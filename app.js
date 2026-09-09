@@ -1156,7 +1156,7 @@ function applyLanguage(){
    ═══════════════════════════════════════════════════════════════════ */
 // Unified reactive data store holding persistent user data and active UI state.
 const STATE = {
-  transactions:[],budgets:[],goals:[],reminders:[],recurring:[],debts:[],
+  transactions:[],budgets:[],goals:[],reminders:[],debts:[],
   accounts: JSON.parse(JSON.stringify(DEFAULT_MY_ACCOUNTS)),
   quickPresets: JSON.parse(JSON.stringify(DEFAULT_QUICK_PRESETS)),
   expCategories: JSON.parse(JSON.stringify(DEFAULT_EXP_CATS)),
@@ -1631,6 +1631,7 @@ function canUseLocalStateApi(){
 }
 
 function save(){
+  S.lastUpdated = Date.now();
   try {
     const serialized = JSON.stringify(S);
     localStorage.setItem('ff2', serialized);
@@ -1673,9 +1674,27 @@ function load(){
       .then(remoteState => {
         if(remoteState && remoteState.transactions && remoteState.transactions.length > 0){
           const localR = localStorage.getItem('ff2');
-          const localCount = (localR ? (JSON.parse(localR).transactions || []).length : 0);
-          // If remote has data and local was empty or older, apply remote data
-          if(localCount === 0 || remoteState.transactions.length >= localCount){
+          let shouldApply = false;
+          
+          if (!localR) {
+            shouldApply = true;
+          } else {
+            try {
+              const localState = JSON.parse(localR);
+              const localCount = (localState.transactions || []).length;
+              const remoteCount = remoteState.transactions.length;
+              
+              if (remoteState.lastUpdated && localState.lastUpdated) {
+                shouldApply = remoteState.lastUpdated > localState.lastUpdated;
+              } else {
+                shouldApply = remoteCount > localCount;
+              }
+            } catch(e) {
+              shouldApply = true;
+            }
+          }
+
+          if(shouldApply){
             applyStateObject(remoteState);
             try { localStorage.setItem('ff2', JSON.stringify(S)); } catch(e){}
             if(typeof renderAll === 'function') renderAll();
@@ -2005,7 +2024,6 @@ function go(page){
     const navIcon = el('home-period-nav-icon');
     const navLabel = el('home-period-nav-label');
     if(navIcon) navIcon.innerHTML = `<span class="nav-dual-icon"><span>${onPeriod ? '🌸' : '⌂'}</span><span>${onPeriod ? '⌂' : '🌸'}</span></span>`;
-    if(navIcon) navIcon.textContent = onPeriod ? '🌸' : '⌂';
     if(navLabel) navLabel.textContent = onPeriod ? 'Period Care' : (S.lang === 'zh' ? '首页' : 'Home');
   }
   closeFab();
@@ -2179,52 +2197,9 @@ function nextDue(from,freq){
   else if(freq==='yearly') d.setFullYear(d.getFullYear()+1);
   return d.toISOString().split('T')[0];
 }
-function applyRecurring(){
-  // Ensure all recurring entries have a valid nextDue date
-  const t = today();
-  S.recurring.forEach(r => {
-    if(!r.nextDue) r.nextDue = t;
-  });
-  save();
-}
+function applyRecurring() {}
 
-function confirmRecurring(recId){
-  const r = S.recurring.find(x => x.id === recId);
-  if(!r) return;
-
-  const defaultAccId = getActiveAccountId();
-  const txDate = r.nextDue || today();
-
-  const newTx = {
-    id: uid('rec') + '_' + Math.random().toString(36).substring(2,6),
-    type: r.type,
-    amount: Number(r.amount) || 0,
-    desc: r.desc,
-    category: r.category,
-    date: txDate,
-    paymentMethod: r.paymentMethod || (r.type === 'income' ? 'Direct Deposit' : 'Auto-Debit'),
-    note: `Recurring (${r.freq})`,
-    accountId: defaultAccId,
-    createdAt: new Date().toISOString()
-  };
-
-  S.transactions.unshift(newTx);
-  // Advance nextDue date for the next cycle until it is in the future
-  let d = new Date((r.nextDue || today()) + 'T00:00:00');
-  const tStr = today();
-  while(d.toISOString().split('T')[0] <= tStr) {
-    if(r.freq==='daily') d.setDate(d.getDate()+1);
-    else if(r.freq==='weekly') d.setDate(d.getDate()+7);
-    else if(r.freq==='monthly') d.setMonth(d.getMonth()+1);
-    else if(r.freq==='yearly') d.setFullYear(d.getFullYear()+1);
-    else break;
-  }
-  r.nextDue = d.toISOString().split('T')[0];
-  
-  save();
-  renderAll();
-  toast(`✅ Recorded ${r.type === 'income' ? 'Income' : 'Expense'}: ${r.desc} (${fmt(r.amount)})!`);
-}
+function confirmRecurring(id) {}
 
 // ── HEALTH SCORE ───────────────────────────────────────
 function calcHealth(){
@@ -2563,23 +2538,32 @@ function renderTxSubCategoryPicker(){
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const count = getSelectableSubCategories(txType).length;
   const currentSub = selSubCat ? getSubCatInfo(selSubCat) : null;
+  const catSubCats = getSelectableSubCategories(txType).filter(item => item.parent === selCat);
+
+  // If this category has no subcategories and user is not searching all, hide cleanly
+  if(!showAllTxSubCats && !catSubCats.length && !selSubCat){
+    picker.innerHTML = '';
+    return;
+  }
+
   const selectedLabel = currentSub
     ? `${currentSub.icon} ${esc(currentSub.name)}`
-    : (isZh ? '未选择' : 'None selected');
-  const scopeLabel = showAllTxSubCats
-    ? (isZh ? '只看当前分类' : 'Current category')
-    : (isZh ? `浏览全部 ${count} 项` : `Browse all ${count}`);
+    : '';
 
   picker.innerHTML = `
-    <div class="subcat-picker">
-      <div class="subcat-picker-head">
-        <div>
-          <div class="subcat-picker-title">${isZh ? '细分类（可选）' : 'Specific category (optional)'}</div>
-          <div class="subcat-picker-hint">${isZh ? `已选：${selectedLabel}。搜索可查看所有 ${count} 个选项。` : `Selected: ${selectedLabel}. Search across all ${count} options.`}</div>
+    <div class="subcat-picker-clean" style="margin-top:4px;padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:6px">
+          <span>${isZh ? '细分类 (可选)' : 'Subcategory (optional)'}</span>
+          ${selectedLabel ? `<span style="color:var(--cyan);font-weight:800;background:rgba(6,182,212,.12);padding:1px 7px;border-radius:6px">${selectedLabel}</span>` : ''}
         </div>
-        <button type="button" class="subcat-show-all" id="tx-subcat-scope">${scopeLabel}</button>
+        <button type="button" class="subcat-show-all" id="tx-subcat-scope" style="background:none;border:none;color:var(--amber);font-size:10.5px;font-weight:700;cursor:pointer;padding:2px 4px">
+          ${showAllTxSubCats ? (isZh ? '收起 ▴' : 'Less ▴') : (isZh ? `🔍 搜索全部 (${count}) ▾` : `🔍 Search all (${count}) ▾`)}
+        </button>
       </div>
-      <input type="search" id="tx-subcat-search" class="subcat-search" autocomplete="off" placeholder="${isZh ? '搜索：咖啡、诊所、路税、奖金…' : 'Search: coffee, clinic, road tax, bonus…'}" aria-label="${isZh ? '搜索细分类' : 'Search specific categories'}" />
+      ${showAllTxSubCats ? `
+        <input type="search" id="tx-subcat-search" class="subcat-search" style="padding:6px 10px;font-size:11.5px;margin-bottom:6px" autocomplete="off" placeholder="${isZh ? '搜索细分类：咖啡、诊所、路税…' : 'Search subcategories: coffee, clinic…'}" aria-label="${isZh ? '搜索细分类' : 'Search specific categories'}" />
+      ` : ''}
       <div class="subcat-list" id="tx-subcat-list"></div>
     </div>
   `;
@@ -2591,7 +2575,7 @@ function renderTxSubCategoryPicker(){
     showAllTxSubCats = !showAllTxSubCats;
     renderTxSubCategoryPicker();
   });
-  filterTxSubCategories('');
+  filterTxSubCategories(search ? search.value : '');
 }
 
 function filterTxSubCategories(query = ''){
@@ -4287,12 +4271,12 @@ function renderCalendar(){
   // 1. Calculate Month-Wide Stats
   const txsInMonth = filteredTx().filter(t => inMonth(t, calCurrentMonth, calCurrentYear));
   const mSpent = txsInMonth.reduce((s, t) => s + (Number(t.amount) || 0), 0);
-  const mIncome = txsInMonth.length > 0 ? (mSpent / (new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate())) : 0;
-  const mNet = mIncome - mSpent;
+  const dailyAvg = txsInMonth.length > 0 ? (mSpent / (new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate())) : 0;
+  const txCount = txsInMonth.length;
 
   if(el('cal-m-spent')) el('cal-m-spent').textContent = fmt(mSpent);
-  if(el('cal-m-income')) el('cal-m-income').textContent = fmt(mIncome);
-  if(el('cal-m-net')) el('cal-m-net').textContent = (mNet >= 0 ? '+' : '') + fmt(mNet);
+  if(el('cal-m-income')) el('cal-m-income').textContent = fmt(dailyAvg);
+  if(el('cal-m-net')) el('cal-m-net').textContent = txCount + (typeof S !== 'undefined' && S && S.lang === 'zh' ? ' 笔' : ' txs');
 
   // 2. Build 7-Column Grid
   const grid = el('cal-days-grid');
@@ -5240,43 +5224,7 @@ function payReminder(id){
 function delReminder(id){S.reminders=S.reminders.filter(r=>r.id!==id);save();renderReminders();renderDueSoon();toast('Reminder removed');}
 
 // ── RENDER: RECURRING ──────────────────────────────────
-function renderRecurring(){
-  const list=el('rec-list'), empty=el('empty-recurring');
-  if(!list) return;
-  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-  list.innerHTML='';
-  if(!S.recurring.length){if(empty) empty.classList.remove('hidden');return;}
-  if(empty) empty.classList.add('hidden');
-  const tStr = today();
-  S.recurring.forEach(r=>{
-    const cat=catInfo(r.type,r.category);
-    const isDue = r.nextDue && r.nextDue <= tStr;
-    const freqLabels = {
-      daily: isZh ? '每天' : 'Daily',
-      weekly: isZh ? '每周' : 'Weekly',
-      monthly: isZh ? '每月' : 'Monthly',
-      yearly: isZh ? '每年' : 'Yearly'
-    };
-    const freqTxt = freqLabels[r.freq] || r.freq;
-    const div=document.createElement('div'); div.className='rec-item';
-    div.innerHTML=`
-      <div class="rec-icon" style="background:${r.type==='income'?'rgba(16,185,129,.12)':'rgba(239,68,68,.12)'}">${cat.icon}</div>
-      <div class="rec-info" style="flex:1">
-        <div class="rec-name">${esc(r.desc)}</div>
-        <div class="rec-sub">${freqTxt}${r.nextDue ? (isZh ? ` · 下次: ${r.nextDue}` : ` · Next: ${r.nextDue}`) : ''} ${isDue ? (isZh ? '· <span style="color:#ef4444;font-weight:700">待扣款</span>' : '· <span style="color:#ef4444;font-weight:700">DUE</span>') : ''}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px">
-        ${isDue ? `<button class="settle-btn rec-complete-btn" type="button" style="padding:5px 10px;font-size:11px;background:var(--amber);color:#4e342e;font-weight:800;border-radius:12px">${isZh ? '入账 ✓' : 'Complete ✓'}</button>` : ''}
-        <div class="rec-amt ${r.type}">${r.type==='income'?'+':'-'}${fmt(r.amount)}</div>
-        <button class="del-btn" type="button">🗑</button>
-      </div>
-    `;
-    const compBtn = div.querySelector('.rec-complete-btn');
-    if(compBtn) compBtn.onclick = () => confirmRecurring(r.id);
-    div.querySelector('.del-btn').onclick=()=>delRec(r.id);
-    list.appendChild(div);
-  });
-}
+function renderRecurring() {}
 function delRec(id){S.recurring=S.recurring.filter(r=>r.id!==id);save();renderRecurring();toast('Recurring removed');}
 
 // ── RENDER: DEBTS ──────────────────────────────────────
@@ -5395,20 +5343,14 @@ function renderPaymentMethods(){
   const current = el('tx-paymethod-val')?.value || 'Cash (现金)';
 
   const PRIMARY_NAMES = [
-    'Maybank (MAE / QR)',
-    'Touch \'n Go eWallet',
-    'GrabPay',
-    'ShopeePay',
-    'CIMB Bank (Octo)',
-    'Public Bank (PBe)',
-    'RHB Bank',
-    'Hong Leong Bank',
     'Cash (现金)',
-    'Credit Card',
-    'Debit Card',
+    'Touch \'n Go eWallet',
     'Online Banking (FPX / DuitNow)',
-    'SPayLater / Atome / BNPL'
+    'Maybank (MAE / QR)',
+    'Credit Card'
   ];
+
+  grid.classList.toggle('expanded', Boolean(showAllPayMethods));
 
   const listToRender = showAllPayMethods ? PAYMENT_METHODS : PAYMENT_METHODS.filter(pm => PRIMARY_NAMES.includes(pm.name) || pm.name === current);
 
@@ -5558,9 +5500,9 @@ function saveTx(){
     note: el('tx-note') ? el('tx-note').value.trim() : '',
     photo: photoData || existingTx?.photo || null,
     items: (currentOcrItems && currentOcrItems.length > 0) ? JSON.parse(JSON.stringify(currentOcrItems)) : (existingTx?.items || []),
-    taxReliefCat: existingTx?.taxReliefCat || null,
-    taxReliefAmount: existingTx?.taxReliefAmount || null,
-    taxReliefReason: existingTx?.taxReliefReason || null,
+    
+    
+    
     isAdvance: isAdvance || false,
     advance: isAdvance || false,
     advancePerson: isAdvance ? (advancePerson || (isZh ? '公司报销' : 'Company Claim')) : null,
@@ -5605,6 +5547,21 @@ function saveTx(){
   renderAll();
   closeModal('tx-modal');
   toast(isZh ? `✅ ${txType==='income'?'收入已记录':'支出已记录'}: ${desc} (${fmt(amount)})` : `✅ ${txType==='income'?'Income':'Expense'} saved: ${desc} (${fmt(amount)})`);
+
+  // Check budget warning
+  if (txType === 'expense' && selCat) {
+    const bInfo = S.budgets.find(b => b.category === selCat);
+    if (bInfo) {
+      const bLimit = Number(bInfo.limit) || 0;
+      const moStr = date.substring(0, 7);
+      const spentMo = S.transactions.filter(t => t.type === 'expense' && t.category === selCat && t.date.startsWith(moStr)).reduce((s,t) => s + (Number(t.amount)||0), 0);
+      if (spentMo > bLimit) {
+        const catName = getCategories('expense').find(c => c.id === selCat)?.name || selCat;
+        setTimeout(() => toast(`⚠️ ${isZh ? '预算超支警告' : 'Budget Warning'}: ${catName} (${fmt(spentMo)} / ${fmt(bLimit)})`, 5000), 2000);
+      }
+    }
+  }
+
   detectRecurringPattern(newTx);
 
   const aiAlert = getTxInstantAiAlert(newTx);
@@ -6778,33 +6735,15 @@ function renderUniversalPreview(){
         </div>
       </div>
 
-      <!-- Quick Category Pills for 1-Tap Switching -->
-      <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="uni-cat-quick-pills">
-        ${[
-          { id: 'food', icon: '🍽️', name: 'Food' },
-          { id: 'drinks', icon: '🧋', name: 'Drinks' },
-          { id: 'groceries', icon: '🛒', name: 'Groceries' },
-          { id: 'fuel', icon: '⛽', name: 'Fuel' },
-          { id: 'shopping', icon: '🛍️', name: 'Shopping' },
-          { id: 'bills', icon: '⚡', name: 'Bills' },
-          { id: 'health', icon: '💊', name: 'Health' },
-          { id: 'transport', icon: '🚗', name: 'Transport' }
-        ].map(p => `
-          <button type="button" class="promo-chip ${p.id === matchedCatId ? 'on' : ''}" onclick="selectUniCategory('${p.id}')" style="padding:4px 9px;font-size:11px;flex-shrink:0" id="uni-cat-chip-${p.id}">
-            <span>${p.icon}</span> <span>${p.name}</span>
-          </button>
-        `).join('')}
-      </div>
-
       ${d.categoryVerification ? `
-        <div style="display:flex;align-items:flex-start;gap:6px;margin:-1px 0 9px;padding:7px 9px;border-radius:9px;background:rgba(6,182,212,.10);border:1px solid rgba(6,182,212,.26);color:var(--text);font-size:10.5px;line-height:1.35">
+        <div style="display:flex;align-items:flex-start;gap:6px;margin:2px 0 10px;padding:7px 9px;border-radius:9px;background:rgba(6,182,212,.10);border:1px solid rgba(6,182,212,.26);color:var(--text);font-size:10.5px;line-height:1.35">
           <span style="flex-shrink:0">🧠</span>
           <span><strong>Category checked:</strong> ${esc(d.categoryVerification.message || 'Verified before saving')}</span>
         </div>
       ` : ''}
 
       <!-- Payment Method / Bank & Account Row -->
-      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-bottom:6px">
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-bottom:10px">
         <div>
           <label class="form-label" style="font-size:10.5px;margin-bottom:2px">Payment Method (付款方式)</label>
           <select id="uni-edit-payment" class="form-input" style="padding:7px 8px;font-size:11.5px;font-weight:700" onchange="handleUniPaymentSelectChange(this.value)">
@@ -6817,26 +6756,6 @@ function renderUniversalPreview(){
             ${accOptions}
           </select>
         </div>
-      </div>
-
-      <!-- Quick Payment Pills for 1-Tap Switching -->
-      <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="uni-pay-quick-pills">
-        ${[
-          { name: 'Cash (现金)', icon: '💵', label: 'Cash' },
-          { name: "Touch 'n Go eWallet", icon: '📱', label: 'TNG' },
-          { name: 'Maybank (MAE / QR)', icon: '🟡', label: 'MAE' },
-          { name: 'GrabPay', icon: '💚', label: 'Grab' },
-          { name: 'Credit Card', icon: '💳', label: 'Credit Card' },
-          { name: 'Debit Card', icon: '💳', label: 'Debit Card' },
-          { name: 'Online Banking (FPX / DuitNow)', icon: '🏛️', label: 'FPX Bank' }
-        ].map(pm => {
-          const isSel = (pm.name === matchedMethodName);
-          return `
-            <button type="button" class="promo-chip ${isSel ? 'on' : ''}" onclick="selectUniPayment('${esc(pm.name)}')" style="padding:4px 9px;font-size:11px;flex-shrink:0" data-uni-pay="${esc(pm.name)}">
-              <span>${pm.icon}</span> <span>${pm.label}</span>
-            </button>
-          `;
-        }).join('')}
       </div>
 
       <!-- Items & Note -->
@@ -12362,57 +12281,7 @@ const LHDN_RELIEF_CAPS = [
   { id: 'ev', name: 'EV Charging & Green Facilities', icon: '⚡', cap: 2500, cats: ['fuel', 'bills'], keywords: ['ev', 'charger', 'solar', 'charging', 'gentari', 'chargen'] }
 ];
 
-function renderTaxRelief(){
-  const list = el('tax-relief-list'); if(!list) return;
-  list.innerHTML = '';
-
-  const curYear = new Date().getFullYear();
-  const yearTxs = S.transactions.filter(t => {
-    if(t.type !== 'expense') return false;
-    const d = new Date(t.date + 'T00:00:00');
-    return d.getFullYear() === curYear;
-  });
-
-  let totalClaimed = 0;
-
-  LHDN_RELIEF_CAPS.forEach(rel => {
-    let relSpent = 0;
-    yearTxs.forEach(tx => {
-      const descLower = (tx.desc || '').toLowerCase() + ' ' + (tx.note || '').toLowerCase();
-      const catMatch = rel.cats.includes(tx.category);
-      const kwMatch = rel.keywords.some(kw => descLower.includes(kw));
-      if(catMatch || kwMatch){
-        relSpent += Number(tx.amount) || 0;
-      }
-    });
-
-    const claimed = Math.min(relSpent, rel.cap);
-    totalClaimed += claimed;
-    const pct = Math.min(100, Math.round((claimed / rel.cap) * 100));
-
-    const card = document.createElement('div');
-    card.className = 'tax-item-card';
-    card.innerHTML = `
-      <div class="tax-item-hdr">
-        <div>
-          <div class="tax-item-title">${rel.icon} ${rel.name}</div>
-          <div class="tax-item-cap">Max Relief Cap: ${fmt(rel.cap)}</div>
-        </div>
-        <div style="font-weight:800;color:${pct >= 100 ? 'var(--green)' : 'var(--amber)'};font-size:13px">${pct}%</div>
-      </div>
-      <div class="tax-track"><div class="tax-fill" style="width:${pct}%;background:${pct >= 100 ? 'var(--green)' : 'var(--amber)'}"></div></div>
-      <div class="tax-item-foot">
-        <span>Claimed: ${fmt(claimed)}</span>
-        <span>Remaining: ${fmt(Math.max(0, rel.cap - claimed))}</span>
-      </div>
-    `;
-    list.appendChild(card);
-  });
-
-  if(el('tax-total-claimed')) el('tax-total-claimed').textContent = fmt(totalClaimed);
-  const estSaved = totalClaimed * 0.15;
-  if(el('tax-est-saved')) el('tax-est-saved').textContent = fmt(estSaved);
-}
+function renderTaxRelief() {}
 
 // ── GREETING ───────────────────────────────────────────
 function greeting(){
@@ -12643,52 +12512,7 @@ function init(){
   updateHomePeriodNavAppearance(false);
 }
 
-function detectRecurringPattern(newTx){
-  if(!newTx || newTx.type !== 'expense') return;
-  const desc = (newTx.desc || '').toLowerCase().trim();
-  const amt = Number(newTx.amount) || 0;
-  if(!desc || amt <= 0) return;
-  
-  const alreadyRecurring = S.recurring.some(r => 
-    (r.desc || '').toLowerCase().trim() === desc
-  );
-  if(alreadyRecurring) return;
-  
-  const similar = S.transactions.filter(t => {
-    if(t.id === newTx.id) return false;
-    if(t.type !== 'expense') return false;
-    const tDesc = (t.desc || '').toLowerCase().trim();
-    const tAmt = Number(t.amount) || 0;
-    return tDesc === desc && Math.abs(tAmt - amt) / amt < 0.15;
-  });
-  
-  if(similar.length < 2) return;
-  
-  const months = new Set([newTx.date.substring(0,7)]);
-  similar.forEach(t => months.add(t.date.substring(0,7)));
-  if(months.size < 3) return;
-  
-  const avgAmt = (similar.reduce((s,t) => s + (Number(t.amount)||0), 0) + amt) / (similar.length + 1);
-  
-  setTimeout(() => {
-    const add = confirm(`🔄 Smart Detection:\n\n"${newTx.desc}" appears ${similar.length + 1} times across ${months.size} months (avg ${S.currency} ${avgAmt.toFixed(2)}).\n\nAdd as a monthly recurring expense?`);
-    if(add){
-      S.recurring.push({
-        id: uid('rec'),
-        type: 'expense',
-        desc: newTx.desc,
-        amount: parseFloat(avgAmt.toFixed(2)),
-        category: newTx.category || 'bills',
-        freq: 'monthly',
-        nextDue: '',
-        paymentMethod: newTx.paymentMethod || '',
-        createdAt: new Date().toISOString()
-      });
-      save();
-      toast('🔄 Added as recurring expense!');
-    }
-  }, 800);
-}
+function detectRecurringPattern(tx) { return false; }
 
 function openReceiptGallery(){
   renderReceiptGallery();

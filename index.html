@@ -617,6 +617,16 @@
           </div>
           <div class="more-row-right">›</div>
         </button>
+        <button type="button" class="more-row" onclick="go('debts')">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:rgba(59,130,246,.16);color:#3b82f6">🤝</div>
+            <div>
+              <div class="more-row-title">债务与借还记录 (Debt & IOU)</div>
+              <div class="more-row-sub">记录朋友垫付、借钱与欠款</div>
+            </div>
+          </div>
+          <div class="more-row-right">›</div>
+        </button>
         <button type="button" class="more-row" onclick="exportMonthlyPDF()">
           <div class="more-row-left">
             <div class="more-row-icon" style="background:rgba(124,58,237,.16);color:#7c3aed">📄</div>
@@ -699,7 +709,7 @@
     </div>
 
     <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px">
-      <button type="button" class="chip on" style="font-size:11.5px;padding:6px 12px" data-i18n="tab_budgets">📊 Monthly Budgets</button>
+      <button type="button" class="chip on" style="font-size:11.5px;padding:6px 12px" onclick="go('budgets')" data-i18n="tab_budgets">📊 Monthly Budgets</button>
       <button type="button" class="chip" style="font-size:11.5px;padding:6px 12px" onclick="go('goals')" data-i18n="tab_goals">🎯 Savings Goals</button>
       <button type="button" class="chip" style="font-size:11.5px;padding:6px 12px" onclick="openWeeklyReportModal()" data-i18n="tab_weekly_grade">📈 Weekly Grade</button>
       <button type="button" class="chip" style="font-size:11.5px;padding:6px 12px" onclick="openChallengesModal()" data-i18n="tab_streaks">🏆 Streaks</button>
@@ -720,12 +730,12 @@
     <div class="inner-hdr">
       <button class="back-btn" onclick="go('budgets')" title="Back to Budgets">✕</button>
       <h1 data-i18n="tab_goals">🎯 Savings Goals</h1>
-      <button class="icon-btn" onclick="openModal('goal-modal')">＋</button>
+      <button class="icon-btn" onclick="openGoalModal()">＋</button>
     </div>
 
     <div style="display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px">
       <button type="button" class="chip" style="font-size:11.5px;padding:6px 12px" onclick="go('budgets')" data-i18n="tab_budgets">📊 Monthly Budgets</button>
-      <button type="button" class="chip on" style="font-size:11.5px;padding:6px 12px" data-i18n="tab_goals">🎯 Savings Goals</button>
+      <button type="button" class="chip on" style="font-size:11.5px;padding:6px 12px" onclick="go('goals')" data-i18n="tab_goals">🎯 Savings Goals</button>
       <button type="button" class="chip" style="font-size:11.5px;padding:6px 12px" onclick="openWeeklyReportModal()" data-i18n="tab_weekly_grade">📈 Weekly Grade</button>
       <button type="button" class="chip" style="font-size:11.5px;padding:6px 12px" onclick="openChallengesModal()" data-i18n="tab_streaks">🏆 Streaks</button>
     </div>
@@ -740,7 +750,7 @@
     <div class="inner-hdr">
       <button class="back-btn" onclick="go('home')" title="Back to Home">✕</button>
       <h1 data-i18n="modal_bill_rem">⏰ Bill Reminders</h1>
-      <button class="icon-btn" onclick="openModal('reminder-modal')">＋</button>
+      <button class="icon-btn" onclick="openReminderModal()">＋</button>
     </div>
     <div id="reminders-list" class="tx-list"></div>
     <div id="empty-reminders" class="empty hidden"><div class="empty-ico">⏰</div><p>No bill reminders yet</p><small>Tap + to create a reminder</small></div>
@@ -926,6 +936,23 @@
     <div class="spacer"></div>
   </section>
 
+  <!-- DEBTS -->
+  <section id="page-debts" class="page">
+    <div class="inner-hdr">
+      <button class="back-btn" onclick="go('more')" title="Back to More">✕</button>
+      <h1 data-i18n="debts_title">🤝 Debt & IOU Tracker</h1>
+      <button class="icon-btn" onclick="openDebtModal()">＋</button>
+    </div>
+    <div id="debt-summary" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px"></div>
+    <div id="debts-list" class="tx-list"></div>
+    <div id="empty-debts" class="empty hidden">
+      <div class="empty-ico">🤝</div>
+      <p>No active debts</p>
+      <small>Tap + to record an IOU</small>
+    </div>
+    <div class="spacer"></div>
+  </section>
+
   <!-- NAV -->
   <nav class="nav">
     <div class="nav-side nav-side-left">
@@ -958,6 +985,7 @@
   <div class="overlay" id="overlay" onclick="closeFab()"></div>
   <div class="fab-menu" id="fab-menu">
     <button class="fab-item fi-exp" onclick="closeFab();openTxModal('expense')">↓ &nbsp;<span data-i18n="btn_expense">Add Expense</span></button>
+    <button class="fab-item" onclick="closeFab();openBudgetModal()" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff">📊 &nbsp;<span>Set Monthly Budget</span></button>
     <button class="fab-item" onclick="closeFab();openUniversalUpload('expense')" style="background:linear-gradient(135deg,#06b6d4,#0284c7);color:#fff">📸 &nbsp;<span>Smart AI Receipt Scan</span></button>
     <button class="fab-item" onclick="closeFab();go('period')" style="background:linear-gradient(135deg,#f472b6,#ec4899);color:#fff">🌸 &nbsp;<span data-i18n="btn_period_tracker">Girl Period Tracker</span></button>
   </div>
@@ -1087,14 +1115,14 @@
       </div>
       
       <!-- Top Action Bar (Upload Receipt, Split & AI Helper) -->
-      <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button type="button" class="ocr-btn" id="ocr-scan-btn" onclick="openUniversalUpload('expense')" style="flex:1;margin-bottom:0;padding:10px 14px;font-size:13px;font-weight:700">
-          <span data-i18n="btn_ai_upload">📸 Smart AI Upload (Auto-Fill)</span>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button type="button" class="ocr-btn" id="ocr-scan-btn" onclick="openUniversalUpload('expense')" style="flex:1;margin-bottom:0;padding:8px 12px;font-size:12px;font-weight:700">
+          <span data-i18n="btn_ai_upload">📸 Smart AI Upload</span>
         </button>
-        <button type="button" class="ocr-btn" id="tx-modal-split-btn" onclick="splitCurrentTxModal()" style="width:auto;margin-bottom:0;padding:10px 12px;font-size:12px;background:rgba(245,158,11,.15);border-color:var(--amber);color:var(--text)" title="Split this bill with friends">
+        <button type="button" class="ocr-btn" id="tx-modal-split-btn" onclick="splitCurrentTxModal()" style="width:auto;margin-bottom:0;padding:8px 10px;font-size:11.5px;background:rgba(245,158,11,.15);border-color:var(--amber);color:var(--text)" title="Split this bill with friends">
           <span>🍕 Split</span>
         </button>
-        <button type="button" class="ocr-btn" onclick="openGeminiModal()" id="tx-gemini-status-btn" style="width:auto;margin-bottom:0;padding:10px 12px;font-size:12px;background:rgba(59,130,246,.15);border-color:var(--cyan);color:var(--text)" title="Configure Google AI">
+        <button type="button" class="ocr-btn" onclick="openGeminiModal()" id="tx-gemini-status-btn" style="width:auto;margin-bottom:0;padding:8px 10px;font-size:11.5px;background:rgba(59,130,246,.15);border-color:var(--cyan);color:var(--text)" title="Configure Google AI">
           <span>🤖 AI</span>
         </button>
       </div>
@@ -1297,25 +1325,6 @@
       <div class="form-row"><label class="form-label" data-i18n="lbl_category">Category</label><div class="cat-scroll" id="rem-cats"></div></div>
       <button class="primary-btn" onclick="saveReminder()" data-i18n="btn_save_reminder">Save Reminder</button>
       <button class="ghost-btn" onclick="closeModal('reminder-modal')" data-i18n="cancel">Cancel</button>
-    </div>
-  </div>
-
-  <!-- Recurring Subscription Modal -->
-  <div id="rec-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'rec-modal')">
-    <div class="modal">
-      <div class="modal-handle"></div>
-      <div class="modal-title">
-        <span data-i18n="modal_new_sub">New Subscription / Recurring</span>
-        <button type="button" class="modal-close-btn" onclick="closeModal('rec-modal')">✕</button>
-      </div>
-      
-      <div class="form-row"><label class="form-label" data-i18n="lbl_name">Name / Description</label><input type="text" id="rec-desc" class="form-input" placeholder="e.g. Netflix, Spotify, Salary"/></div>
-      <div class="form-row"><label class="form-label" data-i18n="lbl_amount">Amount</label><div class="amt-wrap"><span class="cur-sym" id="rec-cur">RM</span><input type="number" class="amt-input" id="rec-amount" placeholder="0.00" inputmode="decimal"/></div></div>
-      <div class="form-row"><label class="form-label" data-i18n="lbl_frequency">Frequency</label><select id="rec-freq" class="form-input"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly" selected>Monthly</option><option value="yearly">Yearly</option></select></div>
-      <div class="form-row"><label class="form-label" data-i18n="lbl_first_due">Next / First Due Date</label><input type="date" id="rec-date" class="form-input"/></div>
-      <div class="form-row"><label class="form-label" data-i18n="lbl_category">Category</label><div class="cat-scroll" id="rec-cats"></div></div>
-      <button class="primary-btn" onclick="saveRecurring()" data-i18n="btn_save_sub">Save Subscription</button>
-      <button class="ghost-btn" onclick="closeModal('rec-modal')" data-i18n="cancel">Cancel</button>
     </div>
   </div>
 
