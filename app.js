@@ -1157,6 +1157,7 @@ function applyLanguage(){
 // Unified reactive data store holding persistent user data and active UI state.
 const STATE = {
   transactions:[],budgets:[],goals:[],reminders:[],debts:[],
+  monthlyBudget: 0,
   accounts: JSON.parse(JSON.stringify(DEFAULT_MY_ACCOUNTS)),
   quickPresets: JSON.parse(JSON.stringify(DEFAULT_QUICK_PRESETS)),
   expCategories: JSON.parse(JSON.stringify(DEFAULT_EXP_CATS)),
@@ -1725,9 +1726,14 @@ function applyStateObject(p){
   }
   const migratedInternalTransfers = migrateLegacyInternalTransfers(loadedTx);
 
+  const loadedMonthlyBudget = (p && p.monthlyBudget !== undefined)
+    ? Number(p.monthlyBudget) || 0
+    : (Array.isArray(p.budgets) && p.budgets.length > 0 ? p.budgets.reduce((s,b)=>s+(Number(b.limit)||0),0) : 0);
+
   S = {
     ...S,
     ...p,
+    monthlyBudget: loadedMonthlyBudget,
     transactions: loadedTx,
     budgets: p.budgets || [],
     goals: p.goals || [],
@@ -2215,14 +2221,10 @@ function calcHealth(){
     else if(rate<0){score-=20;tips.push({icon:'🚨',txt:'Spending exceeds income!',tag:'alert'});}
     else{score+=5;tips.push({icon:'⚠️',txt:'Low savings rate this month',tag:'warn'});}
   }
-  let over=0;
-  S.budgets.forEach(b=>{
-    const sp=mtx.filter(t=>t.type==='expense'&&t.category===b.category).reduce((s,t)=>s+Number(t.amount)||0,0);
-    if(sp>Number(b.limit)) over++;
-  });
-  if(S.budgets.length>0){
-    if(over===0){score+=20;tips.push({icon:'✅',txt:'All budgets on track!',tag:'tip'});}
-    else{score-=over*5;tips.push({icon:'⚠️',txt:over+' budget(s) exceeded',tag:'alert'});}
+  const monthlyLimit = getMonthlyBudgetTotal();
+  if(monthlyLimit > 0){
+    if(exp <= monthlyLimit){ score += 20; tips.push({icon:'✅', txt:'Monthly spending on track!', tag:'tip'}); }
+    else { score -= 15; tips.push({icon:'🚨', txt:'Monthly spending exceeds available budget!', tag:'alert'}); }
   }
   const owed=S.debts.filter(d=>d.dir==='owe'&&!d.settled).reduce((s,d)=>s+Number(d.remaining)||0,0);
   if(owed>0&&inc>0&&owed/inc>0.5){score-=10;tips.push({icon:'💸',txt:'High debt-to-income ratio',tag:'alert'});}
@@ -2379,31 +2381,31 @@ function buildInsights(){
   }
 
 
-  // 8. 🚨 BUDGET THRESHOLDS
-  S.budgets.forEach(b => {
-    const sp = thisMonthTx.filter(t => t.type === 'expense' && t.category === b.category).reduce((s,t) => s + (Number(t.amount)||0), 0);
-    const pct = sp / Number(b.limit);
-    const c = catInfo('expense', b.category);
+  // 8. 🚨 MONTHLY SPENDING BUDGET THRESHOLDS (ALL CATEGORIES)
+  const monthlyBudgetTotal = getMonthlyBudgetTotal();
+  if(monthlyBudgetTotal > 0){
+    const totalMonthExp = thisMonthTx.filter(t => t.type === 'expense').reduce((s,t) => s + (Number(t.amount)||0), 0);
+    const pct = totalMonthExp / monthlyBudgetTotal;
     if(pct >= 1.0){
       ins.push({
         icon: '🚨',
-        title: isZh ? `${c.name} 预算已超支！` : `${c.name} Over Budget!`,
+        title: isZh ? '月度可用预算已超支！' : 'Monthly Spending Budget Exceeded!',
         text: isZh 
-          ? `已超出限额 ${fmt(sp - Number(b.limit))}（已支出 ${fmt(sp)} / 预算 ${fmt(b.limit)}）。建议暂停非必要 ${c.name} 开支！`
-          : `Exceeded by ${fmt(sp - Number(b.limit))} (Spent ${fmt(sp)} of ${fmt(b.limit)}). Freeze non-essential ${c.name} spending!`,
+          ? `本月总支出 ${fmt(totalMonthExp)} 已超出设定的可用预算 ${fmt(monthlyBudgetTotal)}（超支 ${fmt(totalMonthExp - monthlyBudgetTotal)}）！建议节约后续开支。`
+          : `Total monthly spend of ${fmt(totalMonthExp)} exceeded your available pool of ${fmt(monthlyBudgetTotal)} by ${fmt(totalMonthExp - monthlyBudgetTotal)}!`,
         tag: 'alert'
       });
-    } else if(pct >= 0.8){
+    } else if(pct >= 0.85){
       ins.push({
         icon: '⚠️',
-        title: isZh ? `${c.name} 预算接近上限 (${(pct*100).toFixed(0)}%)` : `${c.name} Near Limit (${(pct*100).toFixed(0)}%)`,
+        title: isZh ? `月度可用预算已使用 ${(pct*100).toFixed(0)}%` : `Monthly Budget ${(pct*100).toFixed(0)}% Used`,
         text: isZh 
-          ? `本月剩余可用预算仅剩 ${fmt(Number(b.limit) - sp)}。`
-          : `Only ${fmt(Number(b.limit) - sp)} left for the rest of the month.`,
+          ? `本月已花费 ${fmt(totalMonthExp)}，可用资金仅剩 ${fmt(monthlyBudgetTotal - totalMonthExp)}。请留意本月剩余消费节奏。`
+          : `You have spent ${fmt(totalMonthExp)} this month. Only ${fmt(monthlyBudgetTotal - totalMonthExp)} available spending remaining!`,
         tag: 'warn'
       });
     }
-  });
+  }
 
   // 9. ⛽ HIGH TRAVEL & PETROL ALERT
   const travelList = last7DaysTx.filter(t => t.type === 'expense' && (t.category === 'fuel' || t.category === 'toll_parking'));
@@ -5091,41 +5093,214 @@ function renderBudPreview(){
   });
 }
 
-// ── RENDER: BUDGETS PAGE ───────────────────────────────
+function getMonthlyBudgetTotal(){
+  if(typeof S !== 'undefined' && S && S.monthlyBudget !== undefined && Number(S.monthlyBudget) > 0){
+    return Number(S.monthlyBudget);
+  }
+  if(typeof S !== 'undefined' && S && Array.isArray(S.budgets) && S.budgets.length > 0){
+    return S.budgets.reduce((s,b) => s + (Number(b.limit)||0), 0);
+  }
+  return 0;
+}
+
+// ── RENDER: BUDGET PREVIEW ─────────────────────────────
+function renderBudPreview(){
+  const wrap=el('bud-preview'); if(!wrap) return;
+  wrap.innerHTML='';
+  const budgetLimit = getMonthlyBudgetTotal();
+  if(budgetLimit <= 0){
+    wrap.innerHTML='<p style="font-size:12px;color:var(--dim);text-align:center;padding:8px">No monthly budget set</p>';
+    return;
+  }
+  const now = new Date(), m = now.getMonth(), y = now.getFullYear();
+  const txs = (S.transactions || []).filter(t => t.type === 'expense' && inMonth(t, m, y));
+  const sp = txs.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const remaining = budgetLimit - sp;
+  const pct = Math.min((sp / budgetLimit) * 100, 100);
+  const col = remaining < 0 ? '#ef4444' : pct >= 85 ? '#f59e0b' : '#10b981';
+  const d = document.createElement('div'); d.className = 'bud-item';
+  d.innerHTML = `
+    <div class="bud-hdr">
+      <div class="bud-name"><span>💰</span>Monthly Available Pool</div>
+      <div class="bud-amts">${fmt(sp)} / <strong>${fmt(budgetLimit)}</strong></div>
+    </div>
+    <div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div>
+    <div class="bud-foot" style="color:${col}">${remaining < 0 ? 'Over budget by ' + fmt(Math.abs(remaining)) : fmt(remaining) + ' available left'}</div>
+  `;
+  wrap.appendChild(d);
+}
+
+// ── RENDER: BUDGETS PAGE (AVAILABLE SPENDING POOL DASHBOARD) ───────────
 function renderBudgets(){
-  const list=el('budgets-list'), empty=el('empty-budgets');
+  const list = el('budgets-list'), empty = el('empty-budgets');
   if(!list) return;
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-  list.innerHTML='';
-  if(!S.budgets.length){if(empty) empty.classList.remove('hidden');return;}
+  list.innerHTML = '';
   if(empty) empty.classList.add('hidden');
-  const now=new Date(), m=now.getMonth(), y=now.getFullYear();
-  const txs=filteredTx().filter(t=>t.type==='expense'&&inMonth(t,m,y));
-  S.budgets.forEach(b=>{
-    const cat=catInfo('expense',b.category);
-    const spent=txs.filter(t=>t.category===b.category).reduce((s,t)=>s+Number(t.amount)||0,0);
-    const pct=Math.min(Math.round((spent/b.limit)*100),100);
-    const over=spent>b.limit;
-    const div=document.createElement('div'); div.className='bud-card';
-    div.innerHTML=`
-      <div class="bud-top">
-        <div class="bud-cat"><span class="bud-cat-icon">${cat.icon}</span><span class="bud-cat-name">${esc(cat.name)}</span></div>
-        <div class="bud-amounts">${fmt(spent)} <span style="font-size:11px;color:var(--muted)">${isZh ? '/' : 'of'} ${fmt(b.limit)}</span></div>
+
+  const now = new Date(), m = now.getMonth(), y = now.getFullYear();
+  const txs = (S.transactions || []).filter(t => t.type === 'expense' && inMonth(t, m, y));
+  const totalSpent = txs.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const budgetLimit = getMonthlyBudgetTotal();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const daysRemaining = Math.max(1, daysInMonth - now.getDate() + 1);
+
+  if(budgetLimit <= 0){
+    // Empty state: prompt to set monthly available budget
+    const emptyCard = document.createElement('div');
+    emptyCard.style.cssText = 'background:linear-gradient(145deg,rgba(36,27,22,.92),rgba(24,19,16,.92));border:1.5px dashed rgba(245,158,11,.35);border-radius:20px;padding:26px 18px;text-align:center;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.2)';
+    emptyCard.innerHTML = `
+      <div style="font-size:36px;margin-bottom:8px">🍯</div>
+      <div style="font-size:16px;font-weight:900;color:var(--text);margin-bottom:6px">${isZh ? '尚未设置本月可用预算' : 'No Monthly Spending Budget Set'}</div>
+      <p style="font-size:12px;color:var(--muted);max-width:320px;margin:0 auto 16px;line-height:1.4">
+        ${isZh ? '设置一个本月所有消费的总可用资金池。记账时将实时从该池扣减，并在超支时自动发出警告提醒。' : 'Define your total available spending money across all categories for the month. Pocket Winnie will track your total spending against this pool and warn you when you overspend.'}
+      </p>
+      <button type="button" class="primary-btn" onclick="openBudgetModal()" style="width:auto;padding:11px 24px;font-size:13px;font-weight:800;display:inline-flex;align-items:center;gap:6px">
+        <span>➕</span> <span>${isZh ? '设置月度总预算' : 'Set Monthly Spending Budget'}</span>
+      </button>
+      ${totalSpent > 0 ? `
+        <div style="margin-top:16px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--border);padding-top:12px">
+          ${isZh ? '本月目前已累计支出：' : 'Total spent so far this month:'} <strong style="color:var(--text)">${fmt(totalSpent)}</strong>
+        </div>
+      ` : ''}
+    `;
+    list.appendChild(emptyCard);
+  } else {
+    // Active Monthly Budget: Hero Available Spending Card
+    const remaining = budgetLimit - totalSpent;
+    const isOver = remaining < 0;
+    const overAmt = Math.abs(remaining);
+    const pct = Math.min(Math.round((totalSpent / budgetLimit) * 100), 100);
+    const actualPct = Math.round((totalSpent / budgetLimit) * 100);
+    const safeDaily = isOver ? 0 : (remaining / daysRemaining);
+
+    const barColor = isOver ? '#fb7185' : pct >= 85 ? '#f59e0b' : '#10b981';
+    const statusBg = isOver ? 'rgba(251,113,133,.1)' : pct >= 85 ? 'rgba(245,158,11,.1)' : 'rgba(16,185,129,.1)';
+    const statusBorder = isOver ? 'rgba(251,113,133,.28)' : pct >= 85 ? 'rgba(245,158,11,.28)' : 'rgba(16,185,129,.28)';
+    const statusColor = isOver ? '#fb7185' : pct >= 85 ? 'var(--amber)' : 'var(--green)';
+
+    const hero = document.createElement('div');
+    hero.style.cssText = `background:linear-gradient(145deg,rgba(36,27,22,.95),rgba(24,19,16,.95));border:1.5px solid ${statusBorder};border-radius:20px;padding:18px 16px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.25);position:relative;overflow:hidden`;
+    hero.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:11px;font-weight:800;background:${statusBg};color:${statusColor};border:1px solid ${statusBorder};padding:4px 10px;border-radius:12px;display:inline-flex;align-items:center;gap:4px">
+          <span>${isOver ? '🚨' : pct >= 85 ? '⚠️' : '🛡️'}</span>
+          <span>${isOver ? (isZh ? `已超支 ${fmt(overAmt)}` : `Over Budget by ${fmt(overAmt)}`) : (isZh ? `预算健康 (${actualPct}%)` : `On Track (${actualPct}%)`)}</span>
+        </span>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="chip" onclick="openBudgetModal()" style="font-size:11px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);cursor:pointer">✏️ ${isZh ? '调整' : 'Edit'}</button>
+          <button type="button" class="del-btn" onclick="clearMonthlyBudget()" title="Clear Budget" style="font-size:13px;padding:2px 6px">🗑</button>
+        </div>
       </div>
-      <div class="progress-bar"><div class="progress-fill ${over?'danger':pct>75?'warn':''}" style="width:${pct}%"></div></div>
-      <div class="bud-sub ${over?'over':''}">
-        <span>${over ? (isZh ? `⚠️ 超支 ${fmt(spent-b.limit)}` : `Over budget by ${fmt(spent-b.limit)}`) : (isZh ? `剩余 ${fmt(b.limit-spent)}` : `${fmt(b.limit-spent)} left`)}</span>
-        <span>${pct}%</span>
+
+      <div style="text-align:center;padding:4px 0 14px">
+        <div style="font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">
+          ${isOver ? (isZh ? '本月已超额支出' : 'Overspent Amount') : (isZh ? '本月剩余可用金额' : 'Available Spending Money Left')}
+        </div>
+        <div style="font-size:36px;font-weight:900;color:${statusColor};line-height:1.1;letter-spacing:-.5px">
+          ${isOver ? '-' + fmt(overAmt) : fmt(remaining)}
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:4px">
+          ${isZh ? `月度总资金池: ${fmt(budgetLimit)}` : `of ${fmt(budgetLimit)} total monthly pool`}
+        </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-top:8px">
-        <button class="del-btn" style="font-size:11px;color:var(--red);background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:3px 8px;cursor:pointer" onclick="delBudget('${b.category}')">🗑 ${isZh ? '删除' : 'Delete'}</button>
+
+      <div style="height:8px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden;margin-bottom:12px">
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:6px;transition:width .4s ease"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:rgba(255,255,255,.03);padding:10px 8px;border-radius:14px;border:1px solid rgba(255,255,255,.07);text-align:center;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;color:var(--muted)">${isZh ? '总月预算' : 'Total Budget'}</div>
+          <div style="font-size:12.5px;font-weight:800;color:var(--text);margin-top:2px">${fmt(budgetLimit)}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted)">${isZh ? '本月已花' : 'Total Spent'}</div>
+          <div style="font-size:12.5px;font-weight:800;color:${statusColor};margin-top:2px">${fmt(totalSpent)}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted)">${isZh ? '每日建议' : 'Safe Daily'}</div>
+          <div style="font-size:12.5px;font-weight:800;color:var(--text);margin-top:2px">${isOver ? 'RM 0.00' : fmt(safeDaily)}</div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;line-height:1.4;color:var(--text);background:rgba(255,255,255,.03);border:1px solid ${statusBorder};border-radius:12px;padding:8px 10px;display:flex;align-items:flex-start;gap:6px">
+        <span style="flex-shrink:0">${isOver ? '🚨' : '💡'}</span>
+        <span>
+          ${isOver
+            ? (isZh ? `本月总消费已超出设定预算 ${fmt(overAmt)}！建议在接下来 ${daysRemaining} 天严格控制非必要支出。` : `You have exceeded your monthly limit by ${fmt(overAmt)}. Try pausing non-essential purchases for the remaining ${daysRemaining} days.`)
+            : (isZh ? `本月还剩 ${daysRemaining} 天。每天支出保持在 ${fmt(safeDaily)} 以内即可安全保持在预算内！` : `You have ${daysRemaining} days left. Spending ~${fmt(safeDaily)} or less per day keeps you comfortably within budget!`)}
+        </span>
       </div>
     `;
-    list.appendChild(div);
-  });
+    list.appendChild(hero);
+  }
+
+  // Section 2: Where did your available money go? (All Categories Breakdown)
+  if(txs.length > 0){
+    const catGroup = {};
+    txs.forEach(t => {
+      const c = t.category || 'other';
+      catGroup[c] = (catGroup[c] || 0) + (Number(t.amount) || 0);
+    });
+
+    const sortedCats = Object.entries(catGroup).sort((a, b) => b[1] - a[1]);
+
+    const breakdownBox = document.createElement('div');
+    breakdownBox.style.cssText = 'background:linear-gradient(145deg,rgba(36,27,22,.9),rgba(24,19,16,.9));border:1px solid rgba(245,158,11,.18);border-radius:20px;padding:16px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.2)';
+    breakdownBox.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:12.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px">
+          <span>📊</span> <span>${isZh ? '资金消耗分布 (全部分类)' : 'Where Your Money Went (All Categories)'}</span>
+        </span>
+        <span style="font-size:10.5px;color:var(--muted)">${txs.length} ${isZh ? '笔支出' : 'txs'}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${sortedCats.map(([catId, amt]) => {
+          const info = catInfo('expense', catId);
+          const catPct = totalSpent > 0 ? Math.round((amt / totalSpent) * 100) : 0;
+          return `
+            <div style="background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:12px;padding:9px 12px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                <span style="font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px">
+                  <span style="font-size:15px">${info.icon}</span> <span>${esc(info.name)}</span>
+                </span>
+                <span style="font-size:12px;font-weight:800;color:var(--text)">
+                  ${fmt(amt)} <span style="font-size:10px;font-weight:600;color:var(--muted)">(${catPct}%)</span>
+                </span>
+              </div>
+              <div style="height:6px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden">
+                <div style="height:100%;width:${catPct}%;background:linear-gradient(90deg,#f59e0b,#d97706);border-radius:4px"></div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+    list.appendChild(breakdownBox);
+  }
 }
+
+function clearMonthlyBudget(){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  if(confirm(isZh ? '确定要清除月度预算限额吗？' : 'Clear your monthly budget limit?')){
+    S.monthlyBudget = 0;
+    S.budgets = [];
+    save();
+    renderAll();
+    toast(isZh ? '月度预算已清除' : 'Monthly budget cleared');
+  }
+}
+
 function delBudget(cat){
-  if(confirm('Delete budget?')){S.budgets=S.budgets.filter(b=>b.category!==cat);save();renderBudgets();renderBudPreview();toast('Budget removed');}
+  if(confirm('Delete budget?')){
+    S.budgets = S.budgets.filter(b => b.category !== cat);
+    if(S.budgets.length === 0) S.monthlyBudget = 0;
+    save();
+    renderBudgets();
+    renderBudPreview();
+    toast('Budget removed');
+  }
 }
 
 // ── RENDER: GOALS ──────────────────────────────────────
@@ -5548,16 +5723,21 @@ function saveTx(){
   closeModal('tx-modal');
   toast(isZh ? `✅ ${txType==='income'?'收入已记录':'支出已记录'}: ${desc} (${fmt(amount)})` : `✅ ${txType==='income'?'Income':'Expense'} saved: ${desc} (${fmt(amount)})`);
 
-  // Check budget warning
-  if (txType === 'expense' && selCat) {
-    const bInfo = S.budgets.find(b => b.category === selCat);
-    if (bInfo) {
-      const bLimit = Number(bInfo.limit) || 0;
-      const moStr = date.substring(0, 7);
-      const spentMo = S.transactions.filter(t => t.type === 'expense' && t.category === selCat && t.date.startsWith(moStr)).reduce((s,t) => s + (Number(t.amount)||0), 0);
-      if (spentMo > bLimit) {
-        const catName = getCategories('expense').find(c => c.id === selCat)?.name || selCat;
-        setTimeout(() => toast(`⚠️ ${isZh ? '预算超支警告' : 'Budget Warning'}: ${catName} (${fmt(spentMo)} / ${fmt(bLimit)})`, 5000), 2000);
+  // Check overall monthly budget warning (all categories combined)
+  if (txType === 'expense') {
+    const monthlyLimit = getMonthlyBudgetTotal();
+    if (monthlyLimit > 0) {
+      const moStr = (date && date.length >= 7) ? date.substring(0, 7) : today().substring(0, 7);
+      const spentMo = S.transactions
+        .filter(t => t.type === 'expense' && t.date && t.date.startsWith(moStr))
+        .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+
+      const remaining = monthlyLimit - spentMo;
+      if (remaining < 0) {
+        const over = Math.abs(remaining);
+        setTimeout(() => toast(`🚨 ${isZh ? '月度总预算已超支' : 'Monthly Budget Overspent'}: ${isZh ? '已超出' : 'Exceeded by'} ${fmt(over)}! (${fmt(spentMo)} / ${fmt(monthlyLimit)})`, 5500), 1800);
+      } else if (remaining <= monthlyLimit * 0.15) {
+        setTimeout(() => toast(`⚠️ ${isZh ? '月度可用余额不足' : 'Budget Alert'}: ${isZh ? '仅剩' : 'Only'} ${fmt(remaining)} ${isZh ? '可用资金！' : 'available spending left this month!'}`, 4500), 1800);
       }
     }
   }
@@ -7799,15 +7979,38 @@ async function syncGSheet(){
   }
 }
 
-// ── BUDGET ─────────────────────────────────────────────
-function openBudgetModal(){selBudCat=null;el('bud-amount').value='';buildCats('bud-cats','expense',id=>selBudCat=id);openModal('budget-modal');}
+// ── BUDGET (OVERALL MONTHLY SPENDING POOL) ─────────────
+function setBudgetQuickAmt(amt){
+  const inp = el('bud-limit') || el('bud-amount');
+  if(inp){
+    inp.value = amt;
+    inp.focus();
+  }
+}
+
+function openBudgetModal(){
+  const cur = getMonthlyBudgetTotal();
+  const inp = el('bud-limit') || el('bud-amount');
+  if(inp) inp.value = (cur > 0 ? cur : '');
+  if(el('bud-cur')) el('bud-cur').textContent = S.currency || 'RM';
+  openModal('budget-modal');
+  setTimeout(() => (el('bud-limit') || el('bud-amount'))?.focus(), 220);
+}
+
 function saveBudget(){
-  const amount=parseFloat(el('bud-amount').value);
-  if(!selBudCat){toast('⚠️ Pick a category');return;}
-  if(!amount||amount<=0){toast('⚠️ Enter a limit');return;}
-  const idx=S.budgets.findIndex(b=>b.category===selBudCat);
-  if(idx>=0) S.budgets[idx].limit=amount; else S.budgets.push({category:selBudCat,limit:amount});
-  save();renderAll();closeModal('budget-modal');toast('✅ Budget saved!');
+  const inp = el('bud-limit') || el('bud-amount');
+  const amount = parseFloat(inp?.value);
+  if(isNaN(amount) || amount <= 0){
+    toast('⚠️ Please enter a valid monthly spending budget');
+    return;
+  }
+  S.monthlyBudget = amount;
+  S.budgets = [{ category: 'all', limit: amount, name: 'Overall Monthly Spending' }];
+  save();
+  renderAll();
+  closeModal('budget-modal');
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  toast(isZh ? `✅ 已设置月度总预算: ${fmt(amount)}` : `✅ Monthly spending budget set: ${fmt(amount)}!`);
 }
 
 // ── GOALS ──────────────────────────────────────────────
@@ -8248,6 +8451,7 @@ function openPeriodSettingsModal(){
 
 function savePeriodSettings(){
   initPeriodTrackerState();
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const dateInp = el('period-settings-last-date');
   const cycleInp = el('period-settings-cycle-length');
   const periodInp = el('period-settings-period-length');
@@ -8478,6 +8682,9 @@ function savePeriodSymptomLog(){
 
   save();
   renderPeriodTrackerUI();
+  if(!el('period-single-tap-inspector-card')?.classList.contains('hidden')){
+    openDailyExpensesAndAiDietaryInspector(tStr);
+  }
   closeModal('period-date-care-modal');
   toast(isZh ? `💾 已保存 ${fmtDate(tStr)} 的生理症状与痛感记录！` : `💾 Saved period flow & symptom log for ${fmtDate(tStr)}!`);
 }
@@ -8597,6 +8804,7 @@ let selectedPeriodInspectorDateStr = today();
 let periodAiInspectDateStr = today();
 
 function shiftPeriodCalMonth(delta){
+  periodCalInspectedDate.setDate(1);
   periodCalInspectedDate.setMonth(periodCalInspectedDate.getMonth() + delta);
   renderPeriodCalendarGrid();
 }
@@ -8755,6 +8963,11 @@ function renderPeriodCalendarGrid(){
     };
 
     box.onclick = (e) => {
+      document.querySelectorAll('#period-cal-days-grid .cal-day-box').forEach(b => {
+        b.classList.remove('selected');
+      });
+      box.classList.add('selected');
+
       const now = Date.now();
       const timeSinceLast = now - lastTapTimestamp;
 
@@ -8769,7 +8982,7 @@ function renderPeriodCalendarGrid(){
           triggerSingleTap();
           lastTapTimestamp = 0;
           singleTapTimeout = null;
-        }, 400);
+        }, 300);
       }
     };
 
@@ -8941,6 +9154,18 @@ function openDailyExpensesAndAiDietaryInspector(dateStr){
   }, 50);
 }
 
+function openPeriodDateCareModalForInspectedDate(){
+  const dateStr = periodAiInspectDateStr || selectedPeriodInspectorDateStr || today();
+  const pt = S.periodTracker || {};
+  const lastD = new Date((pt.lastPeriodDate || today()) + 'T00:00:00');
+  const currD = new Date(dateStr + 'T00:00:00');
+  const cycleDays = Number(pt.cycleLength) || 28;
+  const periodDays = Number(pt.periodLength) || 5;
+  const diffDays = Math.floor((currD - lastD) / (1000 * 60 * 60 * 24));
+  const cycleDay = diffDays >= 0 ? ((diffDays % cycleDays) + 1) : (cycleDays + ((diffDays % cycleDays) + 1));
+  selectPeriodCalDay(dateStr, cycleDay, periodDays, cycleDays, true);
+}
+
 async function analyzeSelectedPeriodDayWithAi(){
   const insightEl = el('period-singletap-ai-insight');
   const btn = el('period-singletap-ai-btn');
@@ -9103,9 +9328,18 @@ function setPeriodStartForSelectedDate(){
   const selDate = selectedPeriodInspectorDateStr || today();
   S.periodTracker.lastPeriodDate = selDate;
   S.periodTracker.hasSetFirstDate = true;
-  S.periodTracker.history.unshift({ startDate: selDate, endDate: null, note: isZh ? '手动设定开潮日' : 'Manual Period Start' });
+  if(!Array.isArray(S.periodTracker.history)) S.periodTracker.history = [];
+  const existing = S.periodTracker.history.find(h => h && normalizeDateStr(h.startDate) === selDate);
+  if(existing){
+    existing.note = isZh ? '手动设定开潮日' : 'Manual Period Start';
+  } else {
+    S.periodTracker.history.unshift({ startDate: selDate, endDate: null, note: isZh ? '手动设定开潮日' : 'Manual Period Start' });
+  }
   save();
   renderPeriodTrackerUI();
+  if(!el('period-single-tap-inspector-card')?.classList.contains('hidden')){
+    openDailyExpensesAndAiDietaryInspector(selDate);
+  }
   closeModal('period-date-care-modal');
   toast(isZh ? `🩸 已将 ${fmtDate(selDate)} 设为经期第一天！` : `🩸 Set ${fmtDate(selDate)} as Period Start!`);
 }
@@ -9114,11 +9348,22 @@ function setPeriodEndForSelectedDate(){
   initPeriodTrackerState();
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const selDate = selectedPeriodInspectorDateStr || today();
-  if(S.periodTracker.history.length > 0){
-    S.periodTracker.history[0].endDate = selDate;
+  if(!Array.isArray(S.periodTracker.history)) S.periodTracker.history = [];
+  let target = S.periodTracker.history.find(h => h && normalizeDateStr(h.startDate) === selDate);
+  if(!target){
+    // Find closest cycle starting on or before selDate
+    target = S.periodTracker.history.find(h => h && normalizeDateStr(h.startDate) <= selDate);
+  }
+  if(target){
+    target.endDate = selDate;
+  } else {
+    S.periodTracker.history.unshift({ startDate: selDate, endDate: selDate, note: isZh ? '经期结束日' : 'Period End' });
   }
   save();
   renderPeriodTrackerUI();
+  if(!el('period-single-tap-inspector-card')?.classList.contains('hidden')){
+    openDailyExpensesAndAiDietaryInspector(selDate);
+  }
   closeModal('period-date-care-modal');
   toast(isZh ? `✅ 已将 ${fmtDate(selDate)} 设为经期结束日！` : `✅ Set ${fmtDate(selDate)} as Period End!`);
 }
@@ -9179,6 +9424,7 @@ function savePeriodExpenseForSelectedDate(){
   S.lastUsedAccId = accId;
   save();
   amtInp.value = '';
+  if(descInp) descInp.value = '';
   closeModal('period-date-care-modal');
   toast(isZh ? `✅ 已记入 ${fmtDate(selDate)}：${desc} · RM ${amt.toFixed(2)}！` : `✅ Logged ${desc} · ${fmt(amt)} for ${fmtDate(selDate)}!`);
   // Close and confirm first so a rendering issue cannot make a successful save
@@ -9186,6 +9432,9 @@ function savePeriodExpenseForSelectedDate(){
   try {
     renderAll();
     renderPeriodTrackerUI();
+    if(!el('period-single-tap-inspector-card')?.classList.contains('hidden')){
+      openDailyExpensesAndAiDietaryInspector(selDate);
+    }
   } catch(e) {
     console.warn('Period expense saved but UI refresh failed:', e);
   }
@@ -9218,8 +9467,10 @@ function stepAnaPeriod(delta){
   if(anaPeriod === 'week'){
     anaInspectedDate.setDate(anaInspectedDate.getDate() + delta * 7);
   } else if(anaPeriod === 'year'){
+    anaInspectedDate.setDate(1);
     anaInspectedDate.setFullYear(anaInspectedDate.getFullYear() + delta);
   } else if(anaPeriod === 'month'){
+    anaInspectedDate.setDate(1);
     anaInspectedDate.setMonth(anaInspectedDate.getMonth() + delta);
   }
   renderAnalytics();

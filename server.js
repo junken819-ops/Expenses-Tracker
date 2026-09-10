@@ -60,10 +60,23 @@ const server = http.createServer((req, res) => {
           }
 
           fs.rename(tempFile, DATA_FILE, (renameErr) => {
-            res.writeHead(renameErr ? 500 : 200, {
+            if (renameErr) {
+              try {
+                fs.copyFileSync(tempFile, DATA_FILE);
+                fs.unlinkSync(tempFile);
+                res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ success: true, error: null }));
+                return;
+              } catch(copyErr) {
+                res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+                res.end(JSON.stringify({ success: false, error: copyErr.message }));
+                return;
+              }
+            }
+            res.writeHead(200, {
               'Content-Type': 'application/json; charset=utf-8'
             });
-            res.end(JSON.stringify({ success: !renameErr, error: renameErr ? renameErr.message : null }));
+            res.end(JSON.stringify({ success: true, error: null }));
           });
         });
       });
