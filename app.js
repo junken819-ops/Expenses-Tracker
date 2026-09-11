@@ -1328,7 +1328,8 @@ function formatItemsSummary(data){
         const name = it.name || it.desc || it.title || '';
         const price = it.price ? ` (${fmt(it.price)})` : '';
         const qty = (it.qty && it.qty > 1) ? ` x${it.qty}` : '';
-        return `${name}${qty}${price}`.trim();
+        const cal = (it.calories && parseInt(it.calories) > 0) ? ` [${it.calories}kcal]` : '';
+        return `${name}${qty}${price}${cal}`.trim();
       }
       return String(it);
     }).filter(Boolean).join(', ');
@@ -5688,7 +5689,9 @@ function saveTx(){
   };
 
   if(isPeriodCareExpense(newTx)){
-    newTx.subCategory = 'health_period_care';
+    if(!newTx.subCategory || (!newTx.subCategory.startsWith('period_') && newTx.subCategory !== 'health_period_care')){
+      newTx.subCategory = newTx.category === 'period_care' ? 'period_sanitary_pads' : 'health_period_care';
+    }
   }
 
   // If editing, update in place; otherwise insert at beginning
@@ -6276,11 +6279,11 @@ function smartAutoDetectCategoryAndPayment(text){
   }
 
   // 2. PERIOD CARE & FEMININE HYGIENE
-  else if(/laurier|kotex|sofy|whisper|carefree|sanitary\s*pad|tampon|menstrual|panty\s*liner|pantyliner|midol|panadol\s*menstrual|cramp\s*patch|warm\s*patch|heating\s*pad|period\s*care|feminine\s*wash|lactacyd|betadine\s*feminine|卫生棉|卫生巾|经期|暖宫贴|月经|护垫|女性护理/i.test(s)){
+  else if(/laurier|kotex|sofy|whisper|libresse|carefree|stayfree|tampax|playtex|sanitary\s*pad|tampon|menstrual|panty\s*liner|pantyliner|midol|panadol\s*menstrual|ponstan|ibuprofen|cramp\s*patch|warm\s*patch|heat\s*patch|heating\s*pad|heatpad|period\s*care|period\s*pant|feminine\s*wash|intimate\s*wash|lactacyd|betadine\s*feminine|卫生棉|卫生巾|护垫|夜用|日用|安睡裤|裤型卫生巾|棉条|卫生棉条|月经杯|月经碟|月事|大姨妈|姨妈巾|姨妈|例假|暖宫贴|暖宫|暖宝宝|暖贴|热敷贴|暖腹贴|痛经贴|止痛贴|止痛药|布洛芬|红糖姜茶|女性护理|私密洗液|高洁丝|乐而雅|苏菲|护舒宝|轻曲线/i.test(s) || (/\b(pad|pads|period)\b/i.test(s) && !/ipad|touchpad|mousepad|keypad|launchpad|thinkpad|notepad/i.test(s))){
     detectedCat = 'period_care';
-    if(/pad|pantyliner|liner|卫生棉|卫生巾|护垫/i.test(s)) detectedSubCat = 'period_sanitary_pads';
-    else if(/tampon|menstrual\s*cup|棉条/i.test(s)) detectedSubCat = 'period_tampons_cup';
-    else if(/midol|panadol|cramp|warm\s*patch|heating|暖宫|止痛/i.test(s)) detectedSubCat = 'period_pain_relief';
+    if(/pad|pantyliner|liner|sanitary|maxi|night|wing|day|安睡裤|卫生棉|卫生巾|护垫|夜用|日用|姨妈巾|姨妈|超熟睡|丝薄|超丝薄|棉柔|极薄/i.test(s) || /libresse|kotex|sofy|whisper|laurier|carefree|stayfree|高洁丝|乐而雅|苏菲|护舒宝|轻曲线/i.test(s)) detectedSubCat = 'period_sanitary_pads';
+    else if(/tampon|menstrual\s*cup|棉条|卫生棉条|月经杯|月经碟/i.test(s)) detectedSubCat = 'period_tampons_cup';
+    else if(/midol|panadol|ponstan|ibuprofen|cramp|warm\s*patch|heat\s*patch|heating|heatpad|暖宫|暖宝宝|暖贴|热敷|痛经|止痛|布洛芬|红糖姜茶/i.test(s)) detectedSubCat = 'period_pain_relief';
     else detectedSubCat = 'period_intimate_care';
   }
 
@@ -6639,7 +6642,7 @@ Extract ALL information accurately into a single raw JSON object matching this s
   "paymentMethod": "Cash",
   "location": "Mall / Street / Area",
   "items": [
-    { "name": "Item or Dish Name", "price": 19.80, "qty": 1, "subCategory": "food_restaurant", "tags": ["noodle"] }
+    { "name": "Item or Dish Name", "price": 19.80, "qty": 1, "subCategory": "food_restaurant", "tags": ["noodle"], "calories": 450 }
   ],
   "itemsSummary": "Dish 1, Dish 2, Dish 3...",
   "serviceChargePct": 10,
@@ -6659,7 +6662,8 @@ CRITICAL RULES:
 3. "originalAmount" & "amount": The final total payable in the receipt's native currency as a floating number.
 4. "subtotal": The subtotal before taxes/service charge.
 5. "category": Choose the main category: "drinks" (coffee, boba, tea, juice, bar), "food" (restaurant, hawker, fast food, bakery), "groceries" (supermarket, convenience 7-11/FamilyMart, fresh produce), "period_care" (sanitary pads, tampon, cramp relief, Midol), "fuel" (Petronas, Shell, Caltex, BHP, Petron), "toll_parking" (Toll, RFID, Parking), "transport" (Grab, LRT/MRT, flights), "shopping" (clothing, electronics, Shopee, IKEA), "beauty" (skincare, haircut, salon, spa), "bills" (TNB electric, water, telco, wifi, Netflix), "rent_housing", "health" (pharmacy Watsons/Guardian, clinic, doctor, dental, vitamins), "entertainment" (cinema GSC/TGV, gaming, outings), "education" (books, tuition, courses), "pets" (pet food, vet), "donation", "other".
-5. "subCategory": Accurately assign one of the 40+ granular sub-categories:
+6. "calories": If it is a food or drink item in the items array, accurately estimate the calories (kcal) per item and include it as an integer 'calories' property. If unknown or not a food/drink item, omit it or set it to 0.
+7. "subCategory": Accurately assign one of the 40+ granular sub-categories:
    - Food: "food_restaurant", "food_cafe_coffee", "food_drinks_boba", "food_fastfood", "food_hawker_mamak", "food_dessert_snack", "food_delivery", "food_bar_alcohol"
    - Groceries: "groc_fresh_produce", "groc_meat_seafood", "groc_dairy_eggs", "groc_pantry_staples", "groc_snacks_sweets", "groc_household_cleaning", "groc_personal_care"
    - Shopping: "shop_clothing_apparel", "shop_shoes_footwear", "shop_electronics_tech", "shop_beauty_skincare", "shop_home_furniture", "shop_hardware_tools"
@@ -7103,6 +7107,10 @@ function renderUniPreviewItemsList(){
     row.style.cssText = 'display:flex;align-items:center;gap:6px;background:var(--bg3);padding:4px 6px;border-radius:8px;border:1px solid var(--border)';
     row.innerHTML = `
       <input type="text" class="form-input" value="${esc(it.name || '')}" placeholder="Item name" style="flex:1;padding:4px 6px;font-size:11px;background:transparent;border:none" oninput="updateUniPreviewItem(${idx}, 'name', this.value)"/>
+      <div style="display:flex;align-items:center;width:60px">
+        <span style="font-size:10px;color:var(--muted);margin-right:2px">🔥</span>
+        <input type="number" class="form-input" value="${it.calories !== undefined ? it.calories : ''}" placeholder="kcal" style="padding:4px 4px;font-size:11px;font-weight:700;background:transparent;border:none;color:var(--text)" oninput="updateUniPreviewItem(${idx}, 'calories', this.value)"/>
+      </div>
       <div style="display:flex;align-items:center;width:75px">
         <span style="font-size:10px;color:var(--muted);margin-right:2px">RM</span>
         <input type="number" step="0.01" class="form-input" value="${it.price !== undefined ? it.price : ''}" placeholder="0.00" style="padding:4px 4px;font-size:11px;font-weight:700;background:transparent;border:none;color:var(--text)" oninput="updateUniPreviewItem(${idx}, 'price', this.value)"/>
@@ -7116,7 +7124,7 @@ function renderUniPreviewItemsList(){
 function addUniPreviewItem(){
   if(!uniParsedData) uniParsedData = {};
   if(!uniParsedData.items) uniParsedData.items = [];
-  uniParsedData.items.push({ name: '', price: 0, qty: 1 });
+  uniParsedData.items.push({ name: '', price: 0, qty: 1, calories: 0 });
   renderUniPreviewItemsList();
 }
 
@@ -7133,6 +7141,8 @@ function updateUniPreviewItem(idx, field, val){
   if(!uniParsedData || !uniParsedData.items || !uniParsedData.items[idx]) return;
   if(field === 'price'){
     uniParsedData.items[idx].price = parseFloat(val) || 0;
+  } else if(field === 'calories'){
+    uniParsedData.items[idx].calories = parseInt(val) || 0;
   } else {
     uniParsedData.items[idx][field] = val;
   }
@@ -8089,18 +8099,56 @@ function saveDebt(){
 // ── 🌸 GIRL PERIOD & HEALTH CARE TRACKER ENGINE ───────────
 // Items bought related to period (sanitary, pain relief, warming supplies).
 function isPeriodCareExpense(t){
-  if(!t) return false;
-  if(t.subCategory === 'health_period_care') return true;
-  const desc = (t.desc || '').toLowerCase();
-  const note = (t.note || '').toLowerCase();
-  const cat = t.category || '';
-  const kw = [
-    '卫生巾', '暖宫贴', '暖宝宝', '卫生棉', '红糖', '止痛药', 'panadol menstrual', 'midol',
-    'sanitary', 'pad', 'tampon', 'period', '经期', '月经', 'menstrual', 'pantyliner', '护垫',
-    '月经杯', '安睡裤', '暖宫', '姜茶', 'ginger tea', 'brown sugar', 'kotex', 'laurier', 'sofy', 'whisper'
+  if(!t || t.type === 'income') return false;
+
+  const cat = String(t.category || '').toLowerCase();
+  const subCat = String(t.subCategory || '').toLowerCase();
+
+  // 1. Direct Category Match (Category: Period Care & Hygiene)
+  if(cat === 'period_care' || cat === 'period' || cat === 'health_period_care'){
+    return true;
+  }
+
+  // 2. Direct Subcategory Match
+  if(subCat === 'health_period_care' || subCat.startsWith('period_')){
+    return true;
+  }
+
+  // 3. Search description, note, and receipt line items
+  const desc = String(t.desc || '').toLowerCase();
+  const note = String(t.note || '').toLowerCase();
+  const itemNames = (Array.isArray(t.items) ? t.items.map(it => String(it.name || '').toLowerCase()) : []);
+  const allTexts = [desc, note, ...itemNames].join(' ');
+
+  // 4. Period Care Keywords (Chinese & English)
+  const exactKeywords = [
+    // Chinese keywords
+    '卫生巾', '卫生棉', '护垫', '夜用', '日用', '安睡裤', '裤型卫生巾', '棉条', '卫生棉条',
+    '月经杯', '月经碟片', '月经碟', '月事', '大姨妈', '姨妈巾', '姨妈', '例假',
+    '暖宫贴', '暖宫', '暖宝宝', '暖贴', '热敷贴', '暖腹贴', '暖身贴', '痛经贴', '止痛贴',
+    '止痛药', '止痛', '止疼', '布洛芬', '田七痛经', '红糖', '黑糖', '姜茶', '姜母茶', '红糖姜茶',
+    '私密洗液', '私密护理', '女性洗液', '私密抑菌', '高洁丝', '乐而雅', '苏菲', '护舒宝', '轻曲线',
+    // English keywords & brands
+    'sanitary', 'pantyliner', 'tampon', 'menstrual', 'menses', 'menstruation',
+    'cramp relief', 'cramps', 'warm patch', 'heat patch', 'heating pad', 'heatpad',
+    'midol', 'panadol menstrual', 'ponstan', 'ibuprofen', 'naproxen', 'mefenamic', 'nurofen',
+    'ginger tea', 'brown sugar', 'period panties', 'period underwear',
+    'fem wash', 'feminine wash', 'intimate wash', 'lactacyd', 'betadine wash',
+    'kotex', 'laurier', 'sofy', 'whisper', 'libresse', 'carefree', 'stayfree', 'tampax', 'playtex'
   ];
-  return (cat === 'health' || cat === 'shopping' || cat === 'personal' || cat === 'other' || cat === 'groceries' || cat === 'food') && 
-    kw.some(k => desc.includes(k) || note.includes(k));
+
+  if(exactKeywords.some(k => allTexts.includes(k))){
+    return true;
+  }
+
+  // Check for pad/pads/period with word boundary (avoiding 'ipad', 'touchpad', 'mousepad', etc.)
+  if(/\b(pad|pads|period)\b/i.test(allTexts)){
+    if(!/ipad|touchpad|mousepad|keypad|launchpad|thinkpad|notepad/i.test(allTexts)){
+      return true;
+    }
+  }
+
+  return false;
 }
 
 let homePeriodNavClickTimer = null;
@@ -8145,7 +8193,7 @@ function isPeriodDietAffectingTx(t){
     '黑巧', '黑巧克力', 'dark chocolate', 'chocolate', '热汤', '汤', 'soup', 'herbal', 'tea', '茶', '姜', 'ginger', '豆浆', 'soy milk', 'warm'
   ];
 
-  if(cat === 'food' || cat === 'groceries' || cat === 'shopping' || cat === 'other'){
+  if(cat === 'food' || cat === 'drinks' || cat === 'groceries' || cat === 'shopping' || cat === 'other'){
     if(dietKeywords.some(k => desc.includes(k) || note.includes(k))) return true;
     if(t.items && Array.isArray(t.items)){
       return t.items.some(it => {
@@ -8335,8 +8383,10 @@ function renderPeriodTrackerUI(){
     }
   }
 
-  // Render Auto-Grouped Period Expenses List
-  const periodTxs = S.transactions.filter(t => t.type === 'expense' && isPeriodCareExpense(t));
+  // Render Auto-Grouped Period Expenses List (sorted by date descending)
+  const periodTxs = S.transactions
+    .filter(t => t.type === 'expense' && isPeriodCareExpense(t))
+    .sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : (b.id > a.id ? 1 : -1)));
   const periodTotal = periodTxs.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
   const expTotalEl = el('period-month-expense-total');
@@ -8348,7 +8398,7 @@ function renderPeriodTrackerUI(){
     if(!periodTxs.length){
       expListEl.innerHTML = `<div style="font-size:11px;color:var(--muted);text-align:center;padding:8px">${isZh ? '暂无自动归类的经期用品开销' : 'No period care expenses logged yet.'}</div>`;
     } else {
-      periodTxs.slice(0, 6).forEach(t => {
+      periodTxs.slice(0, 10).forEach(t => {
         const row = document.createElement('div');
         row.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;font-size:11.5px';
         row.innerHTML = `
@@ -8497,9 +8547,10 @@ function quickLogPeriodExpense(){
   closeModal('period-tracker-modal');
   openTxModal('expense');
   el('tx-desc').value = (typeof S !== 'undefined' && S && S.lang === 'zh') ? '卫生巾 / 暖宫贴' : 'Sanitary Pads / Heating Pad';
-  selCat = 'health';
+  selCat = 'period_care';
+  selSubCat = 'period_sanitary_pads';
   buildCats('tx-cats', 'expense', id => selCat = id);
-  toast(typeof S !== 'undefined' && S && S.lang === 'zh' ? '🛒 已快捷预填卫生用品开销' : '🛒 Pre-filled Sanitary Expense');
+  toast(typeof S !== 'undefined' && S && S.lang === 'zh' ? '🛒 已快捷预填经期用品开销' : '🛒 Pre-filled Period Care Expense');
 }
 
 async function runAiPeriodDiagnosis(){
@@ -8514,7 +8565,7 @@ async function runAiPeriodDiagnosis(){
   const info = getPeriodPhaseInfo();
   const npDateStr = fmtDate(info.nextPeriodDate.toISOString().split('T')[0]);
 
-  const sanitaryTxs = S.transactions.filter(t => t.category === 'health' || (t.desc && (t.desc.includes('卫生') || t.desc.includes('暖宫') || t.desc.includes('Pad') || t.desc.includes('Care'))));
+  const sanitaryTxs = S.transactions.filter(t => isPeriodCareExpense(t));
   const totalSanitaryExp = sanitaryTxs.reduce((s,t) => s + (Number(t.amount)||0), 0);
 
   // Include the user's recorded flow, pain, and symptoms so AI advice reflects their actual logs.
@@ -9400,10 +9451,20 @@ function savePeriodExpenseForSelectedDate(){
     if(el('tx-date')) el('tx-date').value = selDate;
     if(el('tx-amount')) el('tx-amount').value = amt.toFixed(2);
     if(el('tx-desc')) el('tx-desc').value = desc;
-    selCat = entryKind === 'food' ? 'food' : 'health';
+    selCat = entryKind === 'food' ? 'food' : 'period_care';
+    selSubCat = entryKind === 'food' ? 'food_restaurant' : 'period_sanitary_pads';
     buildCats('tx-cats', 'expense', id => selCat = id);
     toast(isZh ? '请先选择一个账户，再保存这笔记录' : 'Choose an account, then save this entry');
     return;
+  }
+
+  let finalCat = entryKind === 'food' ? 'food' : 'period_care';
+  let finalSubCat = entryKind === 'food' ? 'food_restaurant' : 'period_sanitary_pads';
+  if(entryKind === 'care'){
+    const smart = smartAutoDetectCategoryAndPayment(desc);
+    if(smart && smart.detectedCat === 'period_care' && smart.detectedSubCat){
+      finalSubCat = smart.detectedSubCat;
+    }
   }
 
   const newTx = {
@@ -9411,8 +9472,8 @@ function savePeriodExpenseForSelectedDate(){
     type: 'expense',
     amount: amt,
     desc,
-    category: entryKind === 'food' ? 'food' : 'health',
-    subCategory: entryKind === 'food' ? 'period_diet_reference' : 'health_period_care',
+    category: finalCat,
+    subCategory: finalSubCat,
     date: selDate,
     accountId: accId,
     paymentMethod: 'Cash',
@@ -10459,6 +10520,7 @@ function renderAll(){
   renderPaydayCountdown();
   renderSpendingPrediction();
   renderStreakCard();
+  renderCalorieWidget();
   renderHealth();
   renderBudgets();
   renderGoals();
@@ -12727,6 +12789,7 @@ renderAll = function(){
   renderPaydayCountdown();
   renderSpendingPrediction();
   if(typeof renderStreakCard === 'function') renderStreakCard();
+  if(typeof renderCalorieWidget === 'function') renderCalorieWidget();
   if(el('payday-date-inp')) el('payday-date-inp').value = S.paydayDate || 25;
 };
 
@@ -12962,6 +13025,28 @@ function updateStreaks(){
   if(streak > S.streaks.noSpendBest) S.streaks.noSpendBest = streak;
   S.streaks.lastCheckedDate = todayStr;
   save();
+}
+
+function renderCalorieWidget(){
+  const card = el('calorie-card');
+  if(!card) return;
+  const numEl = el('cal-intake-num');
+  if(!numEl) return;
+  
+  const dStr = today();
+  const txs = S.txs.filter(t => t.date === dStr && t.type === 'expense');
+  let totalKcal = 0;
+  txs.forEach(tx => {
+    if(tx.items && Array.isArray(tx.items)){
+      tx.items.forEach(it => {
+        const cal = parseInt(it.calories) || 0;
+        const qty = parseInt(it.qty) || 1;
+        totalKcal += (cal * qty);
+      });
+    }
+  });
+  
+  numEl.textContent = totalKcal;
 }
 
 function renderStreakCard(){
