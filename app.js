@@ -1634,6 +1634,10 @@ function canUseLocalStateApi(){
 
 function save(){
   S.lastUpdated = Date.now();
+  // Strip photos to save storage as requested
+  if (S.transactions) {
+    S.transactions.forEach(t => delete t.photo);
+  }
   try {
     const serialized = JSON.stringify(S);
     localStorage.setItem('ff2', serialized);
@@ -5712,15 +5716,9 @@ function saveTx(){
     isEditingFromUpload = false;
     if(el('tx-from-upload-bar')) el('tx-from-upload-bar').classList.add('hidden');
   }
-  if(date && date.length >= 7){
-    const [tY, tM] = date.split('-');
-    const parsedY = parseInt(tY, 10);
-    const parsedM = parseInt(tM, 10) - 1;
-    if(!isNaN(parsedY) && !isNaN(parsedM)){
-      homeActiveYear = parsedY;
-      homeActiveMonth = parsedM;
-    }
-  }
+  // Do not jump to the transaction's month automatically, 
+  // as it confuses users into thinking their current month's transactions are lost.
+
   save();
   renderAll();
   closeModal('tx-modal');
