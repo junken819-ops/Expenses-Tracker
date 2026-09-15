@@ -1632,20 +1632,31 @@ function canUseLocalStateApi(){
     (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]');
 }
 
+let _saveTimer = null;
 function save(){
+  // Debounce: coalesce rapid consecutive saves into one actual write
+  if(_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(_saveNow, 500);
+}
+
+function saveImmediate(){
+  // For critical operations (e.g. before page unload) that can't wait
+  if(_saveTimer) clearTimeout(_saveTimer);
+  _saveNow();
+}
+
+function _saveNow(){
+  _saveTimer = null;
   S.lastUpdated = Date.now();
-  // Strip photos to save storage as requested
-  if (S.transactions) {
-    S.transactions.forEach(t => delete t.photo);
-  }
   try {
     const serialized = JSON.stringify(S);
     localStorage.setItem('ff2', serialized);
   } catch(e){
     console.warn('LocalStorage quota exceeded or write error:', e);
-    // If local storage is full due to photos, alert user gently
     if(e && e.name === 'QuotaExceededError'){
-      toast('⚠️ 本地存储空间已满，请及时在设置中清理小票相册缓存或同步至云端！');
+      toast(S.lang === 'zh'
+        ? '⚠️ 本地存储空间已满，请及时在设置中清理小票相册缓存或同步至云端！'
+        : '⚠️ Local storage is full! Please clear receipt photo cache or sync to cloud in Settings.');
     }
   }
 
@@ -3008,15 +3019,11 @@ function renderBalance(){
   const periodEl = el('tot-period-exp');
   if(periodEl) periodEl.textContent = fmt(pExp);
 
+  const totalIncome = monthTxs.filter(t => t.type === 'income').reduce((s, t) => s + (Number(t.amount) || 0), 0);
   const incEl = el('tot-inc');
-  if(incEl) incEl.textContent = fmt(0);
+  if(incEl) incEl.textContent = fmt(totalIncome);
 }
-// ── ACCOUNTS (REMOVED) ──
-function openAccountActionSheet(){}
-function accSheetAction(){}
-function toggleAccLayoutMode(){}
-function openAllAccountsModal(){}
-function renderAccRow(){}
+// ── ACCOUNTS (REMOVED — stubs cleaned up) ──
 
 // ── RENDER & MANAGE: QUICK PRESETS (HOME) ─────────────
 const PRESET_ICONS = ['🍜','☕','⛽','🚗','🛒','🅿️','🍔','🎬','💊','🥪','🧋','🏸','🎮','📚','🧺','👕','✈️','⚡','🎁','🍿','🍕','🍣','🥤','🐱','🐾'];
@@ -9724,6 +9731,241 @@ function renderAnalytics(){
   renderAiPatternTracker(txs, inc, exp);
   renderAnaInflationBenchmark(txs, prevTxs, inc, exp);
   render50_30_20Matrix(txs, inc, exp);
+
+  // New Visual Charts
+  renderIncomeVsExpenseChart(inc, exp, prevInc, prevExp);
+  renderMonthlyTrendChart(allTxs, d);
+  renderBudgetGauge(exp);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  VISUAL CHARTS — Income vs Expense, Monthly Trend, Budget Gauge
+// ═══════════════════════════════════════════════════════════════════
+
+function renderIncomeVsExpenseChart(inc, exp, prevInc, prevExp){
+  const wrap = el('ive-bars-wrap');
+  const card = el('ive-chart-card');
+  if(!wrap || !card) return;
+  const isZh = (S && S.lang === 'zh');
+
+  // Hide card if no data at all
+  if(inc <= 0 && exp <= 0){
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+
+  const maxVal = Math.max(inc, exp, 1);
+  const net = inc - exp;
+  const incPct = Math.round((inc / maxVal) * 100);
+  const expPct = Math.round((exp / maxVal) * 100);
+
+  // Delta arrows
+  let incDelta = '', expDelta = '';
+  if(prevInc > 0){
+    const d = Math.round(((inc - prevInc) / prevInc) * 100);
+    incDelta = `<span style="font-size:10px;color:${d >= 0 ? 'var(--green)' : 'var(--red)'}"> ${d >= 0 ? '▲' : '▼'} ${Math.abs(d)}%</span>`;
+  }
+  if(prevExp > 0){
+    const d = Math.round(((exp - prevExp) / prevExp) * 100);
+    expDelta = `<span style="font-size:10px;color:${d <= 0 ? 'var(--green)' : 'var(--red)'}"> ${d <= 0 ? '▼' : '▲'} ${Math.abs(d)}%</span>`;
+  }
+
+  wrap.innerHTML = `
+    <div class="ive-bar-row">
+      <div class="ive-bar-label">${isZh ? '收入' : 'Income'}</div>
+      <div class="ive-bar-track">
+        <div class="ive-bar-fill" style="width:${incPct}%;background:linear-gradient(90deg,#10b981,#34d399)">
+          <span>${incPct}%</span>
+        </div>
+      </div>
+      <div class="ive-bar-val" style="color:var(--green)">${fmt(inc)}${incDelta}</div>
+    </div>
+    <div class="ive-bar-row">
+      <div class="ive-bar-label">${isZh ? '支出' : 'Expenses'}</div>
+      <div class="ive-bar-track">
+        <div class="ive-bar-fill" style="width:${expPct}%;background:linear-gradient(90deg,#ef4444,#f87171)">
+          <span>${expPct}%</span>
+        </div>
+      </div>
+      <div class="ive-bar-val" style="color:var(--red)">${fmt(exp)}${expDelta}</div>
+    </div>
+    <div class="ive-net-row">
+      <span class="ive-net-label">${isZh ? '💎 净储蓄' : '💎 Net Savings'}</span>
+      <span class="ive-net-val" style="color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">
+        ${net >= 0 ? '+' : ''}${fmt(net)}
+      </span>
+    </div>
+  `;
+}
+
+function renderMonthlyTrendChart(allTxs, baseDate){
+  const barsEl = el('mtrend-bars');
+  const tipEl = el('mtrend-tooltip');
+  const titleEl = el('mtrend-title');
+  if(!barsEl) return;
+
+  const isZh = (S && S.lang === 'zh');
+  if(titleEl) titleEl.textContent = isZh ? '📊 近 6 个月支出趋势' : '📊 6-Month Spending Trend';
+
+  const curYear = baseDate.getFullYear();
+  const curMonth = baseDate.getMonth();
+
+  // Build 6 months of data ending at current month
+  const months = [];
+  for(let i = 5; i >= 0; i--){
+    let m = curMonth - i;
+    let y = curYear;
+    while(m < 0){ m += 12; y--; }
+    const monthTxs = allTxs.filter(t => t.type === 'expense' && inMonth(t, m, y));
+    const spend = monthTxs.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    const count = monthTxs.length;
+    const label = isZh
+      ? `${m+1}月`
+      : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m];
+    months.push({ m, y, spend, count, label, isCurrent: (i === 0) });
+  }
+
+  const maxSpend = Math.max(...months.map(d => d.spend), 1);
+  const colors = ['#6366f1','#8b5cf6','#a78bfa','#c084fc','#e879f9','#f59e0b'];
+
+  barsEl.innerHTML = '';
+  months.forEach((d, idx) => {
+    const pct = Math.max(2, Math.round((d.spend / maxSpend) * 100));
+    const col = document.createElement('div');
+    col.className = 'mtrend-col';
+
+    const amtLabel = d.spend > 0
+      ? (d.spend >= 1000 ? `${(d.spend/1000).toFixed(1)}k` : Math.round(d.spend).toString())
+      : '';
+
+    col.innerHTML = `
+      <div class="mtrend-amt">${amtLabel}</div>
+      <div class="mtrend-bar-wrap">
+        <div class="mtrend-bar${d.isCurrent ? ' active' : ''}" 
+             style="height:${pct}%;background:${d.isCurrent ? 'linear-gradient(180deg,#f59e0b,#d97706)' : colors[idx]}"
+             data-idx="${idx}"></div>
+      </div>
+      <div class="mtrend-label${d.isCurrent ? ' active' : ''}">${d.label}</div>
+    `;
+
+    // Interactive click
+    col.querySelector('.mtrend-bar').addEventListener('click', () => {
+      if(tipEl){
+        const delta = idx > 0 && months[idx-1].spend > 0
+          ? Math.round(((d.spend - months[idx-1].spend) / months[idx-1].spend) * 100)
+          : null;
+        const deltaStr = delta !== null
+          ? ` · <span style="color:${delta <= 0 ? 'var(--green)' : 'var(--red)'}">
+              ${delta <= 0 ? '▼' : '▲'}${Math.abs(delta)}% vs prev
+            </span>`
+          : '';
+        tipEl.innerHTML = `<strong>${d.label} ${d.y}</strong> · ${fmt(d.spend)} (${d.count} ${isZh ? '笔' : 'txs'})${deltaStr}`;
+      }
+      // Highlight active bar
+      barsEl.querySelectorAll('.mtrend-bar').forEach(b => b.classList.remove('active'));
+      col.querySelector('.mtrend-bar').classList.add('active');
+      barsEl.querySelectorAll('.mtrend-label').forEach(l => l.classList.remove('active'));
+      col.querySelector('.mtrend-label').classList.add('active');
+    });
+
+    barsEl.appendChild(col);
+  });
+
+  // Set default tooltip to current month
+  const cur = months[months.length - 1];
+  if(tipEl && cur.spend > 0){
+    const prev = months[months.length - 2];
+    const delta = prev && prev.spend > 0
+      ? Math.round(((cur.spend - prev.spend) / prev.spend) * 100)
+      : null;
+    const deltaStr = delta !== null
+      ? ` · <span style="color:${delta <= 0 ? 'var(--green)' : 'var(--red)'}">
+          ${delta <= 0 ? '▼' : '▲'}${Math.abs(delta)}% vs prev
+        </span>`
+      : '';
+    tipEl.innerHTML = `<strong>${cur.label} ${cur.y}</strong> · ${fmt(cur.spend)} (${cur.count} ${isZh ? '笔' : 'txs'})${deltaStr}`;
+  } else if(tipEl){
+    tipEl.innerHTML = isZh ? '点击柱条查看月度详情' : 'Tap a bar for monthly details';
+  }
+}
+
+function renderBudgetGauge(currentExp){
+  const card = el('budget-gauge-card');
+  const svgEl = el('budget-gauge-svg');
+  const pctEl = el('budget-gauge-pct');
+  const subEl = el('budget-gauge-sublabel');
+  const infoEl = el('budget-gauge-info');
+  if(!card || !svgEl) return;
+
+  const isZh = (S && S.lang === 'zh');
+  const budget = getMonthlyBudgetTotal();
+
+  if(budget <= 0){
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+
+  const pct = Math.min(Math.round((currentExp / budget) * 100), 200);
+  const displayPct = Math.min(pct, 100);
+  const remaining = Math.max(0, budget - currentExp);
+  const isOver = currentExp > budget;
+
+  // Color: green -> amber -> red based on percentage
+  let gaugeColor = '#10b981'; // green
+  if(pct >= 90) gaugeColor = '#ef4444'; // red
+  else if(pct >= 70) gaugeColor = '#f59e0b'; // amber
+
+  // SVG Arc gauge (270-degree arc)
+  const cx = 50, cy = 50, r = 40;
+  const startAngle = 135; // degrees
+  const totalAngle = 270;
+  const fillAngle = (displayPct / 100) * totalAngle;
+
+  function polarToCartesian(cx, cy, r, angleDeg){
+    const rad = (angleDeg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+  function describeArc(cx, cy, r, startA, endA){
+    const start = polarToCartesian(cx, cy, r, endA);
+    const end = polarToCartesian(cx, cy, r, startA);
+    const largeArc = (endA - startA) > 180 ? 1 : 0;
+    return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`;
+  }
+
+  const bgArc = describeArc(cx, cy, r, startAngle, startAngle + totalAngle);
+  const fillArc = fillAngle > 0 ? describeArc(cx, cy, r, startAngle, startAngle + fillAngle) : '';
+
+  svgEl.innerHTML = `
+    <path d="${bgArc}" fill="none" stroke="var(--bg2)" stroke-width="8" stroke-linecap="round"/>
+    ${fillArc ? `<path d="${fillArc}" fill="none" stroke="${gaugeColor}" stroke-width="8" stroke-linecap="round" style="transition:all .5s ease"/>` : ''}
+  `;
+
+  if(pctEl){
+    pctEl.textContent = `${pct}%`;
+    pctEl.style.color = gaugeColor;
+  }
+  if(subEl) subEl.textContent = isZh ? '已用' : 'used';
+
+  if(infoEl){
+    infoEl.innerHTML = `
+      <div class="budget-gauge-row">
+        <span class="bg-label">${isZh ? '💰 月度预算' : '💰 Budget'}</span>
+        <span class="bg-val" style="color:var(--text)">${fmt(budget)}</span>
+      </div>
+      <div class="budget-gauge-row">
+        <span class="bg-label">${isZh ? '🔥 已花费' : '🔥 Spent'}</span>
+        <span class="bg-val" style="color:var(--red)">${fmt(currentExp)}</span>
+      </div>
+      <div class="budget-gauge-row">
+        <span class="bg-label">${isZh ? '✨ 剩余可用' : '✨ Remaining'}</span>
+        <span class="bg-val" style="color:${isOver ? 'var(--red)' : 'var(--green)'}">${isOver ? (isZh ? '超支 ' : 'Over by ') + fmt(currentExp - budget) : fmt(remaining)}</span>
+      </div>
+      ${isOver ? `<div style="font-size:10.5px;color:var(--red);font-weight:700;margin-top:4px;text-align:center">⚠️ ${isZh ? '本月已超出预算！' : 'Over budget this month!'}</div>` : ''}
+    `;
+  }
 }
 
 function renderEnhancedBarChart(txs, period, baseDate){
@@ -13560,6 +13802,11 @@ if(_origRenderWeeklyReport){
     _origRenderWeeklyReport();
   };
 }
+
+// Flush any pending debounced save before the page unloads
+window.addEventListener('beforeunload', () => {
+  if(_saveTimer) saveImmediate();
+});
 
 if (document.readyState === 'loading') {
   window.addEventListener('DOMContentLoaded', init);

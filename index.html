@@ -350,6 +350,34 @@
         </div>
       </div>
 
+      <!-- Income vs Expense Comparison -->
+      <div class="ive-chart-card" id="ive-chart-card">
+        <h3>💰 Income vs Expenses</h3>
+        <div class="ive-bars-wrap" id="ive-bars-wrap"></div>
+      </div>
+
+      <!-- 6-Month Spending Trend -->
+      <div class="mtrend-chart-card" id="mtrend-chart-card">
+        <h3 id="mtrend-title">📊 6-Month Spending Trend</h3>
+        <div class="mtrend-bars" id="mtrend-bars"></div>
+        <div id="mtrend-tooltip" style="font-size:11px;font-weight:700;color:var(--amber);min-height:16px;margin-top:8px;text-align:center"></div>
+      </div>
+
+      <!-- Budget Progress Gauge -->
+      <div class="budget-gauge-card" id="budget-gauge-card" style="display:none">
+        <h3>🎯 Budget Progress</h3>
+        <div class="budget-gauge-ring">
+          <div class="budget-gauge-svg-wrap">
+            <svg id="budget-gauge-svg" viewBox="0 0 100 100" width="100" height="100"></svg>
+            <div class="gauge-center-text">
+              <div class="gauge-pct" id="budget-gauge-pct">0%</div>
+              <div class="gauge-label" id="budget-gauge-sublabel">used</div>
+            </div>
+          </div>
+          <div class="budget-gauge-info" id="budget-gauge-info"></div>
+        </div>
+      </div>
+
       <!-- Spending Trend Bar Chart -->
       <div class="chart-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -2347,5 +2375,13 @@
 </div>
 
 <script src="app.js?v=4.3"></script>
+<script>
+  // Register Service Worker for PWA offline support
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(err => {
+      console.warn('SW registration failed:', err);
+    });
+  }
+</script>
 </body>
 </html>

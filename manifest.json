@@ -1,11 +1,11 @@
 {
-  "name": "FinanceFlow",
-  "short_name": "FinanceFlow",
-  "description": "Smart personal finance tracker — Pixel 10 edition",
+  "name": "Pocket Winnie",
+  "short_name": "Pocket Winnie",
+  "description": "🍯 Your personal honey pot finance tracker",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0d0d1a",
-  "theme_color": "#7c3aed",
+  "theme_color": "#ffb300",
   "orientation": "portrait",
   "icons": [
     {

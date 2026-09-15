@@ -33,9 +33,22 @@ const server = http.createServer((req, res) => {
       });
       return;
     } else if (req.method === 'POST') {
+      const MAX_BODY = 5 * 1024 * 1024; // 5 MB
       let body = '';
-      req.on('data', chunk => { body += chunk; });
+      let overflow = false;
+      req.on('data', chunk => {
+        body += chunk;
+        if (body.length > MAX_BODY) {
+          overflow = true;
+          req.destroy();
+        }
+      });
       req.on('end', () => {
+        if (overflow) {
+          res.writeHead(413, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ success: false, error: 'Request body too large (max 5 MB)' }));
+          return;
+        }
         try {
           JSON.parse(body);
         } catch(parseErr) {
