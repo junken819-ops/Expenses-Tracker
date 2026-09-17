@@ -1632,22 +1632,14 @@ function canUseLocalStateApi(){
     (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]');
 }
 
-let _saveTimer = null;
 function save(){
-  // Debounce: coalesce rapid consecutive saves into one actual write
-  if(_saveTimer) clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(_saveNow, 500);
-}
-
-function saveImmediate(){
-  // For critical operations (e.g. before page unload) that can't wait
-  if(_saveTimer) clearTimeout(_saveTimer);
-  _saveNow();
-}
-
-function _saveNow(){
-  _saveTimer = null;
   S.lastUpdated = Date.now();
+  // Strip receipt photos before persisting to avoid bloating localStorage.
+  // Photos are only shown during the current session; the user opted to not
+  // keep them across reloads.
+  if (S.transactions) {
+    S.transactions.forEach(t => delete t.photo);
+  }
   try {
     const serialized = JSON.stringify(S);
     localStorage.setItem('ff2', serialized);
@@ -7246,13 +7238,7 @@ function confirmUniversalUpload(openFormToEdit = false){
       S.transactions.unshift(newTx);
       S.lastUsedAccId = selectedAcc;
 
-      // Jump Calendar directly to this transaction's date and month
-      const [tYear, tMonth] = dateStr.split('-');
-      calCurrentYear = parseInt(tYear, 10);
-      calCurrentMonth = parseInt(tMonth, 10) - 1;
-      calSelectedDateStr = dateStr;
-      homeActiveYear = calCurrentYear;
-      homeActiveMonth = calCurrentMonth;
+      // Removed calendar jump logic that confused users when old receipts were scanned
 
       uniParsedData = null;
       uniImageDataUrl = null;
@@ -7289,10 +7275,7 @@ function confirmUniversalUpload(openFormToEdit = false){
     S.transactions.unshift(newTx);
     S.lastUsedAccId = selectedAcc;
 
-    const [tYear, tMonth] = dateStr.split('-');
-    calCurrentYear = parseInt(tYear, 10);
-    calCurrentMonth = parseInt(tMonth, 10) - 1;
-    calSelectedDateStr = dateStr;
+    // Removed calendar jump logic that confused users when old receipts were scanned
 
     uniParsedData = null;
     uniImageDataUrl = null;
