@@ -1227,14 +1227,20 @@
         <div id="tx-subcat-picker"></div>
       </div>
 
-      <!-- Payment Method Selector -->
+      <!-- Payment Method -->
       <div class="form-row" id="tx-paymethod-row">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <label class="form-label" style="margin-bottom:0" data-i18n="lbl_paymethod">Payment Method</label>
-          <button type="button" class="see-all" id="pay-method-more-btn" onclick="toggleAllPayMethods()" data-i18n="more">More ▾</button>
-        </div>
-        <div class="pay-methods-pills" id="pay-methods-grid"></div>
-        <input type="hidden" id="tx-paymethod-val" value="Cash"/>
+        <label class="form-label" for="tx-paymethod-val" style="margin-bottom:4px" data-i18n="lbl_paymethod">Payment Method</label>
+        <input type="text" id="tx-paymethod-val" class="form-input" placeholder="e.g. Cash, Touch 'n Go, Maybank, Credit Card..." value="Cash" list="tx-paymethod-suggestions" style="font-weight:700"/>
+        <datalist id="tx-paymethod-suggestions">
+          <option value="Cash">
+          <option value="Touch 'n Go eWallet">
+          <option value="Maybank (MAE / QR)">
+          <option value="Credit Card">
+          <option value="Debit Card">
+          <option value="GrabPay">
+          <option value="ShopeePay">
+          <option value="Online Banking (FPX / DuitNow)">
+        </datalist>
       </div>
 
       <!-- Collapsible 'More Options' -->

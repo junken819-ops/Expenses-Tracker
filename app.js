@@ -5556,7 +5556,8 @@ function toggleAllPayMethods(){
 }
 
 function selectPaymentMethod(name){
-  // Normalize partial names to canonical PAYMENT_METHODS names
+  if(!name) return;
+  // Normalize partial names to canonical PAYMENT_METHODS names if matched
   const match = PAYMENT_METHODS.find(pm => pm.name === name || pm.name.startsWith(name) || pm.id === name);
   const canonical = match ? match.name : name;
   if(el('tx-paymethod-val')) el('tx-paymethod-val').value = canonical;
@@ -5602,6 +5603,7 @@ function openTxModal(type = 'expense'){
     ? (isZh ? '记录收入 (Add Income)' : 'Add Income')
     : (isZh ? '记录支出 (Add Expense)' : 'Add Expense');
   el('tx-amount').value = ''; el('tx-desc').value = ''; el('tx-note').value = ''; el('tx-date').value = today();
+  if(el('tx-paymethod-val') && !isEditingFromUpload) el('tx-paymethod-val').value = 'Cash';
   if(el('tx-time')) el('tx-time').value = currentTimeStr();
   if(el('tx-location')) el('tx-location').value = '';
   el('photo-prev').classList.add('hidden'); el('photo-ph').classList.remove('hidden');
@@ -6675,7 +6677,7 @@ CRITICAL RULES:
 6. "tags": 3-5 relevant keyword tags (e.g. ["coffee", "breakfast", "starbucks"]).
 7. "date": The transaction date in "YYYY-MM-DD" format (convert "23/08/2026" or "23-08-2026" to "2026-08-23").
 8. "time": The transaction time in 24-hour "HH:MM" format (e.g. "13:45").
-9. "paymentMethod": Look for payment tender: "Cash" (Cash/Tunai/Change), "Credit Card", "Debit Card", "Touch 'n Go eWallet", "GrabPay", "ShopeePay", "Maybank (MAE / QR)", "Online Banking (FPX / DuitNow)".
+9. "paymentMethod": Look for payment tender / method on the receipt (e.g. "Cash", "Credit Card", "Visa", "Mastercard", "Touch 'n Go eWallet", "GrabPay", "ShopeePay", "Maybank (MAE / QR)", "Debit Card", "Online Banking", or specific tender/card name printed). If not detected, specify "Cash".
 10. "items": Extract EVERY single individual item, dish, beverage, book, piece of clothing, or grocery product with its name, quantity, line price in RM, and specific subCategory.
 11. "sstAmount" & "sstPct": Extract Malaysian SST / Service Tax rate (6% or 8%) and exact SST tax amount.
 12. "serviceChargeAmount" & "serviceChargePct": Extract restaurant Service Charge (e.g. 10% or 5%) if present.
@@ -6801,10 +6803,11 @@ function renderUniversalPreview(){
   }
 
   // Match Payment Method & Linked Account from AI detection
-  const pmRaw = String(d.paymentMethod || d.payMethod || d.payment || '').toLowerCase();
+  const pmOriginal = String(d.paymentMethod || d.payMethod || d.payment || '').trim();
+  const pmRaw = pmOriginal.toLowerCase();
   const merchLower = rawMerchant.toLowerCase();
 
-  let matchedMethodName = 'Cash (现金)';
+  let matchedMethodName = pmOriginal || 'Cash';
   let matchedAccId = '';
 
   if(/tng|touch\s*'?n\s*go|rfid/i.test(pmRaw)){
@@ -6842,9 +6845,11 @@ function renderUniversalPreview(){
   } else if(/fpx|online banking|duitnow/i.test(pmRaw)){
     matchedMethodName = 'Online Banking (FPX / DuitNow)';
   } else if(/cash|tunai/i.test(pmRaw)){
-    matchedMethodName = 'Cash (现金)';
+    matchedMethodName = 'Cash';
     const acc = S.accounts.find(a => a.type === 'cash' || /cash|tunai/i.test(a.name));
     if(acc) matchedAccId = acc.id;
+  } else if(pmOriginal){
+    matchedMethodName = pmOriginal;
   }
 
   // Fallback account: if no specific tender account matched, use 1st/default account (S.accounts[0])
@@ -6855,8 +6860,9 @@ function renderUniversalPreview(){
   // Available accounts
   const accOptions = S.accounts.map(a => `<option value="${a.id}" ${a.id === matchedAccId ? 'selected' : ''}>${getAccIcon(a)} ${esc(a.name)}</option>`).join('');
 
-  // Payment methods
-  const methodOptions = PAYMENT_METHODS.map(p => `<option value="${esc(p.name)}" ${p.name === matchedMethodName ? 'selected' : ''}>${p.icon} ${esc(p.name)}</option>`).join('');
+  // Filled payment method text for input
+  const displayPaymentMethod = matchedMethodName || pmOriginal || 'Cash';
+  d.paymentMethod = displayPaymentMethod;
 
   if(uniCurrentMode === 'expense'){
     container.innerHTML = `
@@ -6927,9 +6933,10 @@ function renderUniversalPreview(){
       <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-bottom:10px">
         <div>
           <label class="form-label" style="font-size:10.5px;margin-bottom:2px">Payment Method (付款方式)</label>
-          <select id="uni-edit-payment" class="form-input" style="padding:7px 8px;font-size:11.5px;font-weight:700" onchange="handleUniPaymentSelectChange(this.value)">
-            ${methodOptions}
-          </select>
+          <input type="text" id="uni-edit-payment" class="form-input" value="${esc(displayPaymentMethod)}" placeholder="e.g. Cash, Touch 'n Go, Maybank, Credit Card..." style="padding:7px 8px;font-size:11.5px;font-weight:700" list="uni-paymethod-suggestions" oninput="handleUniPaymentInputChange(this.value)"/>
+          <datalist id="uni-paymethod-suggestions">
+            ${PAYMENT_METHODS.map(p => `<option value="${esc(p.name)}">`).join('')}
+          </datalist>
         </div>
         <div>
           <label class="form-label" style="font-size:10.5px;margin-bottom:2px">Record Under Account (记账账户 / 支付记录)</label>
@@ -7053,35 +7060,41 @@ function handleUniCategoryChange(newCatId){
 }
 
 function selectUniPayment(name){
-  const sel = el('uni-edit-payment');
-  if(sel){
-    const opt = Array.from(sel.options).find(o => o.value === name || o.value.startsWith(name) || name.startsWith(o.value));
-    if(opt) sel.value = opt.value;
-  }
+  const inp = el('uni-edit-payment');
+  if(inp) inp.value = name || '';
   document.querySelectorAll('#uni-pay-quick-pills [data-uni-pay]').forEach(btn => {
     btn.classList.toggle('on', btn.dataset.uniPay === name);
   });
-  if(uniParsedData) uniParsedData.paymentMethod = name;
+  if(uniParsedData) uniParsedData.paymentMethod = name || '';
 
-  // Auto-sync corresponding wallet/bank account
-  const lower = name.toLowerCase();
+  syncUniAccountFromPayment(name);
+}
+
+function handleUniPaymentInputChange(val){
+  if(uniParsedData) uniParsedData.paymentMethod = val || '';
+  syncUniAccountFromPayment(val);
+}
+
+function handleUniPaymentSelectChange(val){
+  selectUniPayment(val);
+}
+
+function syncUniAccountFromPayment(name){
+  if(!name) return;
+  const lower = String(name).toLowerCase();
   const matchedAcc = S.accounts.find(a => {
     const aLower = a.name.toLowerCase();
     if(lower.includes('touch') || lower.includes('tng')) return aLower.includes('touch') || aLower.includes('tng');
     if(lower.includes('maybank') || lower.includes('mae')) return aLower.includes('maybank') || aLower.includes('mae');
     if(lower.includes('grab')) return aLower.includes('grab');
     if(lower.includes('shopee')) return aLower.includes('shopee');
-    if(lower.includes('cash')) return a.type === 'cash' || aLower.includes('cash');
-    if(lower.includes('card') || lower.includes('credit')) return a.type === 'credit' || a.type === 'bank';
+    if(lower.includes('cash') || lower.includes('tunai') || lower.includes('现金')) return a.type === 'cash' || aLower.includes('cash');
+    if(lower.includes('card') || lower.includes('credit') || lower.includes('visa') || lower.includes('master')) return a.type === 'credit' || a.type === 'bank';
     return false;
   });
   if(matchedAcc && el('uni-edit-account')){
     el('uni-edit-account').value = matchedAcc.id;
   }
-}
-
-function handleUniPaymentSelectChange(val){
-  selectUniPayment(val);
 }
 
 function renderUniPreviewItemsList(){
@@ -7169,7 +7182,7 @@ function confirmUniversalUpload(openFormToEdit = false){
   const dateStr = normalizeDateStr(rawDate, true);
   const selectedCat = catInp?.value || uniParsedData.category || 'food';
   const selectedAcc = accInp?.value || S.lastUsedAccId || S.accounts[0]?.id || 'acc_1';
-  const selectedPay = payInp?.value || uniParsedData.paymentMethod || 'Cash';
+  const selectedPay = (payInp?.value !== undefined ? payInp.value.trim() : (uniParsedData.paymentMethod || 'Cash')) || 'Cash';
   const formattedNote = (noteInp?.value !== undefined ? noteInp.value : formatItemsSummary(uniParsedData)).trim();
   const photoToSave = uniImageDataUrl || photoData || null;
 
@@ -7398,7 +7411,7 @@ function applyUploadToSplitterAndPromo(){
   const amt = Math.abs(parseFloat(amountInp?.value !== undefined && amountInp.value !== '' ? amountInp.value : d.amount)) || 0;
   const chosenCat = catInp?.value || d.category || 'food';
   const chosenDate = dateInp?.value || d.date || today();
-  const chosenPay = payInp?.value || d.paymentMethod || 'Cash';
+  const chosenPay = (payInp?.value !== undefined ? payInp.value.trim() : (d.paymentMethod || 'Cash')) || 'Cash';
   const chosenAcc = accInp?.value || d.accountId || S.lastUsedAccId || '';
   const chosenNote = (noteInp?.value !== undefined ? noteInp.value : formatItemsSummary(d)).trim();
   const photoToSave = uniImageDataUrl || photoData || null;
@@ -7491,7 +7504,7 @@ function handleTxModalBack(){
     const timeVal = el('tx-time')?.value;
     const noteVal = el('tx-note')?.value?.trim();
     const locVal = el('tx-location')?.value?.trim();
-    const payVal = el('tx-paymethod-val')?.value;
+    const payVal = el('tx-paymethod-val')?.value?.trim();
 
     if(merchantVal) uniParsedData.merchant = merchantVal;
     if(!isNaN(amountVal) && amountVal > 0) uniParsedData.amount = amountVal;
@@ -7683,9 +7696,10 @@ function applyAiGeneratedBudgets(){
 
 function mapAndSetPaymentMethod(methodKeyOrName){
   if(!methodKeyOrName) return;
-  const lower = String(methodKeyOrName).toLowerCase().trim();
+  const raw = String(methodKeyOrName).trim();
+  const lower = raw.toLowerCase();
   
-  let targetName = 'Cash';
+  let targetName = raw || 'Cash';
   let targetAccountType = '';
   
   if(lower.includes('tng') || lower.includes('touch') || lower.includes('rfid')){
@@ -7706,7 +7720,7 @@ function mapAndSetPaymentMethod(methodKeyOrName){
   } else if(lower.includes('credit') || lower.includes('visa') || lower.includes('master')){
     targetName = 'Credit Card';
     targetAccountType = 'bank';
-  } else if(lower.includes('cash') || lower.includes('tunai')){
+  } else if(lower.includes('cash') || lower.includes('tunai') || lower.includes('现金')){
     targetName = 'Cash';
     targetAccountType = 'cash';
   } else {
@@ -7764,8 +7778,12 @@ function applyReceiptStructuredData(rawInput, source = 'AI'){
   }
 
   // 4. Payment Method & Account Mapping
-  if(data.paymentMethod || data.payMethod || merchant){
-    mapAndSetPaymentMethod(data.paymentMethod || data.payMethod || merchant);
+  const detectedPayment = (data.paymentMethod || data.payMethod || '').trim();
+  if(detectedPayment){
+    if(el('tx-paymethod-val')) el('tx-paymethod-val').value = detectedPayment;
+    mapAndSetPaymentMethod(detectedPayment);
+  } else if(merchant){
+    mapAndSetPaymentMethod(merchant);
   }
 
   // 5. Date (YYYY-MM-DD)
