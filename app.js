@@ -48,6 +48,8 @@ function el(id){
     'payday-salary-inp': 'payday-amount-inp',
     'cat-mgr-list': 'cat-manage-list',
     'custom-wallpaper-url': 'wp-online-url-inp',
+    'wallpaper-presets-grid': 'wp-preset-grid',
+    'wp-dropdown-arrow': 'wp-custom-chevron',
     'curr-input-amt': 'fx-amount',
     'curr-from-sel': 'fx-from-cur',
     'curr-res-display': 'fx-converted-val',
@@ -1156,7 +1158,7 @@ function applyLanguage(){
    ═══════════════════════════════════════════════════════════════════ */
 // Unified reactive data store holding persistent user data and active UI state.
 const STATE = {
-  transactions:[],budgets:[],goals:[],reminders:[],debts:[],
+  transactions:[],budgets:[],goals:[],reminders:[],debts:[],recurring:[],
   monthlyBudget: 0,
   accounts: JSON.parse(JSON.stringify(DEFAULT_MY_ACCOUNTS)),
   quickPresets: JSON.parse(JSON.stringify(DEFAULT_QUICK_PRESETS)),
@@ -1634,18 +1636,25 @@ function canUseLocalStateApi(){
 
 function save(){
   S.lastUpdated = Date.now();
-  // Strip receipt photos before persisting to avoid bloating localStorage.
-  // Photos are only shown during the current session; the user opted to not
-  // keep them across reloads.
-  if (S.transactions) {
-    S.transactions.forEach(t => delete t.photo);
-  }
   try {
     const serialized = JSON.stringify(S);
     localStorage.setItem('ff2', serialized);
   } catch(e){
     console.warn('LocalStorage quota exceeded or write error:', e);
     if(e && e.name === 'QuotaExceededError'){
+      // Fallback: persist state without bulky receipt photos to preserve transaction records
+      try {
+        const fallbackState = {
+          ...S,
+          transactions: (S.transactions || []).map(t => {
+            if(!t.photo) return t;
+            const copy = { ...t };
+            delete copy.photo;
+            return copy;
+          })
+        };
+        localStorage.setItem('ff2', JSON.stringify(fallbackState));
+      } catch(e2){}
       toast(S.lang === 'zh'
         ? '⚠️ 本地存储空间已满，请及时在设置中清理小票相册缓存或同步至云端！'
         : '⚠️ Local storage is full! Please clear receipt photo cache or sync to cloud in Settings.');
@@ -2238,7 +2247,7 @@ function calcHealth(){
   if(owed>0&&inc>0&&owed/inc>0.5){score-=10;tips.push({icon:'💸',txt:'High debt-to-income ratio',tag:'alert'});}
   if(mtx.length>=10){score+=10;tips.push({icon:'🔥',txt:'Great tracking consistency!',tag:'tip'});}
   if(inc===0) tips.push({icon:'💡',txt:'Log your salary or income for full insights',tag:'tip'});
-  if(S.recurring.length>0) tips.push({icon:'🔁',txt:S.recurring.length+' recurring entries active',tag:'tip'});
+  if(Array.isArray(S.recurring) && S.recurring.length>0) tips.push({icon:'🔁',txt:S.recurring.length+' recurring entries active',tag:'tip'});
   if(!tips.length) tips.push({icon:'✨',txt:'No issues detected. Keep it up!',tag:'tip'});
   score=Math.max(0,Math.min(100,score));
   const grade=score>=90?'A+':score>=80?'A':score>=70?'B':score>=60?'C':score>=50?'D':'F';
@@ -5492,22 +5501,6 @@ function setTxAccount(accId){
       c.classList.toggle('on', c.dataset.accId === accId);
     });
   }
-
-  const acc = S.accounts.find(a=>a.id===accId);
-  if(acc){
-    const lower = acc.name.toLowerCase();
-    if(lower.includes('touch') || lower.includes('tng')){
-      selectPaymentMethod("Touch 'n Go eWallet");
-    } else if(lower.includes('maybank') || lower.includes('mae')){
-      selectPaymentMethod('Maybank (MAE / QR)');
-    } else if(lower.includes('grab')){
-      selectPaymentMethod('GrabPay');
-    } else if(lower.includes('shopee')){
-      selectPaymentMethod('ShopeePay');
-    } else if(acc.type === 'cash'){
-      selectPaymentMethod('Cash');
-    }
-  }
 }
 
 function onTxAccSelectChange(accId){
@@ -6802,63 +6795,40 @@ function renderUniversalPreview(){
     }
   }
 
-  // Match Payment Method & Linked Account from AI detection
+  // Match Payment Method from AI detection
   const pmOriginal = String(d.paymentMethod || d.payMethod || d.payment || '').trim();
   const pmRaw = pmOriginal.toLowerCase();
   const merchLower = rawMerchant.toLowerCase();
 
   let matchedMethodName = pmOriginal || 'Cash';
-  let matchedAccId = '';
 
   if(/tng|touch\s*'?n\s*go|rfid/i.test(pmRaw)){
     matchedMethodName = "Touch 'n Go eWallet";
-    const acc = S.accounts.find(a => /tng|touch\s*'?n\s*go/i.test(a.name));
-    if(acc) matchedAccId = acc.id;
   } else if(/grab/i.test(pmRaw)){
     matchedMethodName = 'GrabPay';
-    const acc = S.accounts.find(a => /grab/i.test(a.name));
-    if(acc) matchedAccId = acc.id;
   } else if(/shopee/i.test(pmRaw)){
     matchedMethodName = 'ShopeePay';
-    const acc = S.accounts.find(a => /shopee/i.test(a.name));
-    if(acc) matchedAccId = acc.id;
   } else if(/mae|maybank/i.test(pmRaw) || /mae/i.test(merchLower)){
     matchedMethodName = 'Maybank (MAE / QR)';
-    const acc = S.accounts.find(a => /maybank|mae/i.test(a.name));
-    if(acc) matchedAccId = acc.id;
   } else if(/cimb/i.test(pmRaw)){
     matchedMethodName = 'CIMB Bank (Octo)';
-    const acc = S.accounts.find(a => /cimb/i.test(a.name));
-    if(acc) matchedAccId = acc.id;
   } else if(/public/i.test(pmRaw)){
     matchedMethodName = 'Public Bank (PBe)';
-    const acc = S.accounts.find(a => /public/i.test(a.name));
-    if(acc) matchedAccId = acc.id;
   } else if(/credit|visa|master|amex/i.test(pmRaw)){
     matchedMethodName = 'Credit Card';
-    const acc = S.accounts.find(a => a.type === 'credit' || /credit/i.test(a.name));
-    if(acc) matchedAccId = acc.id;
   } else if(/debit|mydebit/i.test(pmRaw)){
     matchedMethodName = 'Debit Card';
-    const acc = S.accounts.find(a => a.type === 'bank');
-    if(acc) matchedAccId = acc.id;
   } else if(/fpx|online banking|duitnow/i.test(pmRaw)){
     matchedMethodName = 'Online Banking (FPX / DuitNow)';
   } else if(/cash|tunai/i.test(pmRaw)){
     matchedMethodName = 'Cash';
-    const acc = S.accounts.find(a => a.type === 'cash' || /cash|tunai/i.test(a.name));
-    if(acc) matchedAccId = acc.id;
   } else if(pmOriginal){
     matchedMethodName = pmOriginal;
   }
 
-  // Fallback account: if no specific tender account matched, use 1st/default account (S.accounts[0])
-  if(!matchedAccId){
-    matchedAccId = S.lastUsedAccId || (S.accounts.length > 0 ? S.accounts[0].id : '');
-  }
-
-  // Available accounts
-  const accOptions = S.accounts.map(a => `<option value="${a.id}" ${a.id === matchedAccId ? 'selected' : ''}>${getAccIcon(a)} ${esc(a.name)}</option>`).join('');
+  // Available accounts (decoupled from payment method; uses active/default account)
+  const defaultAccId = d.accountId || getActiveAccountId();
+  const accOptions = S.accounts.map(a => `<option value="${a.id}" ${a.id === defaultAccId ? 'selected' : ''}>${getAccIcon(a)} ${esc(a.name)}</option>`).join('');
 
   // Filled payment method text for input
   const displayPaymentMethod = matchedMethodName || pmOriginal || 'Cash';
@@ -7066,35 +7036,14 @@ function selectUniPayment(name){
     btn.classList.toggle('on', btn.dataset.uniPay === name);
   });
   if(uniParsedData) uniParsedData.paymentMethod = name || '';
-
-  syncUniAccountFromPayment(name);
 }
 
 function handleUniPaymentInputChange(val){
   if(uniParsedData) uniParsedData.paymentMethod = val || '';
-  syncUniAccountFromPayment(val);
 }
 
 function handleUniPaymentSelectChange(val){
   selectUniPayment(val);
-}
-
-function syncUniAccountFromPayment(name){
-  if(!name) return;
-  const lower = String(name).toLowerCase();
-  const matchedAcc = S.accounts.find(a => {
-    const aLower = a.name.toLowerCase();
-    if(lower.includes('touch') || lower.includes('tng')) return aLower.includes('touch') || aLower.includes('tng');
-    if(lower.includes('maybank') || lower.includes('mae')) return aLower.includes('maybank') || aLower.includes('mae');
-    if(lower.includes('grab')) return aLower.includes('grab');
-    if(lower.includes('shopee')) return aLower.includes('shopee');
-    if(lower.includes('cash') || lower.includes('tunai') || lower.includes('现金')) return a.type === 'cash' || aLower.includes('cash');
-    if(lower.includes('card') || lower.includes('credit') || lower.includes('visa') || lower.includes('master')) return a.type === 'credit' || a.type === 'bank';
-    return false;
-  });
-  if(matchedAcc && el('uni-edit-account')){
-    el('uni-edit-account').value = matchedAcc.id;
-  }
 }
 
 function renderUniPreviewItemsList(){
@@ -7700,52 +7649,27 @@ function mapAndSetPaymentMethod(methodKeyOrName){
   const lower = raw.toLowerCase();
   
   let targetName = raw || 'Cash';
-  let targetAccountType = '';
   
   if(lower.includes('tng') || lower.includes('touch') || lower.includes('rfid')){
     targetName = "Touch 'n Go eWallet";
-    targetAccountType = 'tng';
   } else if(lower.includes('mae') || lower.includes('maybank')){
     targetName = 'Maybank (MAE / QR)';
-    targetAccountType = 'maybank';
   } else if(lower.includes('grab')){
     targetName = 'GrabPay';
-    targetAccountType = 'grab';
   } else if(lower.includes('shopee')){
     targetName = 'ShopeePay';
-    targetAccountType = 'shopee';
   } else if(lower.includes('debit')){
     targetName = 'Debit Card';
-    targetAccountType = 'bank';
   } else if(lower.includes('credit') || lower.includes('visa') || lower.includes('master')){
     targetName = 'Credit Card';
-    targetAccountType = 'bank';
   } else if(lower.includes('cash') || lower.includes('tunai') || lower.includes('现金')){
     targetName = 'Cash';
-    targetAccountType = 'cash';
   } else {
     const found = PAYMENT_METHODS.find(p => p.id === methodKeyOrName || p.name.toLowerCase() === lower);
     if(found) targetName = found.name;
   }
   
   selectPaymentMethod(targetName);
-
-  // Auto-select corresponding bank/wallet account
-  if(targetAccountType){
-    const matchedAcc = S.accounts.find(a => {
-      const aLower = a.name.toLowerCase();
-      if(targetAccountType === 'tng') return aLower.includes('touch') || aLower.includes('tng');
-      if(targetAccountType === 'maybank') return aLower.includes('maybank') || aLower.includes('mae');
-      if(targetAccountType === 'grab') return aLower.includes('grab');
-      if(targetAccountType === 'shopee') return aLower.includes('shopee');
-      if(targetAccountType === 'cash') return a.type === 'cash' || aLower.includes('cash');
-      if(targetAccountType === 'bank') return a.type === 'bank';
-      return false;
-    });
-    if(matchedAcc){
-      setTxAccount(matchedAcc.id);
-    }
-  }
 }
 
 function applyReceiptStructuredData(rawInput, source = 'AI'){
@@ -7777,7 +7701,7 @@ function applyReceiptStructuredData(rawInput, source = 'AI'){
     if(el('tx-cats')) buildCats('tx-cats', 'expense', id => selCat = id);
   }
 
-  // 4. Payment Method & Account Mapping
+  // 4. Payment Method
   const detectedPayment = (data.paymentMethod || data.payMethod || '').trim();
   if(detectedPayment){
     if(el('tx-paymethod-val')) el('tx-paymethod-val').value = detectedPayment;
@@ -11796,8 +11720,9 @@ function selectFuelType(type){
 }
 
 function calcPetrolCost(){
-  const liters = parseFloat(el('petrol-liters-inp').value) || 0;
-  const rate = petrolPrices[currentFuelType] || 2.05;
+  const litersInp = el('petrol-liters-inp') || el('petrol-liters-val');
+  const liters = parseFloat(litersInp ? litersInp.value : 36) || 0;
+  const rate = (petrolPrices && petrolPrices[currentFuelType]) ? petrolPrices[currentFuelType] : 2.05;
   const total = liters * rate;
   
   const fuelName = currentFuelType === 'ron95' ? 'RON 95' : currentFuelType === 'ron97' ? 'RON 97' : 'Diesel';
@@ -11806,8 +11731,9 @@ function calcPetrolCost(){
 }
 
 function logPetrolExpense(){
-  const liters = parseFloat(el('petrol-liters-inp').value) || 0;
-  const rate = petrolPrices[currentFuelType] || 2.05;
+  const litersInp = el('petrol-liters-inp') || el('petrol-liters-val');
+  const liters = parseFloat(litersInp ? litersInp.value : 0) || 0;
+  const rate = (petrolPrices && petrolPrices[currentFuelType]) ? petrolPrices[currentFuelType] : 2.05;
   const total = (liters * rate).toFixed(2);
   const fuelName = currentFuelType === 'ron95' ? 'RON 95' : currentFuelType === 'ron97' ? 'RON 97' : 'Diesel';
 
@@ -12493,18 +12419,20 @@ function saveMealPayLater(){
 }
 
 function confirmSaveMealPayLater(){
-  const desc = (el('pay-later-desc').value || '').trim();
-  const amount = parseFloat(el('pay-later-amount').value) || 0;
-  const dueDate = (el('pay-later-date').value || '').trim();
-  const payTo = (el('pay-later-payto').value || '').trim();
-  const note = (el('pay-later-note').value || '').trim();
+  const descEl = el('pay-later-desc');
+  const amtEl = el('pay-later-amount') || el('pay-later-amt');
+  const dateEl = el('pay-later-date');
+  const payToEl = el('pay-later-payto') || el('pay-later-person');
+  const noteEl = el('pay-later-note');
+
+  const desc = (descEl ? descEl.value : '').trim() || 'Meal Split';
+  const amount = parseFloat(amtEl ? amtEl.value : 0) || 0;
+  const dueDate = (dateEl ? dateEl.value : '').trim() || today();
+  const payTo = (payToEl ? payToEl.value : '').trim();
+  const note = (noteEl ? noteEl.value : '').trim();
 
   if(!amount || amount <= 0){
     toast('⚠️ Amount is required');
-    return;
-  }
-  if(!dueDate){
-    toast('⚠️ Please set a due date');
     return;
   }
 
@@ -12764,29 +12692,29 @@ function swapCurrencies(){
 }
 
 function calcCurrencyConversion(){
-  const amtInput = el('curr-input-amt');
-  const fromSel = el('curr-from-sel');
+  const amtInput = el('curr-input-amt') || el('fx-amount');
+  const fromSel = el('curr-from-sel') || el('fx-from-cur');
   const toSel = el('curr-to-sel');
   const amt = amtInput ? parseFloat(amtInput.value) || 0 : 0;
   const from = fromSel ? fromSel.value : 'SGD';
   const to = toSel ? toSel.value : 'MYR';
 
-  const rateFrom = liveRates[from] || 1;
-  const rateTo = liveRates[to] || 1;
+  const rateFrom = (typeof liveRates !== 'undefined' && liveRates[from]) ? liveRates[from] : 1;
+  const rateTo = (typeof liveRates !== 'undefined' && liveRates[to]) ? liveRates[to] : 1;
 
   const converted = (amt * rateFrom) / rateTo;
   const symbol = to === 'MYR' ? 'RM ' : to + ' ';
 
-  const resDisplay = el('curr-res-display');
+  const resDisplay = el('curr-res-display') || el('fx-converted-val');
   if(resDisplay) resDisplay.textContent = `${symbol}${converted.toFixed(2)}`;
 }
 
 function logConvertedExpense(){
-  const amtInput = el('curr-input-amt');
-  const fromSel = el('curr-from-sel');
+  const amtInput = el('curr-input-amt') || el('fx-amount');
+  const fromSel = el('curr-from-sel') || el('fx-from-cur');
   const amt = amtInput ? parseFloat(amtInput.value) || 0 : 0;
   const from = fromSel ? fromSel.value : 'SGD';
-  const rateFrom = liveRates[from] || 1;
+  const rateFrom = (typeof liveRates !== 'undefined' && liveRates[from]) ? liveRates[from] : 1;
   const rmVal = (amt * rateFrom).toFixed(2);
 
   closeModal('currency-modal');
@@ -12882,7 +12810,7 @@ function renderSpendingPrediction(){
   
   const dailyAvg = monthExpenses / dayOfMonth;
   const projected = dailyAvg * daysInMonth;
-  const totalBudget = S.budgets.reduce((s,b) => s + (Number(b.limit)||0), 0);
+  const totalBudget = getMonthlyBudgetTotal();
   
   let msg = isZh 
     ? `📈 每日均消: <strong>${fmt(dailyAvg)}</strong> · 预计月末总支出: <strong>${fmt(projected)}</strong>`
@@ -13275,7 +13203,7 @@ function renderCalorieWidget(){
   if(!numEl) return;
   
   const dStr = today();
-  const txs = S.txs.filter(t => t.date === dStr && t.type === 'expense');
+  const txs = (S.transactions || []).filter(t => t.date === dStr && t.type === 'expense');
   let totalKcal = 0;
   txs.forEach(tx => {
     if(tx.items && Array.isArray(tx.items)){
