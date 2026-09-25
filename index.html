@@ -148,12 +148,12 @@
       </div>
 
       <!-- 🥗 Calorie Tracker -->
-      <div class="widget-card" id="calorie-card">
+      <div class="widget-card" id="calorie-card" onclick="openCalorieModal()" style="cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#10b981;margin-bottom:2px">🔥 Calorie Intake</div>
             <div style="font-size:13px;font-weight:800;color:var(--text)" id="cal-intake-title">Today's Intake</div>
-            <div style="font-size:10.5px;color:var(--muted);margin-top:1px" id="cal-intake-sub">Powered by AI Menu Detection</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:1px" id="cal-intake-sub">Scan a food receipt to track</div>
           </div>
           <div style="font-size:22px;font-weight:900;color:#10b981;line-height:1"><span id="cal-intake-num">0</span> <span style="font-size:11px">kcal</span></div>
         </div>
@@ -1237,7 +1237,6 @@
           <option value="Maybank (MAE / QR)"></option>
           <option value="Credit Card"></option>
           <option value="Debit Card"></option>
-          <option value="GrabPay"></option>
           <option value="ShopeePay"></option>
           <option value="Online Banking (FPX / DuitNow)"></option>
         </datalist>
@@ -1981,6 +1980,19 @@
       </div>
       <div id="challenges-content"></div>
       <button type="button" class="ghost-btn" onclick="closeModal('challenges-modal')" style="margin-top:14px">Close</button>
+    </div>
+  </div>
+
+  <!-- Calorie Tracker Details Modal -->
+  <div id="calorie-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'calorie-modal')">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title">
+        <span id="calorie-modal-title">🥗 Daily Calorie Intake</span>
+        <button type="button" class="modal-close-btn" onclick="closeModal('calorie-modal')">✕</button>
+      </div>
+      <div id="calorie-modal-content"></div>
+      <button type="button" class="ghost-btn" onclick="closeModal('calorie-modal')" style="margin-top:14px">Close</button>
     </div>
   </div>
 

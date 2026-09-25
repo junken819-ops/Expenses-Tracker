@@ -89,7 +89,6 @@ function el(id){
 const PAYMENT_METHODS = [
   { id: 'mae_scan', name: 'Maybank (MAE / QR)', icon: '🐯', bank: 'Maybank' },
   { id: 'tng_qr', name: 'Touch \'n Go eWallet', icon: '💙', bank: 'TNG' },
-  { id: 'grabpay', name: 'GrabPay', icon: '🟢', bank: 'Grab' },
   { id: 'shopeepay', name: 'ShopeePay', icon: '🛍️', bank: 'Shopee' },
   { id: 'cimb', name: 'CIMB Bank (Octo)', icon: '🔴', bank: 'CIMB' },
   { id: 'public_bank', name: 'Public Bank (PBe)', icon: '🏛️', bank: 'Public Bank' },
@@ -141,7 +140,6 @@ const MY_BANKS = [
 
 const MY_EWALLETS = [
   { name: "Touch 'n Go eWallet", icon: '💙', color: '#0284c7', type: 'ewallet' },
-  { name: 'GrabPay', icon: '🟢', color: '#10b981', type: 'ewallet' },
   { name: 'ShopeePay', icon: '🟠', color: '#ea580c', type: 'ewallet' },
   { name: 'Boost eWallet', icon: '🔴', color: '#e11d48', type: 'ewallet' },
   { name: 'MAE by Maybank', icon: '🟡', color: '#f59e0b', type: 'ewallet' },
@@ -356,11 +354,7 @@ const CURRENCIES=['RM','$','€','£','¥','₹'];
 
 // ── DEFAULT MALAYSIAN ACCOUNTS ─────────────────────────
 const DEFAULT_MY_ACCOUNTS = [
-  {id:'acc_maybank',name:'Maybank (MAE)',type:'bank',icon:'🐯',color:'#ffc800',openingBalance:0},
-  {id:'acc_cimb',name:'CIMB Bank',type:'bank',icon:'🔴',color:'#dc2626',openingBalance:0},
-  {id:'acc_tng',name:"Touch 'n Go eWallet",type:'ewallet',icon:'💙',color:'#0284c7',openingBalance:0},
-  {id:'acc_grabpay',name:'GrabPay',type:'ewallet',icon:'🟢',color:'#10b981',openingBalance:0},
-  {id:'acc_cash',name:'Cash Wallet',type:'cash',icon:'💵',color:'#10b981',openingBalance:0}
+  {id:'default',name:'Wallet',type:'cash',icon:'🍯',color:'#f59e0b',openingBalance:0}
 ];
 
 const DEFAULT_QUICK_PRESETS = [
@@ -442,7 +436,7 @@ const I18N = {
     "hub5_sub": "Receipt Gallery · LHDN Tax Relief · PDF Statements",
     "acc_sec_title": "⚙️ Accounts & Settings",
     "row_banks": "Banks & e-Wallets",
-    "row_banks_sub": "Maybank, CIMB, TNG, GrabPay & 28+ accounts",
+    "row_banks_sub": "Maybank, CIMB, TNG & 28+ accounts",
     "row_family": "Family & Shared Partner Wallet",
     "row_family_sub": "Joint household budget & two-way sync",
     "row_wallpaper": "Cute Wallpaper Studio",
@@ -776,7 +770,7 @@ const I18N = {
     "hub5_sub": "小票相册画廊 · LHDN 个人税减免 · 月度 PDF 对账单",
     "acc_sec_title": "⚙️ 账户与基础设置",
     "row_banks": "银行账户与电子钱包",
-    "row_banks_sub": "Maybank、CIMB、TNG、GrabPay 及 28+ 种本地账户",
+    "row_banks_sub": "Maybank、CIMB、TNG 及 28+ 种本地账户",
     "row_family": "情侣 / 家庭共享账本",
     "row_family_sub": "家庭共同开销管理与离线双向数据同步",
     "row_wallpaper": "小金库壁纸工坊",
@@ -1422,7 +1416,10 @@ function normalizeGeminiReceiptOutput(data){
           items.push({
             name: itemName || 'Item',
             price: itemPrice,
-            qty: itemQty
+            qty: itemQty,
+            calories: it.calories ? parseInt(it.calories) : 0,
+            subCategory: it.subCategory || null,
+            tags: it.tags || []
           });
         }
       }
@@ -1663,10 +1660,12 @@ function save(){
 
   // Host-side persistence is available only from the local companion server.
   if(canUseLocalStateApi()){
+    const diskState = { ...S };
+    delete diskState.geminiApiKey; // Keep API key in localStorage only, avoid writing secrets to user_data.json
     fetch('/api/state', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(S)
+      body: JSON.stringify(diskState)
     }).then(r => {
       if(!r.ok) console.warn('/api/state returned HTTP ' + r.status);
     }).catch(err => {
@@ -1727,10 +1726,8 @@ function load(){
 
 function applyStateObject(p){
   if(!p || typeof p !== 'object') return;
-  let loadedAccounts = p.accounts || [];
-  if(!loadedAccounts.length || (loadedAccounts.length === 1 && loadedAccounts[0].id === 'acc1')){
-    loadedAccounts = JSON.parse(JSON.stringify(DEFAULT_MY_ACCOUNTS));
-  }
+  // Account system simplified to unified wallet
+  let loadedAccounts = JSON.parse(JSON.stringify(DEFAULT_MY_ACCOUNTS));
 
   let loadedTx = p.transactions || [];
   if(Array.isArray(loadedTx)){
@@ -1739,9 +1736,16 @@ function applyStateObject(p){
       if(t.note && typeof t.note === 'string' && t.note.includes('[object Object]')){
         t.note = t.note.replace(/\[object Object\],?\s*/g, '').trim();
       }
+      t.accountId = 'default';
+      if(!t.paymentMethod || t.paymentMethod === 'GrabPay'){
+        t.paymentMethod = 'Cash';
+      }
     });
   }
   const migratedInternalTransfers = migrateLegacyInternalTransfers(loadedTx);
+
+  let loadedLastUsedAccId = 'default';
+  let loadedSelAcc = 'all';
 
   const loadedMonthlyBudget = (p && p.monthlyBudget !== undefined)
     ? Number(p.monthlyBudget) || 0
@@ -1763,7 +1767,8 @@ function applyStateObject(p){
     incCategories: (p.incCategories && p.incCategories.length) ? p.incCategories : JSON.parse(JSON.stringify(DEFAULT_INC_CATS)),
     quickLogTitle: p.quickLogTitle || '⚡ Quick Log',
     lang: p.lang || 'en',
-    lastUsedAccId: p.lastUsedAccId || '',
+    lastUsedAccId: loadedLastUsedAccId,
+    selAcc: loadedSelAcc,
     gsheetUrl: p.gsheetUrl || '',
     lastSync: p.lastSync || '',
     biometricLock: p.biometricLock || false,
@@ -1780,7 +1785,7 @@ function applyStateObject(p){
     locationSuggestEnabled: p.locationSuggestEnabled !== false,
     wallpaperUrl: p.wallpaperUrl !== undefined ? p.wallpaperUrl : 'https://i.pinimg.com/736x/d4/f4/44/d4f4446eec7e530e612f30f10db39d77.jpg',
     wallpaperOpacity: p.wallpaperOpacity !== undefined ? p.wallpaperOpacity : 35,
-    geminiApiKey: p.geminiApiKey || ''
+    geminiApiKey: p.geminiApiKey || (typeof S !== 'undefined' && S ? S.geminiApiKey : '') || ''
   };
 
   // Keep converted legacy transfers on this device without requiring a server.
@@ -2198,17 +2203,15 @@ function getAccIcon(acc){
 }
 
 function getDefaultAccountId(){
-  return S.accounts.length > 0 ? S.accounts[0].id : '';
+  return 'default';
 }
 
 function getActiveAccountId(){
-  if(S.selAcc !== 'all' && S.accounts.some(a=>a.id===S.selAcc)){
-    return S.selAcc;
-  }
-  if(S.lastUsedAccId && S.accounts.some(a=>a.id===S.lastUsedAccId)){
-    return S.lastUsedAccId;
-  }
-  return getDefaultAccountId();
+  return 'default';
+}
+
+function resolveAccountIdFromPayment(paymentStr, fallbackAccId){
+  return 'default';
 }
 
 // ── RECURRING ──────────────────────────────────────────
@@ -3578,9 +3581,10 @@ function openTxDetailModal(txId){
       if(items.length > 0 && (items.length > 1 || items[0].name !== tx.desc)){
         htmlContent += `<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">`;
         items.forEach(it => {
+          const calInfo = (it.calories && parseInt(it.calories) > 0) ? `<span style="font-size:10px;color:#10b981;margin-left:6px;font-weight:700;background:rgba(16,185,129,0.1);padding:2px 4px;border-radius:4px">🔥 ${it.calories} kcal</span>` : '';
           htmlContent += `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px">
-              <span>${it.qty > 1 ? `${it.qty}x ` : ''}${esc(it.name)}</span>
+              <span style="display:flex;align-items:center">${it.qty > 1 ? `<span style="color:var(--cyan);margin-right:4px">${it.qty}x</span> ` : ''}${esc(it.name)}${calInfo}</span>
               <strong style="color:var(--text)">${fmt(it.price)}</strong>
             </div>
           `;
@@ -4086,7 +4090,6 @@ function makeTxEl(tx){
           <span>${subCat ? `${subCat.icon} ${esc(subCat.name)}` : esc(cat.name)}</span>
           ${tx.isAdvance ? `<span class="tx-badge" style="background:${tx.advanceStatus==='reimbursed'?'rgba(74,222,128,.16)':'rgba(255,179,0,.16)'};color:${tx.advanceStatus==='reimbursed'?'var(--green)':'var(--amber)'};font-weight:700">📌 ${tx.advanceStatus==='reimbursed'? (isZh?'已报销':'Reimbursed') : (isZh?'待报销':'Claimable')}</span>` : ''}
           ${tx.time ? `<span class="tx-badge" style="background:rgba(255,255,255,0.05);color:var(--dim)">⏰ ${tx.time}</span>` : ''}
-          ${acc ? `<span class="tx-badge tx-badge-bank">${accIco} ${esc(acc.name)}</span>` : ''}
           ${payM ? `<span class="tx-badge tx-badge-method">⚡ ${esc(payM)}</span>` : ''}
           ${tx.location ? `<span class="tx-badge tx-badge-loc">📍 ${esc(tx.location)}</span>` : ''}
           ${cleanNote ? `<span style="color:var(--text)">· ${esc(cleanNote)}</span>` : ''}
@@ -5657,7 +5660,7 @@ function saveTx(){
 
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const existingTx = editingTxId ? S.transactions.find(t => t.id === editingTxId) : null;
-  const selectedAccId = (el('tx-acc-select')?.value) || existingTx?.accountId || S.lastUsedAccId || (S.accounts[0]?.id) || 'default';
+  const selectedAccId = (el('tx-acc-select')?.value) || existingTx?.accountId || resolveAccountIdFromPayment(payMethod, S.lastUsedAccId || (S.accounts[0]?.id) || 'default');
 
   const newTx = {
     id: editingTxId || uid('item'),
@@ -5835,6 +5838,10 @@ async function handlePhoto(inp){
 
     const result = await analyzeUnifiedUploadWithGemini(compressed);
     if(result && (result.amount > 0 || result.merchant)){
+      // Enrich items with calorie estimates before applying
+      if(result.items && Array.isArray(result.items) && result.items.length > 0){
+        await enrichItemsWithCalories(result.items);
+      }
       applyReceiptStructuredData(result, 'AI');
       toast(`🤖 Auto-filled from receipt: ${result.merchant || 'Store'} · ${fmt(result.amount)}`);
     } else {
@@ -6127,6 +6134,12 @@ async function reScanReceiptWithGemini(){
     stopAiScanAnimation();
     if(result && (result.merchant || result.amount > 0 || (result.items && result.items.length > 0))){
       uniParsedData = result;
+      
+      // Enrich items with calorie estimates
+      if(uniParsedData.items && uniParsedData.items.length > 0){
+        await enrichItemsWithCalories(uniParsedData.items);
+      }
+      
       if(badgeWrap) badgeWrap.classList.remove('hidden');
       if(actionBtns) actionBtns.classList.remove('hidden');
 
@@ -6420,8 +6433,6 @@ function smartAutoDetectCategoryAndPayment(text){
     detectedPayment = 'Maybank (MAE / QR)';
   } else if(/tng|touch\s*'?n\s*go|tng\s*ewallet|tng\s*qr|touch\s*n\s*go\s*ewallet|\brfid\b/i.test(s)){
     detectedPayment = "Touch 'n Go eWallet";
-  } else if(/grabpay|grab\s*pay|grab\s*wallet|\bgrab\b/i.test(s)){
-    detectedPayment = 'GrabPay';
   } else if(/shopeepay|shopee\s*pay/i.test(s)){
     detectedPayment = 'ShopeePay';
   } else if(/cimb|cimb\s*clicks|octo/i.test(s)){
@@ -6555,6 +6566,12 @@ async function handleUniversalFile(inputOrFile){
 
     if(result && (result.merchant || result.amount > 0 || (result.items && result.items.length > 0))){
       uniParsedData = result;
+      
+      // Enrich items with calorie estimates
+      if(uniParsedData.items && uniParsedData.items.length > 0){
+        await enrichItemsWithCalories(uniParsedData.items);
+      }
+      
       if(badgeWrap) badgeWrap.classList.remove('hidden');
       if(actionBtns) actionBtns.classList.remove('hidden');
 
@@ -6667,16 +6684,16 @@ CRITICAL RULES:
    - Pets: "pet_food_supplies", "pet_vet_care"
    - Kids: "kids_baby_essentials"
    - Gifts: "gift_presents_angpao", "gift_charity_ngo"
-6. "tags": 3-5 relevant keyword tags (e.g. ["coffee", "breakfast", "starbucks"]).
-7. "date": The transaction date in "YYYY-MM-DD" format (convert "23/08/2026" or "23-08-2026" to "2026-08-23").
-8. "time": The transaction time in 24-hour "HH:MM" format (e.g. "13:45").
-9. "paymentMethod": Look for payment tender / method on the receipt (e.g. "Cash", "Credit Card", "Visa", "Mastercard", "Touch 'n Go eWallet", "GrabPay", "ShopeePay", "Maybank (MAE / QR)", "Debit Card", "Online Banking", or specific tender/card name printed). If not detected, specify "Cash".
-10. "items": Extract EVERY single individual item, dish, beverage, book, piece of clothing, or grocery product with its name, quantity, line price in RM, and specific subCategory.
-11. "sstAmount" & "sstPct": Extract Malaysian SST / Service Tax rate (6% or 8%) and exact SST tax amount.
-12. "serviceChargeAmount" & "serviceChargePct": Extract restaurant Service Charge (e.g. 10% or 5%) if present.
-13. "roundingAmount": Extract rounding adjustment (e.g. 0.00 or -0.02) if listed.
-14. "taxReliefCat": if purchase qualifies for Malaysian LHDN tax relief (e.g. lifestyle for books/reading materials, computer/phone, sports equipment; medical for pharmacy/clinic; childcare), tag it and set taxReliefAmount.
-15. Output ONLY pure raw JSON without markdown backticks.`;
+8. "tags": 3-5 relevant keyword tags (e.g. ["coffee", "breakfast", "starbucks"]).
+9. "date": The transaction date in "YYYY-MM-DD" format (convert "23/08/2026" or "23-08-2026" to "2026-08-23").
+10. "time": The transaction time in 24-hour "HH:MM" format (e.g. "13:45").
+11. "paymentMethod": Look for payment tender / method on the receipt (e.g. "Cash", "Credit Card", "Visa", "Mastercard", "Touch 'n Go eWallet", "GrabPay", "ShopeePay", "Maybank (MAE / QR)", "Debit Card", "Online Banking", or specific tender/card name printed). If not detected, specify "Cash".
+12. "items": Extract EVERY single individual item, dish, beverage, book, piece of clothing, or grocery product with its name, quantity, line price in RM, specific subCategory, and estimated calories.
+13. "sstAmount" & "sstPct": Extract Malaysian SST / Service Tax rate (6% or 8%) and exact SST tax amount.
+14. "serviceChargeAmount" & "serviceChargePct": Extract restaurant Service Tax (e.g. 10% or 5%) if present.
+15. "roundingAmount": Extract rounding adjustment (e.g. 0.00 or -0.02) if listed.
+16. "taxReliefCat": if purchase qualifies for Malaysian LHDN tax relief (e.g. lifestyle for books/reading materials, computer/phone, sports equipment; medical for pharmacy/clinic; childcare), tag it and set taxReliefAmount.
+17. Output ONLY pure raw JSON without markdown backticks.`;
 
   const payload = {
     contents: [{
@@ -6804,8 +6821,6 @@ function renderUniversalPreview(){
 
   if(/tng|touch\s*'?n\s*go|rfid/i.test(pmRaw)){
     matchedMethodName = "Touch 'n Go eWallet";
-  } else if(/grab/i.test(pmRaw)){
-    matchedMethodName = 'GrabPay';
   } else if(/shopee/i.test(pmRaw)){
     matchedMethodName = 'ShopeePay';
   } else if(/mae|maybank/i.test(pmRaw) || /mae/i.test(merchLower)){
@@ -6826,13 +6841,10 @@ function renderUniversalPreview(){
     matchedMethodName = pmOriginal;
   }
 
-  // Available accounts (decoupled from payment method; uses active/default account)
-  const defaultAccId = d.accountId || getActiveAccountId();
-  const accOptions = S.accounts.map(a => `<option value="${a.id}" ${a.id === defaultAccId ? 'selected' : ''}>${getAccIcon(a)} ${esc(a.name)}</option>`).join('');
-
   // Filled payment method text for input
   const displayPaymentMethod = matchedMethodName || pmOriginal || 'Cash';
   d.paymentMethod = displayPaymentMethod;
+  d.accountId = 'default';
 
   if(uniCurrentMode === 'expense'){
     container.innerHTML = `
@@ -6899,21 +6911,18 @@ function renderUniversalPreview(){
         </div>
       ` : ''}
 
-      <!-- Payment Method / Bank & Account Row -->
-      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-bottom:10px">
-        <div>
-          <label class="form-label" style="font-size:10.5px;margin-bottom:2px">Payment Method (付款方式)</label>
-          <input type="text" id="uni-edit-payment" class="form-input" value="${esc(displayPaymentMethod)}" placeholder="e.g. Cash, Touch 'n Go, Maybank, Credit Card..." style="padding:7px 8px;font-size:11.5px;font-weight:700" list="uni-paymethod-suggestions" oninput="handleUniPaymentInputChange(this.value)"/>
-          <datalist id="uni-paymethod-suggestions">
-            ${PAYMENT_METHODS.map(p => `<option value="${esc(p.name)}">`).join('')}
-          </datalist>
-        </div>
-        <div>
-          <label class="form-label" style="font-size:10.5px;margin-bottom:2px">Record Under Account (记账账户 / 支付记录)</label>
-          <select id="uni-edit-account" class="form-input" style="padding:7px 8px;font-size:11.5px;font-weight:700">
-            ${accOptions}
-          </select>
-        </div>
+      <!-- Single Payment Method Input -->
+      <div style="margin-bottom:10px">
+        <label class="form-label" style="font-size:10.5px;margin-bottom:2px">Payment Method (付款方式)</label>
+        <input type="text" id="uni-edit-payment" class="form-input" value="${esc(displayPaymentMethod)}" placeholder="e.g. Cash, Maybank, Touch 'n Go, Credit Card..." list="uni-paymethod-suggestions" style="padding:8px 10px;font-size:12px;font-weight:700" oninput="handleUniPaymentInputChange(this.value)"/>
+        <datalist id="uni-paymethod-suggestions">
+          <option value="Cash"></option>
+          <option value="Maybank (MAE / QR)"></option>
+          <option value="Touch 'n Go eWallet"></option>
+          <option value="Credit Card"></option>
+          <option value="Debit Card"></option>
+          <option value="Online Banking (FPX / DuitNow)"></option>
+        </datalist>
       </div>
 
       <!-- Items & Note -->
@@ -7031,15 +7040,22 @@ function handleUniCategoryChange(newCatId){
 
 function selectUniPayment(name){
   const inp = el('uni-edit-payment');
-  if(inp) inp.value = name || '';
+  if(!inp || !name) return;
+  inp.value = name;
   document.querySelectorAll('#uni-pay-quick-pills [data-uni-pay]').forEach(btn => {
     btn.classList.toggle('on', btn.dataset.uniPay === name);
   });
-  if(uniParsedData) uniParsedData.paymentMethod = name || '';
+  if(uniParsedData){
+    uniParsedData.paymentMethod = name;
+    uniParsedData.accountId = 'default';
+  }
 }
 
 function handleUniPaymentInputChange(val){
-  if(uniParsedData) uniParsedData.paymentMethod = val || '';
+  if(uniParsedData){
+    uniParsedData.paymentMethod = val || '';
+    uniParsedData.accountId = 'default';
+  }
 }
 
 function handleUniPaymentSelectChange(val){
@@ -7130,8 +7146,9 @@ function confirmUniversalUpload(openFormToEdit = false){
   const rawDate = dateInp?.value || uniCustomDate || uniParsedData.date || today();
   const dateStr = normalizeDateStr(rawDate, true);
   const selectedCat = catInp?.value || uniParsedData.category || 'food';
-  const selectedAcc = accInp?.value || S.lastUsedAccId || S.accounts[0]?.id || 'acc_1';
-  const selectedPay = (payInp?.value !== undefined ? payInp.value.trim() : (uniParsedData.paymentMethod || 'Cash')) || 'Cash';
+
+  const selectedPay = (payInp?.value !== undefined ? payInp.value.trim() : (uniParsedData?.paymentMethod || 'Cash')) || 'Cash';
+  const selectedAcc = 'default';
   const formattedNote = (noteInp?.value !== undefined ? noteInp.value : formatItemsSummary(uniParsedData)).trim();
   const photoToSave = uniImageDataUrl || photoData || null;
 
@@ -7163,6 +7180,10 @@ function confirmUniversalUpload(openFormToEdit = false){
         prevEl.classList.remove('hidden');
       }
       if(phEl && photoData) phEl.classList.add('hidden');
+      // Preserve parsed items (with calories) for saveTx()
+      if(uniParsedData.items && Array.isArray(uniParsedData.items) && uniParsedData.items.length > 0){
+        currentOcrItems = JSON.parse(JSON.stringify(uniParsedData.items));
+      }
       toast(`✏️ Reviewing: ${merchant} · ${fmt(amt)}`);
     } else {
       const detCurr = (uniParsedData.currency || 'MYR').toUpperCase();
@@ -7360,8 +7381,9 @@ function applyUploadToSplitterAndPromo(){
   const amt = Math.abs(parseFloat(amountInp?.value !== undefined && amountInp.value !== '' ? amountInp.value : d.amount)) || 0;
   const chosenCat = catInp?.value || d.category || 'food';
   const chosenDate = dateInp?.value || d.date || today();
+
   const chosenPay = (payInp?.value !== undefined ? payInp.value.trim() : (d.paymentMethod || 'Cash')) || 'Cash';
-  const chosenAcc = accInp?.value || d.accountId || S.lastUsedAccId || '';
+  const chosenAcc = 'default';
   const chosenNote = (noteInp?.value !== undefined ? noteInp.value : formatItemsSummary(d)).trim();
   const photoToSave = uniImageDataUrl || photoData || null;
 
@@ -7654,8 +7676,6 @@ function mapAndSetPaymentMethod(methodKeyOrName){
     targetName = "Touch 'n Go eWallet";
   } else if(lower.includes('mae') || lower.includes('maybank')){
     targetName = 'Maybank (MAE / QR)';
-  } else if(lower.includes('grab')){
-    targetName = 'GrabPay';
   } else if(lower.includes('shopee')){
     targetName = 'ShopeePay';
   } else if(lower.includes('debit')){
@@ -10783,11 +10803,13 @@ function exportCSV(){
 }
 
 function exportFullBackupJSON(){
+  const safeState = { ...S };
+  delete safeState.geminiApiKey; // Exclude secret API key from downloadable backups
   const backup = {
     app: '🍯 Pocket Winnie 🍯',
     version: '2.5',
     backupDate: new Date().toISOString(),
-    state: S
+    state: safeState
   };
   const str = JSON.stringify(backup, null, 2);
   const blob = new Blob([str], { type: 'application/json' });
@@ -11035,27 +11057,52 @@ const MY_MARKET_BENCHMARKS = [
 function extractTxReceiptItems(tx){
   if(!tx) return [];
   if(Array.isArray(tx.items) && tx.items.length > 0){
-    return tx.items.map(it => ({
-      name: it.name || it.desc || 'Item',
-      price: Number(it.price || it.amount) || 0,
-      qty: Number(it.qty) || 1
-    }));
+    return tx.items.map(it => {
+      let cal = parseInt(it.calories);
+      if(isNaN(cal) || cal <= 0){
+        const estimated = typeof estimateCaloriesFromName === 'function' ? estimateCaloriesFromName(it.name || it.desc || '') : -1;
+        cal = estimated >= 0 ? estimated : 0;
+      }
+      return {
+        name: it.name || it.desc || 'Item',
+        price: Number(it.price || it.amount) || 0,
+        qty: Number(it.qty) || 1,
+        calories: cal
+      };
+    });
   }
 
-  // If note contains itemized breakdown (e.g. "Item A (RM 10.00), Item B (RM 5.00)" or lines)
+  // If note contains itemized breakdown (e.g. "Item A (RM 10.00) [400kcal], Item B (RM 5.00)" or lines)
   if(tx.note && typeof tx.note === 'string'){
     const lines = tx.note.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
     const parsed = [];
-    const itemRegex = /(?:(\d+)\s*x\s*)?(.+?)\s*(?:[-–:]|\bRM\b|\$)?\s*(?:RM|\$)?\s*([0-9]+(?:\.[0-9]{1,2})?)$/i;
 
     lines.forEach(l => {
+      let calFromNote = 0;
+      const calMatch = l.match(/\[(\d+)\s*kcal\]/i);
+      if(calMatch){
+        calFromNote = parseInt(calMatch[1]) || 0;
+        l = l.replace(/\[\d+\s*kcal\]/i, '').trim();
+      }
+      const itemRegex = /(?:(\d+)\s*x\s*)?(.+?)(?:\s*x(\d+))?\s*(?:\((?:RM|\$)?\s*([0-9]+(?:\.[0-9]{1,2})?)\)|(?:[-–:]|\bRM\b|\$)?\s*(?:RM|\$)?\s*([0-9]+(?:\.[0-9]{1,2})?))?$/i;
       const m = l.match(itemRegex);
-      if(m && m[2] && m[3]){
-        parsed.push({
-          qty: parseInt(m[1]) || 1,
-          name: m[2].trim(),
-          price: parseFloat(m[3]) || 0
-        });
+      if(m && m[2]){
+        const itemName = m[2].replace(/[()]/g, '').trim();
+        const qty = parseInt(m[1] || m[3]) || 1;
+        const price = parseFloat(m[4] || m[5]) || 0;
+        let cal = calFromNote;
+        if(cal <= 0 && typeof estimateCaloriesFromName === 'function' && (tx.category === 'food' || tx.category === 'drinks')){
+          const estimated = estimateCaloriesFromName(itemName);
+          cal = estimated >= 0 ? estimated : 0;
+        }
+        if(itemName && (price > 0 || cal > 0 || itemName.length > 1)){
+          parsed.push({
+            name: itemName,
+            qty,
+            price,
+            calories: cal
+          });
+        }
       }
     });
 
@@ -11064,10 +11111,16 @@ function extractTxReceiptItems(tx){
 
   // Fallback: Use description as a single item entry if amount > 0
   if(tx.desc && Number(tx.amount) > 0){
+    let cal = 0;
+    if(typeof estimateCaloriesFromName === 'function' && (tx.category === 'food' || tx.category === 'drinks')){
+      const estimated = estimateCaloriesFromName(tx.desc);
+      cal = estimated >= 0 ? estimated : 0;
+    }
     return [{
       name: tx.desc,
       price: Number(tx.amount),
-      qty: 1
+      qty: 1,
+      calories: cal
     }];
   }
 
@@ -12955,10 +13008,6 @@ function renderWeeklyReport(){
 const originalRenderAll_F = (typeof renderAll === 'function') ? renderAll : function(){};
 renderAll = function(){
   originalRenderAll_F();
-  renderPaydayCountdown();
-  renderSpendingPrediction();
-  if(typeof renderStreakCard === 'function') renderStreakCard();
-  if(typeof renderCalorieWidget === 'function') renderCalorieWidget();
   if(el('payday-date-inp')) el('payday-date-inp').value = S.paydayDate || 25;
 };
 
@@ -13196,26 +13245,292 @@ function updateStreaks(){
   save();
 }
 
+// ── 🔥 CALORIE ESTIMATION SYSTEM ───────────────────────────
+// Built-in calorie lookup for common Malaysian food items (per serving)
+const CALORIE_DB = {
+  // Rice & Noodles
+  'nasi lemak': 400, 'nasi goreng': 450, 'nasi ayam': 480, 'nasi kandar': 550,
+  'nasi kerabu': 380, 'nasi dagang': 420, 'nasi briyani': 520, 'nasi campur': 500,
+  'mee goreng': 430, 'mee rebus': 350, 'mee bandung': 370, 'mee kari': 400,
+  'mee hoon goreng': 380, 'mee hoon soup': 280, 'char kuey teow': 520,
+  'kuey teow goreng': 480, 'kuey teow soup': 300, 'wan tan mee': 420,
+  'pan mee': 380, 'loh mee': 450, 'curry mee': 500, 'laksa': 480,
+  'asam laksa': 350, 'bihun goreng': 370, 'bihun soup': 250,
+  'maggi goreng': 500, 'indomie': 350,
+  // Chicken
+  'ayam goreng': 300, 'chicken rice': 480, 'chicken chop': 550,
+  'ayam penyet': 450, 'ayam bakar': 350, 'satay ayam': 250,
+  'fried chicken': 350, 'chicken wing': 200, 'nugget': 280,
+  'kfc': 450, 'mcchicken': 400,
+  // Roti & Bread
+  'roti canai': 300, 'roti telur': 380, 'roti bom': 450, 'roti tisu': 250,
+  'roti jala': 200, 'chapati': 180, 'naan': 280, 'tosai': 150,
+  'roti bakar': 250,
+  // Drinks
+  'teh tarik': 120, 'teh o': 40, 'teh ais': 80, 'kopi': 100,
+  'kopi o': 40, 'kopi ais': 90, 'milo': 150, 'milo ais': 180,
+  'milo dinosaur': 250, 'sirap bandung': 160, 'air bandung': 160,
+  'teh c': 100, 'cham': 110, 'neslo': 120, 'horlick': 130,
+  'barli': 80, 'limau ais': 100, 'air kelapa': 60,
+  'americano': 15, 'latte': 180, 'cappuccino': 120, 'mocha': 250,
+  'espresso': 10, 'flat white': 150, 'matcha latte': 200,
+  'boba': 350, 'bubble tea': 350, 'milk tea': 300,
+  'iced coffee': 120, 'frappe': 350, 'smoothie': 250,
+  'juice': 150, 'orange juice': 120, 'apple juice': 120,
+  'coke': 140, 'coca cola': 140, 'pepsi': 150, 'sprite': 130,
+  '100 plus': 120, 'mineral water': 0, 'plain water': 0,
+  // Soup
+  'sup kambing': 350, 'sup tulang': 400, 'bak kut teh': 450,
+  'tom yam': 300, 'soup': 200,
+  // Seafood
+  'ikan bakar': 300, 'udang goreng': 280, 'sotong goreng': 250,
+  'fish and chips': 500, 'sushi': 200,
+  // Mamak / Indian
+  'tandoori': 350, 'briyani': 520, 'murtabak': 500,
+  'thosai': 150, 'idli': 120, 'vadai': 180,
+  // Chinese
+  'char siu': 350, 'roast duck': 400, 'dim sum': 300,
+  'wonton': 250, 'dumpling': 280, 'spring roll': 200,
+  'fried rice': 450, 'chow mein': 400, 'congee': 200, 'porridge': 200,
+  // Snacks & Desserts
+  'pisang goreng': 200, 'keropok': 150, 'kuih': 180,
+  'cendol': 300, 'ais kacang': 350, 'ais cream': 250,
+  'cake': 350, 'pastry': 300, 'donut': 280, 'waffle': 350,
+  'pancake': 300, 'toast': 200, 'croissant': 280,
+  // Fast Food
+  'burger': 450, 'big mac': 550, 'cheeseburger': 500,
+  'fries': 350, 'french fries': 350, 'mcnugget': 280,
+  'pizza': 300, 'hotdog': 300, 'sandwich': 350, 'wrap': 380,
+  'kebab': 400, 'shawarma': 450, 'subway': 350,
+  // Groceries (per item/serving)
+  'egg': 70, 'bread': 80, 'milk': 120, 'cheese': 100,
+  'rice': 200, 'instant noodle': 350, 'biscuit': 150
+};
+
+function estimateCaloriesFromName(itemName){
+  if(!itemName) return -1;
+  const lower = itemName.toLowerCase().trim();
+  
+  // Exact match first
+  if(CALORIE_DB[lower] !== undefined) return CALORIE_DB[lower];
+  
+  // Partial match — find the best (longest) keyword match
+  let bestMatch = null;
+  let bestLen = 0;
+  for(const key of Object.keys(CALORIE_DB)){
+    if(lower.includes(key) && key.length > bestLen){
+      bestMatch = key;
+      bestLen = key.length;
+    }
+  }
+  if(bestMatch !== null) return CALORIE_DB[bestMatch];
+  
+  return -1; // Not found in DB
+}
+
+// Enriches items array with calorie estimates using built-in DB + optional AI fallback
+async function enrichItemsWithCalories(items){
+  if(!items || !Array.isArray(items) || items.length === 0) return;
+  
+  const unknownItems = [];
+  
+  // Step 1: Try built-in lookup for each item
+  items.forEach((it, idx) => {
+    if(it.calories && parseInt(it.calories) > 0) return; // Already has calories
+    const cal = estimateCaloriesFromName(it.name);
+    if(cal >= 0){
+      it.calories = cal; // 0 for water, >0 for food
+    } else {
+      unknownItems.push({ idx, name: it.name }); // -1 = not found
+    }
+  });
+  
+  // Step 2: For items not in DB, use Gemini to estimate
+  if(unknownItems.length > 0){
+    const apiKey = (typeof S !== 'undefined' && S) ? S.geminiApiKey : null;
+    if(apiKey){
+      try {
+        const itemNames = unknownItems.map(u => u.name).join(', ');
+        const prompt = `Estimate calories (kcal) per serving for these food/drink items. Return ONLY a JSON array of integers in the same order. If not food, return 0. Items: ${itemNames}`;
+        const payload = {
+          contents: [{ parts: [{ text: prompt }] }]
+        };
+        const gen = await generateGeminiContent(apiKey, payload);
+        if(gen.data){
+          const parts = gen.data.candidates?.[0]?.content?.parts || [];
+          const rawText = parts.map(p => p.text || '').join('');
+          const jsonStr = rawText.match(/\[[\s\S]*?\]/);
+          if(jsonStr){
+            const cals = JSON.parse(jsonStr[0]);
+            unknownItems.forEach((u, i) => {
+              if(cals[i] && parseInt(cals[i]) > 0){
+                items[u.idx].calories = parseInt(cals[i]);
+              }
+            });
+          }
+        }
+      } catch(e){
+        console.log('Calorie AI estimation fallback error:', e);
+      }
+    }
+  }
+}
+
 function renderCalorieWidget(){
   const card = el('calorie-card');
   if(!card) return;
   const numEl = el('cal-intake-num');
+  const titleEl = el('cal-intake-title');
+  const subEl = el('cal-intake-sub');
   if(!numEl) return;
   
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const dStr = today();
   const txs = (S.transactions || []).filter(t => t.date === dStr && t.type === 'expense');
   let totalKcal = 0;
+  let itemCount = 0;
   txs.forEach(tx => {
-    if(tx.items && Array.isArray(tx.items)){
-      tx.items.forEach(it => {
+    const items = extractTxReceiptItems(tx);
+    if(items && Array.isArray(items)){
+      items.forEach(it => {
         const cal = parseInt(it.calories) || 0;
         const qty = parseInt(it.qty) || 1;
-        totalKcal += (cal * qty);
+        if(cal > 0){
+          totalKcal += (cal * qty);
+          itemCount += qty;
+        }
       });
     }
   });
   
   numEl.textContent = totalKcal;
+  
+  if(titleEl){
+    if(totalKcal === 0){
+      titleEl.textContent = isZh ? '今日卡路里摄入' : "Today's Intake";
+    } else if(totalKcal < 1500){
+      titleEl.textContent = isZh ? '🥗 饮食清淡' : '🥗 Light Day';
+    } else if(totalKcal < 2200){
+      titleEl.textContent = isZh ? '✅ 摄入达标' : '✅ On Track';
+    } else {
+      titleEl.textContent = isZh ? '⚠️ 热量偏高' : '⚠️ High Intake';
+    }
+  }
+  
+  if(subEl){
+    if(totalKcal === 0){
+      subEl.textContent = isZh ? '扫描餐饮小票自动记录热量 · 点击详情 ›' : 'Scan a food receipt to track · Tap details ›';
+    } else {
+      subEl.textContent = isZh ? `今日已记录 ${itemCount} 样食物 · 点击查看详情 ›` : `${itemCount} item${itemCount !== 1 ? 's' : ''} tracked · Tap for details ›`;
+    }
+  }
+}
+
+function openCalorieModal(){
+  renderCalorieModalContent();
+  openModal('calorie-modal');
+}
+window.openCalorieModal = openCalorieModal;
+
+function renderCalorieModalContent(){
+  const container = el('calorie-modal-content');
+  if(!container) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const dStr = today();
+  const txs = (S.transactions || []).filter(t => t.date === dStr && t.type === 'expense');
+
+  let totalKcal = 0;
+  const trackedItems = [];
+
+  txs.forEach(tx => {
+    const items = extractTxReceiptItems(tx);
+    if(items && Array.isArray(items)){
+      items.forEach(it => {
+        const cal = parseInt(it.calories) || 0;
+        const qty = parseInt(it.qty) || 1;
+        if(cal > 0){
+          totalKcal += (cal * qty);
+          trackedItems.push({
+            name: it.name || 'Dish',
+            price: it.price || 0,
+            qty: qty,
+            calories: cal,
+            merchant: tx.desc || ''
+          });
+        }
+      });
+    }
+  });
+
+  const dailyGoal = 2000;
+  const pct = Math.min(100, Math.round((totalKcal / dailyGoal) * 100));
+  const barColor = totalKcal <= 1800 ? '#10b981' : (totalKcal <= 2300 ? '#f59e0b' : '#ef4444');
+
+  let html = `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">
+        ${isZh ? '今日总热量摄入' : "Today's Calorie Intake"}
+      </div>
+      <div style="font-size:32px;font-weight:900;color:${barColor};margin:4px 0">
+        ${totalKcal} <span style="font-size:14px;font-weight:700">kcal</span>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">
+        ${isZh ? `标准参考值：${dailyGoal} kcal · 已达 ${pct}%` : `Recommended reference: ${dailyGoal} kcal · ${pct}% reached`}
+      </div>
+      <div style="background:var(--bg2);height:8px;border-radius:6px;overflow:hidden">
+        <div style="background:${barColor};height:100%;width:${pct}%;transition:width .3s"></div>
+      </div>
+    </div>
+  `;
+
+  if(trackedItems.length === 0){
+    html += `
+      <div style="text-align:center;padding:24px 12px;color:var(--muted)">
+        <div style="font-size:32px;margin-bottom:8px">🥗</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">
+          ${isZh ? '今天尚未记录食物热量' : 'No food calories logged today'}
+        </div>
+        <div style="font-size:11px;line-height:1.4;margin-bottom:14px">
+          ${isZh ? '用相机扫描餐厅发票或菜单，AI 将自动识别菜品并计算卡路里！' : 'Scan a food receipt or menu to have AI automatically estimate and log calories.'}
+        </div>
+        <button type="button" class="btn" onclick="closeModal('calorie-modal');openUniversalUpload('expense');" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff">
+          📸 ${isZh ? '扫描餐饮小票' : 'Scan Food Receipt'}
+        </button>
+      </div>
+    `;
+  } else {
+    html += `
+      <div style="font-size:11.5px;font-weight:800;color:var(--text);margin-bottom:8px;display:flex;justify-content:space-between">
+        <span>${isZh ? `今日明细 (${trackedItems.length} 样)` : `Today's Food (${trackedItems.length} items)`}</span>
+        <span style="color:var(--muted)">${isZh ? '热量估算' : 'Est. Calories'}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;padding-right:2px">
+    `;
+    trackedItems.forEach(item => {
+      html += `
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:8px 10px">
+          <div style="flex:1;overflow:hidden">
+            <div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${item.qty > 1 ? `<span style="color:var(--cyan);font-weight:800;margin-right:2px">${item.qty}x</span> ` : ''}${esc(item.name)}
+            </div>
+            ${item.merchant ? `<div style="font-size:10px;color:var(--muted)">📍 ${esc(item.merchant)}</div>` : ''}
+          </div>
+          <div style="text-align:right;margin-left:8px">
+            <div style="font-size:12px;font-weight:900;color:#10b981">🔥 ${item.calories * item.qty} kcal</div>
+            ${item.price > 0 ? `<div style="font-size:10px;color:var(--muted)">${fmt(item.price * item.qty)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    });
+    html += `
+      </div>
+      <button type="button" class="ghost-btn" onclick="closeModal('calorie-modal');openUniversalUpload('expense');" style="width:100%;margin-top:12px;color:#10b981;border-color:rgba(16,185,129,.3)">
+        📸 ${isZh ? '扫描更多小票' : 'Scan Another Receipt'}
+      </button>
+    `;
+  }
+
+  container.innerHTML = html;
 }
 
 function renderStreakCard(){
