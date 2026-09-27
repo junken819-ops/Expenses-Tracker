@@ -18,7 +18,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
-<link rel="stylesheet" href="styles.css?v=3.1">
+<link rel="stylesheet" href="styles.css?v=4.4">
 </head>
 <body>
 
@@ -147,15 +147,33 @@
         </div>
       </div>
 
-      <!-- 🥗 Calorie Tracker -->
+      <!-- 🥗 Calorie & Nutrition Tracker -->
       <div class="widget-card" id="calorie-card" onclick="openCalorieModal()" style="cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#10b981;margin-bottom:2px">🔥 Calorie Intake</div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#10b981;margin-bottom:2px">🔥 Calorie & Nutrition</div>
             <div style="font-size:13px;font-weight:800;color:var(--text)" id="cal-intake-title">Today's Intake</div>
             <div style="font-size:10.5px;color:var(--muted);margin-top:1px" id="cal-intake-sub">Scan a food receipt to track</div>
           </div>
-          <div style="font-size:22px;font-weight:900;color:#10b981;line-height:1"><span id="cal-intake-num">0</span> <span style="font-size:11px">kcal</span></div>
+          <div style="text-align:right">
+            <div style="font-size:22px;font-weight:900;color:#10b981;line-height:1"><span id="cal-intake-num">0</span> <span style="font-size:11px">kcal</span></div>
+            <div id="cal-protein-pill" style="font-size:10.5px;font-weight:800;color:var(--cyan);margin-top:2px;display:none">🥩 <span id="cal-protein-num">0</span>g protein</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🌏 World Dining & Restaurant Passport -->
+      <div class="widget-card" id="passport-card" onclick="go('passport')" style="cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#ec4899;margin-bottom:2px">🌏 Dining Passport</div>
+            <div style="font-size:13px;font-weight:800;color:var(--text)" id="passport-widget-title">World Dining Log</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:1px" id="passport-widget-sub">Track visited & pending restaurants ›</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:22px;font-weight:900;color:#ec4899;line-height:1"><span id="passport-widget-countries">0</span> <span style="font-size:11px">flags</span></div>
+            <div style="font-size:10.5px;font-weight:800;color:var(--muted);margin-top:2px" id="passport-widget-counts">0 restaurants</div>
+          </div>
         </div>
       </div>
     </div>
@@ -259,14 +277,120 @@
         <button type="button" class="chip" onclick="resetTxMonthFilter()" id="tx-reset-month-btn" style="font-size:11px;padding:6px 10px;cursor:pointer">All Time</button>
       </div>
       <div id="tx-month-summary-bar" class="hidden" style="margin-bottom:10px;padding:8px 12px;border-radius:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);font-size:12px;display:flex;justify-content:space-between;align-items:center"></div>
-      <div class="chips" style="margin-bottom:12px">
+      <div class="chips" style="margin-bottom:8px">
         <button type="button" class="chip on" id="tx-f-all" onclick="setFilter(this,'all')">All</button>
         <button type="button" class="chip" id="tx-f-exp" onclick="setFilter(this,'expense')">Expenses</button>
         <button type="button" class="chip" id="tx-f-inc" onclick="setFilter(this,'income')">Income</button>
       </div>
+      <!-- Tag Filter Bar -->
+      <div id="tx-tag-filter-bar" class="chips hidden" style="margin-bottom:12px;gap:5px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px">
+        <!-- Rendered dynamically -->
+      </div>
       <div id="tx-full-list" class="tx-list"></div>
       <div id="empty-tx" class="empty hidden"><div class="empty-ico">🍯</div><p>No transactions found</p></div>
     </div>
+
+    <div class="spacer"></div>
+  </section>
+
+  <!-- 🌏 WORLD DINING & RESTAURANT PASSPORT PAGE -->
+  <section id="page-passport" class="page">
+    <div class="inner-hdr" style="display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button type="button" class="back-btn" onclick="go('home')" title="Back to Home">✕</button>
+        <div>
+          <h1 style="margin:0;font-size:17px;font-weight:900;display:flex;align-items:center;gap:6px">
+            <span>🌏</span> <span data-i18n="passport_page_title">Dining Passport</span>
+          </h1>
+          <div style="font-size:10px;color:var(--muted)" data-i18n="passport_page_sub">全球美食餐厅足迹 · 跨国探店与待吃清单</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button type="button" class="primary-btn" onclick="openAddRestaurantModal()" style="padding:5px 12px;font-size:11.5px;margin-bottom:0;background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff">
+          ➕ Add
+        </button>
+      </div>
+    </div>
+
+    <!-- Tidy Passport Hero Summary -->
+    <div class="pp-hero">
+      <div class="pp-hero-top">
+        <div class="pp-hero-title">
+          <span>✈️</span>
+          <span id="passport-hero-flags">🇲🇾 🇯🇵 🇹🇭 World Explorer</span>
+        </div>
+        <div class="pp-hero-actions">
+          <button type="button" class="chip" onclick="syncExistingFoodTxsToPassport()" title="Sync dining records from your food transactions" style="font-size:9.5px;padding:2px 7px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:var(--amber)">
+            🔄 Sync
+          </button>
+        </div>
+      </div>
+
+      <!-- Compact 4 Stats Strip -->
+      <div class="pp-stats-strip">
+        <div class="pp-stat-cell">
+          <div class="pp-stat-val" id="passport-page-stat-countries" style="color:#ec4899">0</div>
+          <div class="pp-stat-lbl">Countries</div>
+        </div>
+        <div class="pp-stat-sep"></div>
+        <div class="pp-stat-cell">
+          <div class="pp-stat-val" id="passport-page-stat-visited" style="color:#10b981">0</div>
+          <div class="pp-stat-lbl">Visited</div>
+        </div>
+        <div class="pp-stat-sep"></div>
+        <div class="pp-stat-cell">
+          <div class="pp-stat-val" id="passport-page-stat-pending" style="color:var(--amber)">0</div>
+          <div class="pp-stat-lbl">Wishlist</div>
+        </div>
+        <div class="pp-stat-sep"></div>
+        <div class="pp-stat-cell">
+          <div class="pp-stat-val" id="passport-page-stat-spend" style="color:var(--cyan)">RM 0</div>
+          <div class="pp-stat-lbl">Spend</div>
+        </div>
+      </div>
+
+      <!-- Tidy Nutrition Footprint -->
+      <div class="pp-hero-sub">
+        <span>🥗 Nutrition Footprint</span>
+        <span>
+          <strong style="color:#10b981" id="passport-hero-tot-kcal">🔥 0 kcal</strong> · 
+          <strong style="color:var(--cyan)" id="passport-hero-tot-protein">🥩 0g</strong>
+        </span>
+      </div>
+    </div>
+
+    <!-- Tidy Search & Filter Controls -->
+    <div class="pp-controls">
+      <!-- Search Input -->
+      <div class="pp-search-box">
+        <span class="pp-search-ico">🔍</span>
+        <input type="text" id="passport-search-inp" class="pp-search-input" placeholder="Search places, dishes, cities..." oninput="onPassportSearchInput(this.value)"/>
+        <button type="button" onclick="clearPassportSearch()" id="passport-search-clear-btn" class="pp-search-clear">✕</button>
+      </div>
+
+      <!-- Segmented Status Tabs -->
+      <div class="pp-segmented">
+        <button type="button" id="passport-page-filter-all" class="pp-seg-btn on" onclick="filterPassportPageStatus('all')">All</button>
+        <button type="button" id="passport-page-filter-visited" class="pp-seg-btn" onclick="filterPassportPageStatus('visited')">✅ Visited</button>
+        <button type="button" id="passport-page-filter-pending" class="pp-seg-btn" onclick="filterPassportPageStatus('pending')">📌 Wishlist</button>
+      </div>
+
+      <!-- Dynamic Country Pills (Self-open only when country detected) -->
+      <div id="passport-page-country-pills" class="pp-country-carousel"></div>
+    </div>
+
+    <!-- List Toolbar: Count + Compact/Detailed toggle -->
+    <div class="pp-toolbar">
+      <span id="passport-list-counter" style="font-weight:700">Places</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button type="button" class="pp-toggle-btn" id="passport-view-mode-btn" onclick="togglePassportViewMode()">
+          📋 <span id="passport-view-mode-label">Compact</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Country Categories & Dining List Container -->
+    <div id="passport-page-country-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
 
     <div class="spacer"></div>
   </section>
@@ -317,10 +441,11 @@
       </div>
     </div>
 
-    <!-- View Tabs: Overview / Breakdown / AI -->
+    <!-- View Tabs: Overview / Breakdown / Calories / AI -->
     <div class="cal-view-toggle" style="margin-bottom:14px">
       <button class="cal-toggle-btn on" id="ana-view-tab-overview" onclick="switchAnaViewTab('overview')" data-i18n="ana_tab_overview">📊 Overview</button>
       <button class="cal-toggle-btn" id="ana-view-tab-breakdown" onclick="switchAnaViewTab('breakdown')" data-i18n="ana_tab_breakdown">🍩 Breakdown</button>
+      <button class="cal-toggle-btn" id="ana-view-tab-calories" onclick="switchAnaViewTab('calories')" data-i18n="ana_tab_calories">🥗 Calories</button>
       <button class="cal-toggle-btn" id="ana-view-tab-ai" onclick="switchAnaViewTab('ai')" data-i18n="ana_tab_ai">🤖 AI Insights</button>
     </div>
 
@@ -347,6 +472,111 @@
           <div class="ana-hl-lbl"><span>🧾</span> <span data-i18n="hl_tx_count">Transactions</span></div>
           <div class="ana-hl-val" id="ana-hl-tx-count">0</div>
           <div class="ana-hl-sub" id="ana-hl-tx-avg">Avg: RM 0.00/tx</div>
+        </div>
+      </div>
+
+      <!-- 🍯 Pocket Winnie Wrapped Banner -->
+      <div onclick="openWrappedModal()" style="background:linear-gradient(135deg,rgba(245,158,11,.16),rgba(236,72,153,.14));border:1.5px solid rgba(245,158,11,.4);border-radius:18px;padding:12px 14px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:26px">🍯</div>
+          <div>
+            <div style="font-size:13.5px;font-weight:900;color:var(--text)">Pocket Winnie Wrapped</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:1px">Your annual spending story, food trips & achievements</div>
+          </div>
+        </div>
+        <div class="primary-btn" style="width:auto;margin:0;padding:6px 12px;font-size:11px;background:var(--amber);color:#000;font-weight:800;border:none">
+          Explore ✨
+        </div>
+      </div>
+
+      <!-- 💰 Cash Flow Forecast (30-Day Projection) Card -->
+      <div class="cf-card" id="ana-cashflow-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:16px">💰</span>
+            <strong style="font-size:13.5px;color:var(--text)">30-Day Cash Flow Forecast</strong>
+          </div>
+          <button type="button" onclick="openCashFlowModal()" style="font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:10px;background:rgba(6,182,212,.18);color:#06b6d4;border:none;cursor:pointer">
+            Details & Settings ›
+          </button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--muted)">Payday Runway & Survival Status:</span>
+          <span id="ana-cf-status" class="cf-status-pill cf-status-healthy">🟢 Healthy</span>
+        </div>
+        <div class="cf-metrics-grid">
+          <div class="cf-metric-item">
+            <div class="cf-metric-label">Min Projected</div>
+            <div id="ana-cf-min" class="cf-metric-val" style="color:var(--cyan)">RM 0.00</div>
+          </div>
+          <div class="cf-metric-item">
+            <div class="cf-metric-label">Safe Daily Burn</div>
+            <div id="ana-cf-safe-daily" class="cf-metric-val" style="color:var(--amber)">RM 0.00</div>
+          </div>
+          <div class="cf-metric-item">
+            <div class="cf-metric-label">Payday Eve Bal</div>
+            <div id="ana-cf-payday-eve" class="cf-metric-val" style="color:var(--green)">RM 0.00</div>
+          </div>
+        </div>
+        <div id="ana-cf-chart-wrap" style="width:100%;height:80px;margin-top:6px;overflow:hidden"></div>
+      </div>
+
+      <!-- 📸 Visual Spending Heatmap Card -->
+      <div class="heatmap-card" id="ana-heatmap-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:16px">📸</span>
+            <strong style="font-size:13.5px;color:var(--text)">Spending Activity Heatmap</strong>
+          </div>
+          <button type="button" class="chip" onclick="openHeatmapModal()" style="font-size:10.5px;padding:3px 8px;cursor:pointer">
+            Full Year ›
+          </button>
+        </div>
+        <div style="font-size:10.5px;color:var(--muted);margin-bottom:8px">Daily expense intensity: green is no-spend, red is surge</div>
+        <div class="heatmap-scroll-wrap" id="ana-heatmap-grid-wrap"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--muted)">
+          <div style="display:flex;align-items:center;gap:4px">
+            <span>Less</span>
+            <span class="heatmap-cell hm-level-0" style="display:inline-block;width:10px;height:10px"></span>
+            <span class="heatmap-cell hm-level-1" style="display:inline-block;width:10px;height:10px"></span>
+            <span class="heatmap-cell hm-level-2" style="display:inline-block;width:10px;height:10px"></span>
+            <span class="heatmap-cell hm-level-3" style="display:inline-block;width:10px;height:10px"></span>
+            <span class="heatmap-cell hm-level-4" style="display:inline-block;width:10px;height:10px"></span>
+            <span>More</span>
+          </div>
+          <div id="ana-hm-nospend-stat" style="font-weight:700;color:#10b981">🔥 0 No-Spend Days</div>
+        </div>
+      </div>
+
+      <!-- 🥗 Calorie & Dietary Overview Card in Overview -->
+      <div class="chart-card" id="ana-cal-overview-card" style="background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(6,182,212,.06));border:1.5px solid rgba(16,185,129,.35);margin-bottom:14px;border-radius:18px;padding:14px 16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h3 style="margin:0;font-size:13.5px;font-weight:800;color:#10b981;display:flex;align-items:center;gap:6px">
+            <span>🥗</span> <span id="ana-cal-ov-title">Calorie Intake & Food Nutrition</span>
+          </h3>
+          <button type="button" onclick="switchAnaViewTab('calories')" style="font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:10px;background:rgba(16,185,129,.18);color:#10b981;border:none;cursor:pointer">
+            View Analytics ›
+          </button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 4px;text-align:center">
+            <div style="font-size:9.5px;color:var(--muted);font-weight:700">🔥 Total Intake</div>
+            <div id="ana-cal-ov-total" style="font-size:15px;font-weight:900;color:#10b981;margin-top:2px">0 kcal</div>
+            <div style="font-size:8.5px;color:var(--muted)" id="ana-cal-ov-days">0 meal days</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 4px;text-align:center">
+            <div style="font-size:9.5px;color:var(--muted);font-weight:700">⚡ Daily Average</div>
+            <div id="ana-cal-ov-avg" style="font-size:15px;font-weight:900;color:var(--text);margin-top:2px">0 kcal</div>
+            <div style="font-size:8.5px;color:var(--muted)" id="ana-cal-ov-goal">Ref: 2000 kcal</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 4px;text-align:center">
+            <div style="font-size:9.5px;color:var(--muted);font-weight:700">💵 Cost / 100 kcal</div>
+            <div id="ana-cal-ov-cost" style="font-size:15px;font-weight:900;color:var(--amber);margin-top:2px">RM 0.00</div>
+            <div style="font-size:8.5px;color:var(--muted)">food efficiency</div>
+          </div>
+        </div>
+        <div id="ana-cal-ov-topdish" style="font-size:11px;color:var(--muted);line-height:1.4;background:var(--bg2);padding:7px 10px;border-radius:10px;display:flex;align-items:center;gap:6px">
+          <span>🍽️</span> <span>Loading dietary insights...</span>
         </div>
       </div>
 
@@ -459,7 +689,89 @@
       </div>
     </div>
 
-    <!-- PANE 3: AI INSIGHTS -->
+    <!-- PANE: CALORIES ANALYTICS -->
+    <div id="ana-pane-calories" style="display:none">
+      <!-- Calorie Header Summary Card -->
+      <div class="chart-card" style="background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(6,182,212,.08));border:1.5px solid rgba(16,185,129,.4);margin-bottom:14px;border-radius:18px;padding:14px 16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3 style="margin:0;font-size:14px;font-weight:800;color:#10b981;display:flex;align-items:center;gap:6px">
+            <span>🥗</span> <span id="ana-cal-pane-title">Calorie Intake & Nutrition Analytics</span>
+          </h3>
+          <span id="ana-cal-status-badge" style="font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:10px;background:rgba(16,185,129,.2);color:#10b981">
+            Analyzing...
+          </span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--muted)">🔥 Total Calorie Intake</div>
+            <div id="ana-cal-total-val" style="font-size:20px;font-weight:900;color:#10b981;margin-top:2px">0 kcal</div>
+            <div id="ana-cal-total-sub" style="font-size:10px;color:var(--muted);margin-top:1px">0 active days</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--muted)">⚡ Daily Average Intake</div>
+            <div id="ana-cal-avg-val" style="font-size:20px;font-weight:900;color:var(--text);margin-top:2px">0 kcal</div>
+            <div id="ana-cal-avg-sub" style="font-size:10px;color:var(--muted);margin-top:1px">vs 2,000 kcal target</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--muted)">🍔 Total Food Spending</div>
+            <div id="ana-cal-spend-val" style="font-size:17px;font-weight:900;color:var(--amber);margin-top:2px">RM 0.00</div>
+            <div id="ana-cal-spend-sub" style="font-size:10px;color:var(--muted);margin-top:1px">food & beverages</div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--muted)">🏷️ Nutrition Cost Efficiency</div>
+            <div id="ana-cal-eff-val" style="font-size:17px;font-weight:900;color:var(--cyan);margin-top:2px">RM 0.00</div>
+            <div id="ana-cal-eff-sub" style="font-size:10px;color:var(--muted);margin-top:1px">per 100 kcal</div>
+          </div>
+        </div>
+        <div id="ana-cal-macro-progress" style="background:var(--bg2);border-radius:10px;padding:10px 12px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:6px">
+            <span style="color:var(--text)" id="ana-cal-progress-lbl">Dietary Goal Benchmark</span>
+            <span style="color:#10b981;font-weight:900" id="ana-cal-progress-pct">0%</span>
+          </div>
+          <div style="background:var(--bg3);height:8px;border-radius:6px;overflow:hidden">
+            <div id="ana-cal-progress-fill" style="background:linear-gradient(90deg,#10b981,#34d399);height:100%;width:0%;transition:width .4s"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calorie Intake Trend Bar Chart -->
+      <div class="chart-card" id="ana-cal-chart-card" style="border-radius:18px;padding:14px 16px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <h3 style="margin:0;font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:6px">
+            <span>📊</span> <span id="ana-cal-chart-title">Daily Calorie Intake Trend</span>
+          </h3>
+          <span style="font-size:10px;font-weight:700;color:var(--muted)">Ref: 2,000 kcal</span>
+        </div>
+        <div id="ana-cal-bars" style="display:flex;align-items:flex-end;gap:6px;height:130px;padding:10px 4px 6px 4px;border-bottom:1px solid var(--border)"></div>
+        <div id="ana-cal-chart-tooltip" style="font-size:11px;font-weight:700;color:#10b981;min-height:16px;margin-top:8px;text-align:center"></div>
+      </div>
+
+      <!-- Top Calorie Heavy Dishes -->
+      <div class="chart-card" style="border-radius:18px;padding:14px 16px;margin-bottom:14px">
+        <h3 style="margin:0 0 10px 0;font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:6px">
+          <span>🏆</span> <span>Top Calorie-Heavy Dishes in this Period</span>
+        </h3>
+        <div id="ana-cal-top-dishes-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+
+      <!-- Food Calorie Category Breakdown -->
+      <div class="chart-card" style="border-radius:18px;padding:14px 16px;margin-bottom:14px">
+        <h3 style="margin:0 0 10px 0;font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:6px">
+          <span>🍲</span> <span>Calories by Meal Category</span>
+        </h3>
+        <div id="ana-cal-cat-breakdown" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+      <!-- Meal Receipts Log in Period -->
+      <div class="chart-card" style="border-radius:18px;padding:14px 16px;margin-bottom:14px">
+        <h3 style="margin:0 0 10px 0;font-size:13.5px;font-weight:800;display:flex;align-items:center;gap:6px">
+          <span>🧾</span> <span>Scanned Food Receipts in this Period</span>
+        </h3>
+        <div id="ana-cal-receipts-list" style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;padding-right:2px"></div>
+      </div>
+    </div>
+
+    <!-- PANE 4: AI INSIGHTS -->
     <div id="ana-pane-ai" style="display:none">
       <div class="chart-card" id="ana-ai-tracker-card" style="background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(16,185,129,.06));border:1.5px solid var(--purple2)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -613,6 +925,16 @@
           </div>
           <div class="more-row-right">›</div>
         </button>
+        <button type="button" class="more-row" onclick="openAiCoachModal()">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:rgba(245,158,11,.16);color:var(--amber)">🍯</div>
+            <div>
+              <div class="more-row-title">维尼 AI 理财陪伴官 (Spending Coach)</div>
+              <div class="more-row-sub">智能问答 · 消费漏斗诊断 · 趣味省钱建议与购买决策</div>
+            </div>
+          </div>
+          <div class="more-row-right">Ask 🍯 ›</div>
+        </button>
       </div>
     </div>
 
@@ -647,12 +969,42 @@
     <div class="more-sec">
       <div class="more-sec-title"><span>📊 支出管理与凭证报表</span></div>
       <div class="more-card-list">
-        <button type="button" class="more-row" onclick="openReceiptGallery()">
+        <button type="button" class="more-row" onclick="openCashFlowModal()">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(245,158,11,.16);color:#f59e0b">📸</div>
+            <div class="more-row-icon" style="background:rgba(6,182,212,.16);color:#06b6d4">💰</div>
             <div>
-              <div class="more-row-title">小票凭证相册画廊 (Receipt Gallery)</div>
-              <div class="more-row-sub">全览所有附带拍照凭证的支出记录</div>
+              <div class="more-row-title">30天现金流与发薪日预测 (Cash Flow Forecast)</div>
+              <div class="more-row-sub">基于发薪日、周期账单与日常花销测算资金安全期</div>
+            </div>
+          </div>
+          <div class="more-row-right">›</div>
+        </button>
+        <button type="button" class="more-row" onclick="openHeatmapModal()">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:rgba(249,115,22,.16);color:#f97316">📸</div>
+            <div>
+              <div class="more-row-title">全年支出活跃热力图 (Spending Heatmap)</div>
+              <div class="more-row-sub">GitHub 式 365 天消费点阵 · 记录每一天无消费与高开销</div>
+            </div>
+          </div>
+          <div class="more-row-right">›</div>
+        </button>
+        <button type="button" class="more-row" onclick="openWrappedModal()">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:rgba(245,158,11,.16);color:var(--amber)">🍯</div>
+            <div>
+              <div class="more-row-title">Pocket Winnie Wrapped (年终消费回顾)</div>
+              <div class="more-row-sub">年度总账单 · 美食餐厅足迹 · 攒钱勋章与理财性格</div>
+            </div>
+          </div>
+          <div class="more-row-right">›</div>
+        </button>
+        <button type="button" class="more-row" onclick="go('passport')">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:rgba(236,72,153,.16);color:#ec4899">🌏</div>
+            <div>
+              <div class="more-row-title">全球美食餐厅足迹 (World Dining Passport)</div>
+              <div class="more-row-sub">跨国探店 · 自动创建国家分类 · 消费汇率 · 菜品与营养 · 待探店清单</div>
             </div>
           </div>
           <div class="more-row-right">›</div>
@@ -1014,6 +1366,9 @@
     <button class="nav-btn" data-p="transactions" onclick="go('transactions')">
       <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-i18n="nav_activity">Activity</span>
     </button>
+    <button class="nav-btn" data-p="passport" onclick="go('passport')" title="🌏 World Dining Passport">
+      <span style="font-size:18px;line-height:1;margin-bottom:1px">🌏</span><span data-i18n="nav_passport">Passport</span>
+    </button>
     <button class="nav-btn" data-p="analytics" onclick="go('analytics')">
       <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 20h16M4 20V10l6-4 4 3 6-5v16"/></svg><span data-i18n="nav_analytics">Analytics</span>
     </button>
@@ -1191,7 +1546,7 @@
       </div>
       <div id="ocr-progress" class="ocr-progress-box hidden" style="margin-bottom:14px">
         <div class="ai-scan-spinner"></div>
-        <div class="ai-scan-step-txt" id="ocr-progress-step">🤖 AI Reading Receipt Photo<span class="ai-dots"></span></div>
+        <div class="ai-scan-step-txt" id="ocr-progress-step">🤖 AI Reading Receipt<span class="ai-dots"></span></div>
         <div class="ai-scan-sub-txt" id="ocr-progress-sub">Extracting amount, merchant & Malaysian category…</div>
       </div>
 
@@ -1244,7 +1599,7 @@
 
       <!-- Collapsible 'More Options' -->
       <div class="accordion-toggle" id="tx-more-toggle" onclick="toggleTxMoreDetails()">
-        <span id="tx-more-label" data-i18n="lbl_more_options">⚙️ More Details (Date, Time, Location, Photo)</span>
+        <span id="tx-more-label" data-i18n="lbl_more_options">⚙️ More Details (Date, Time, Location, Notes)</span>
         <span id="tx-more-chevron">▾</span>
       </div>
 
@@ -1279,6 +1634,28 @@
           <input type="text" id="tx-note" class="form-input" data-i18n-ph="ph_note" placeholder="e.g. Split bill with friends…"/>
         </div>
 
+        <!-- Tags / Labels System -->
+        <div class="form-row" id="tx-tags-row">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label class="form-label" style="margin-bottom:0">🏷️ Tags / Labels (标签)</label>
+            <span style="font-size:10.5px;color:var(--muted)">Tap pill or type custom</span>
+          </div>
+          <div id="tx-selected-tags" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;min-height:24px"></div>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="tx-tag-inp" class="form-input" placeholder="Type tag e.g. trip, work, gift..." style="font-size:12px;padding:6px 10px;flex:1" onkeydown="handleTxTagKeyDown(event)"/>
+            <button type="button" class="chip" onclick="addCustomTxTag()" style="padding:4px 10px;font-size:11px;font-weight:700">＋ Add</button>
+          </div>
+          <div class="quick-tags-scroll" id="tx-quick-tag-pills" style="display:flex;gap:5px;overflow-x:auto;margin-top:6px;padding-bottom:2px">
+            <button type="button" class="quick-tag-pill" onclick="toggleQuickTag('trip')">✈️ #trip</button>
+            <button type="button" class="quick-tag-pill" onclick="toggleQuickTag('work')">💼 #work</button>
+            <button type="button" class="quick-tag-pill" onclick="toggleQuickTag('family')">👨‍👩‍👧 #family</button>
+            <button type="button" class="quick-tag-pill" onclick="toggleQuickTag('foodie')">🍜 #foodie</button>
+            <button type="button" class="quick-tag-pill" onclick="toggleQuickTag('gift')">🎁 #gift</button>
+            <button type="button" class="quick-tag-pill" onclick="toggleQuickTag('medical')">💊 #medical</button>
+            <button type="button" class="quick-tag-pill" onclick="toggleQuickTag('emergency')">🚨 #emergency</button>
+          </div>
+        </div>
+
         <!-- Advance / Claimable Expense Option -->
         <div class="form-row" style="background:rgba(255,179,0,.08);padding:10px 12px;border-radius:14px;border:1px dashed rgba(255,179,0,.35)">
           <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleTxAdvanceMode()">
@@ -1309,12 +1686,12 @@
           </div>
         </div>
 
-        <!-- Receipt Photo -->
+        <!-- AI Receipt Scan (Auto-fill) -->
         <div class="form-row" style="margin-bottom:0">
-          <label class="form-label" data-i18n="lbl_receipt_photo">📷 Receipt Photo</label>
+          <label class="form-label" data-i18n="lbl_receipt_photo">📷 AI Receipt Scan (Auto-fill)</label>
           <div class="photo-area" id="photo-area" style="position:relative;overflow:hidden" onclick="document.getElementById('photo-file').click()">
             <input type="file" id="photo-file" accept="image/*" style="display:none" onchange="handlePhoto(this)"/>
-            <div class="photo-placeholder" id="photo-ph" data-i18n="ph_receipt_photo">Tap to attach receipt image</div>
+            <div class="photo-placeholder" id="photo-ph" data-i18n="ph_receipt_photo">Tap or snap receipt to autofill (no photo stored)</div>
             <img id="photo-prev" class="photo-preview hidden" alt="Receipt"/>
             <div id="tx-scan-laser" class="ai-scan-laser-line hidden"></div>
             <div id="tx-scan-grid" class="ai-scan-grid-overlay hidden"></div>
@@ -1957,18 +2334,6 @@
     </div>
   </div>
 
-  <!-- Receipt Gallery Modal -->
-  <div id="receipt-gallery-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'receipt-gallery-modal')">
-    <div class="modal">
-      <div class="modal-handle"></div>
-      <div class="modal-title">
-        <span>📸 Receipt Photo Gallery</span>
-        <button type="button" class="modal-close-btn" onclick="closeModal('receipt-gallery-modal')">✕</button>
-      </div>
-      <div id="receipt-gallery-content"></div>
-      <button type="button" class="ghost-btn" onclick="closeModal('receipt-gallery-modal')" style="margin-top:14px">Close</button>
-    </div>
-  </div>
 
   <!-- Challenges Modal -->
   <div id="challenges-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'challenges-modal')">
@@ -2297,25 +2662,6 @@
           </button>
         </div>
 
-        <!-- Receipt Photo Box -->
-        <div id="tx-det-photo-box" class="hidden" style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:12px 14px;margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">📸 Attached Receipt</span>
-            <div style="display:flex;gap:6px">
-              <button type="button" class="see-all" onclick="document.getElementById('tx-det-photo-input').click()" style="font-size:11px;color:var(--cyan);font-weight:700">🔄 Replace</button>
-              <button type="button" class="see-all" onclick="removeDetailTxPhoto()" style="font-size:11px;color:var(--red);font-weight:700">🗑️ Remove</button>
-            </div>
-          </div>
-          <img id="tx-det-photo-img" style="max-height:220px;border-radius:12px;object-fit:contain;width:100%;cursor:pointer" alt="Receipt Preview" onclick="openPhotoViewer(this.src)"/>
-        </div>
-
-        <!-- Quick Attach Photo Button (when no photo attached) -->
-        <div id="tx-det-no-photo-box" style="margin-bottom:12px">
-          <input type="file" id="tx-det-photo-input" accept="image/*" style="display:none" onchange="handleDetailPhotoUpload(this)"/>
-          <button type="button" class="ghost-btn" id="tx-det-attach-photo-btn" onclick="document.getElementById('tx-det-photo-input').click()" style="width:100%;padding:8px 12px;font-size:11.5px;border-style:dashed;color:var(--muted)">
-            <span>📷 补传发票小票 (Attach Receipt Photo)</span>
-          </button>
-        </div>
 
         <!-- Advance / Reimbursement Box -->
         <div id="tx-det-advance-box" class="hidden" style="background:rgba(255,179,0,.12);border:1.5px solid rgba(255,179,0,.35);border-radius:16px;padding:12px 14px;margin-bottom:12px">
@@ -2417,11 +2763,536 @@
     </div>
   </div>
 
+  <!-- 🌏 WORLD RESTAURANT PASSPORT MODAL -->
+  <div id="restaurant-passport-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'restaurant-passport-modal')">
+    <div class="modal" style="max-height:90vh;display:flex;flex-direction:column">
+      <div class="modal-handle"></div>
+      <div class="modal-title" style="flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:22px">🌏</span>
+          <div>
+            <div style="font-size:14.5px;font-weight:900;color:var(--text)" id="passport-modal-heading">World Dining Passport</div>
+            <div style="font-size:10px;font-weight:600;color:var(--muted)">全球美食餐厅足迹 · 跨国探店与待吃清单</div>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeModal('restaurant-passport-modal')">✕</button>
+      </div>
+
+      <!-- Scrollable content area -->
+      <div style="overflow-y:auto;flex:1;padding-right:2px">
+        <!-- Compact Stats Strip -->
+        <div class="pp-stats-strip" style="margin:6px 0 10px 0">
+          <div class="pp-stat-cell">
+            <div class="pp-stat-val" id="passport-stat-countries" style="color:#ec4899">0</div>
+            <div class="pp-stat-lbl">Countries</div>
+          </div>
+          <div class="pp-stat-sep"></div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-val" id="passport-stat-visited" style="color:#10b981">0</div>
+            <div class="pp-stat-lbl">Visited</div>
+          </div>
+          <div class="pp-stat-sep"></div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-val" id="passport-stat-pending" style="color:var(--amber)">0</div>
+            <div class="pp-stat-lbl">Wishlist</div>
+          </div>
+          <div class="pp-stat-sep"></div>
+          <div class="pp-stat-cell">
+            <div class="pp-stat-val" id="passport-stat-spend" style="color:var(--cyan)">RM 0</div>
+            <div class="pp-stat-lbl">Spend</div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button type="button" class="primary-btn" onclick="openAddRestaurantModal()" style="flex:1;background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff;font-size:11.5px;padding:6px 10px;margin-bottom:0">
+            ➕ Add Restaurant
+          </button>
+          <button type="button" class="ghost-btn" onclick="syncExistingFoodTxsToPassport()" title="Sync dining records from your food transactions" style="font-size:10.5px;padding:6px 8px;color:var(--amber);border-color:rgba(245,158,11,.3);white-space:nowrap">
+            🔄 Sync
+          </button>
+        </div>
+
+        <!-- Status Filter Tabs -->
+        <div class="pp-segmented" style="margin-bottom:8px">
+          <button type="button" id="passport-filter-all" class="pp-seg-btn on" onclick="filterPassportStatus('all')">All</button>
+          <button type="button" id="passport-filter-visited" class="pp-seg-btn" onclick="filterPassportStatus('visited')">✅ Visited</button>
+          <button type="button" id="passport-filter-pending" class="pp-seg-btn" onclick="filterPassportStatus('pending')">📌 Wishlist</button>
+        </div>
+
+        <!-- Dynamic Country Pills (Self-open only when country detected) -->
+        <div id="passport-country-pills" class="pp-country-carousel" style="margin-bottom:8px"></div>
+
+        <!-- Country Category Cards & Restaurant List Container -->
+        <div id="passport-country-list" style="display:flex;flex-direction:column;gap:14px;margin-bottom:12px"></div>
+      </div>
+
+      <button type="button" class="ghost-btn" onclick="closeModal('restaurant-passport-modal')" style="margin-top:8px;flex-shrink:0">Close</button>
+    </div>
+  </div>
+
+  <!-- ➕ ADD / EDIT RESTAURANT MODAL -->
+  <div id="add-restaurant-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'add-restaurant-modal')">
+    <div class="modal" style="max-height:90vh;overflow-y:auto">
+      <div class="modal-handle"></div>
+      <div class="modal-title">
+        <span id="add-rest-modal-title">🍽️ Add Restaurant Record</span>
+        <button type="button" class="modal-close-btn" onclick="closeModal('add-restaurant-modal')">✕</button>
+      </div>
+
+      <form id="add-restaurant-form" onsubmit="event.preventDefault(); saveRestaurantRecord();">
+        <input type="hidden" id="rest-edit-id" value=""/>
+
+        <!-- Status Toggle: Visited vs Pending Wishlist -->
+        <div class="form-row">
+          <label class="form-label">Record Status (打卡状态)</label>
+          <div style="display:flex;gap:8px">
+            <button type="button" id="rest-status-visited-btn" class="chip on" onclick="setRestStatus('visited')" style="flex:1;font-size:12px;padding:8px;border-radius:10px;text-align:center">
+              ✅ Visited (已打卡)
+            </button>
+            <button type="button" id="rest-status-pending-btn" class="chip" onclick="setRestStatus('pending')" style="flex:1;font-size:12px;padding:8px;border-radius:10px;text-align:center">
+              📌 Pending Wishlist (待探店/想吃)
+            </button>
+          </div>
+          <input type="hidden" id="rest-status-inp" value="visited"/>
+        </div>
+
+        <!-- Restaurant Name -->
+        <div class="form-row">
+          <label class="form-label">Restaurant Name (餐厅/店名) *</label>
+          <input type="text" id="rest-name-inp" class="form-input" placeholder="e.g. Ichiran Ramen, Jay Fai, Tai Ho Jiak" required oninput="autoDetectCountryFromRestName(this.value)"/>
+        </div>
+
+        <!-- Country & City -->
+        <div class="form-row" style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px">
+          <div>
+            <label class="form-label">Country (国家) *</label>
+            <select id="rest-country-sel" class="form-input" onchange="onRestCountryChange(this.value)" required>
+              <option value="Malaysia" data-code="MY" data-flag="🇲🇾" data-currency="MYR">🇲🇾 Malaysia (马来西亚)</option>
+              <option value="Japan" data-code="JP" data-flag="🇯🇵" data-currency="JPY">🇯🇵 Japan (日本)</option>
+              <option value="Thailand" data-code="TH" data-flag="🇹🇭" data-currency="THB">🇹🇭 Thailand (泰国)</option>
+              <option value="Singapore" data-code="SG" data-flag="🇸🇬" data-currency="SGD">🇸🇬 Singapore (新加坡)</option>
+              <option value="Taiwan" data-code="TW" data-flag="🇹🇼" data-currency="TWD">🇹🇼 Taiwan (台湾)</option>
+              <option value="South Korea" data-code="KR" data-flag="🇰🇷" data-currency="KRW">🇰🇷 South Korea (韩国)</option>
+              <option value="China" data-code="CN" data-flag="🇨🇳" data-currency="CNY">🇨🇳 China (中国)</option>
+              <option value="United Kingdom" data-code="GB" data-flag="🇬🇧" data-currency="GBP">🇬🇧 United Kingdom (英国)</option>
+              <option value="United States" data-code="US" data-flag="🇺🇸" data-currency="USD">🇺🇸 United States (美国)</option>
+              <option value="Australia" data-code="AU" data-flag="🇦🇺" data-currency="AUD">🇦🇺 Australia (澳洲)</option>
+              <option value="Vietnam" data-code="VN" data-flag="🇻🇳" data-currency="VND">🇻🇳 Vietnam (越南)</option>
+              <option value="Indonesia" data-code="ID" data-flag="🇮🇩" data-currency="IDR">🇮🇩 Indonesia (印尼)</option>
+              <option value="Hong Kong" data-code="HK" data-flag="🇭🇰" data-currency="HKD">🇭🇰 Hong Kong (香港)</option>
+              <option value="Other" data-code="XX" data-flag="🌐" data-currency="USD">🌐 Other Country (其他国家)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">City / Area (城市/区域)</label>
+            <input type="text" id="rest-city-inp" class="form-input" placeholder="e.g. Tokyo, Bangkok, KL"/>
+          </div>
+        </div>
+
+        <!-- Custom Country Name if "Other" -->
+        <div id="rest-custom-country-row" class="form-row hidden">
+          <label class="form-label">Custom Country Name & Flag</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="rest-custom-flag-inp" class="form-input" placeholder="Flag (e.g. 🇫🇷)" style="width:70px;text-align:center"/>
+            <input type="text" id="rest-custom-country-inp" class="form-input" placeholder="Country Name (e.g. France)" style="flex:1"/>
+          </div>
+        </div>
+
+        <!-- Date & Rating -->
+        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <label class="form-label" id="rest-date-lbl">Visited Date (日期)</label>
+            <input type="date" id="rest-date-inp" class="form-input"/>
+          </div>
+          <div>
+            <label class="form-label">Rating (评分)</label>
+            <select id="rest-rating-sel" class="form-input">
+              <option value="5">⭐⭐⭐⭐⭐ Must Try (强烈推荐)</option>
+              <option value="4">⭐⭐⭐⭐ Great (很棒)</option>
+              <option value="3">⭐⭐⭐ Average (普通)</option>
+              <option value="2">⭐⭐ Fair (一般)</option>
+              <option value="1">⭐ Poor (踩雷)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Spending (Speeding) & Currency with Live Conversion -->
+        <div class="form-row">
+          <label class="form-label">Spending (消费金额与币种)</label>
+          <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:6px">
+            <div style="display:flex;gap:4px">
+              <select id="rest-curr-sel" class="form-input" style="width:85px;padding:6px 4px;font-weight:800" onchange="calcRestConvertedMYR()">
+                <option value="MYR">MYR (RM)</option>
+                <option value="JPY">JPY (¥)</option>
+                <option value="THB">THB (฿)</option>
+                <option value="SGD">SGD ($)</option>
+                <option value="TWD">TWD ($)</option>
+                <option value="KRW">KRW (₩)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="AUD">AUD ($)</option>
+                <option value="CNY">CNY (¥)</option>
+                <option value="HKD">HKD ($)</option>
+                <option value="VND">VND (₫)</option>
+                <option value="IDR">IDR (Rp)</option>
+              </select>
+              <input type="number" step="0.01" id="rest-amount-inp" class="form-input" placeholder="0.00" style="flex:1;font-weight:800;font-size:14px" oninput="calcRestConvertedMYR()"/>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px 10px;display:flex;flex-direction:column;justify-content:center">
+              <div style="font-size:9.5px;color:var(--muted)">Converted (折合马币)</div>
+              <div id="rest-converted-myr-display" style="font-size:13px;font-weight:900;color:var(--cyan)">RM 0.00</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Food Dishes & Nutrition (Calories & Protein) -->
+        <div class="form-row">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label class="form-label" style="margin-bottom:0">Dishes & Nutrition (菜品与营养) 🥗</label>
+            <button type="button" class="chip" onclick="addRestFoodItemRow()" style="font-size:10px;padding:3px 8px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);color:#10b981;font-weight:700">＋ Add Dish</button>
+          </div>
+          <div id="rest-dishes-container" style="display:flex;flex-direction:column;gap:6px"></div>
+          <div id="rest-nutrition-total-bar" style="margin-top:6px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;font-size:11px">
+            <span style="color:var(--muted)">Total Nutrition:</span>
+            <span style="font-weight:800"><span style="color:#10b981" id="rest-tot-cal">🔥 0 kcal</span> · <span style="color:var(--cyan)" id="rest-tot-prot">🥩 0g</span></span>
+          </div>
+        </div>
+
+        <!-- Notes / Highlights -->
+        <div class="form-row">
+          <label class="form-label">Notes & Signature Dishes (必点招牌 / 备忘)</label>
+          <textarea id="rest-notes-inp" class="form-input" rows="2" placeholder="e.g. Signature braised pork loin, secret chilli sauce, long queue after 6pm"></textarea>
+        </div>
+
+        <!-- Optional: Also log as an expense transaction -->
+        <div id="rest-sync-tx-box" class="form-row" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:8px 10px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text);cursor:pointer">
+            <input type="checkbox" id="rest-sync-tx-chk" checked/>
+            <span>Also save as an Expense transaction in Pocket Winnie (同步计入日常记账支出)</span>
+          </label>
+        </div>
+
+        <button type="submit" class="primary-btn" style="background:linear-gradient(135deg,#ec4899,#d946ef);margin-top:10px">
+          💾 Save Restaurant Record (保存探店记录)
+        </button>
+        <button type="button" class="ghost-btn" onclick="closeModal('add-restaurant-modal')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 💰 Cash Flow Forecast Modal -->
+  <div id="cashflow-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'cashflow-modal')">
+    <div class="modal" style="max-height:90vh;overflow-y:auto">
+      <div class="modal-handle"></div>
+      <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:6px">💰 <span>30-Day Cash Flow Forecast</span></span>
+        <button type="button" class="modal-close-btn" onclick="closeModal('cashflow-modal')">✕</button>
+      </div>
+      
+      <!-- Payday Configuration Bar -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px 12px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+          <span>🗓️ Payday & Expected Income</span>
+          <button type="button" class="see-all" onclick="saveCashFlowPaydaySettings()">Save Settings ✓</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:8px">
+          <div>
+            <label class="form-label" style="font-size:10px;margin-bottom:2px">Payday Date (Day)</label>
+            <input type="number" id="cf-payday-date-inp" class="form-input" min="1" max="31" placeholder="25" style="font-size:12px;padding:6px 8px"/>
+          </div>
+          <div>
+            <label class="form-label" style="font-size:10px;margin-bottom:2px">Expected Salary (RM)</label>
+            <input type="number" id="cf-payday-amt-inp" class="form-input" min="0" placeholder="e.g. 4500" style="font-size:12px;padding:6px 8px"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projection Status & Metric Badges -->
+      <div class="cf-status-wrap" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;color:var(--muted)">Runway Outlook:</div>
+        <div id="cf-modal-status" class="cf-status-pill cf-status-healthy">🟢 Healthy</div>
+      </div>
+      <div class="cf-metrics-grid" style="margin-bottom:14px">
+        <div class="cf-metric-item">
+          <div class="cf-metric-label">Min Projected</div>
+          <div id="cf-modal-min" class="cf-metric-val" style="color:var(--cyan)">RM 0.00</div>
+          <div id="cf-modal-min-date" style="font-size:8.5px;color:var(--muted);margin-top:1px">—</div>
+        </div>
+        <div class="cf-metric-item">
+          <div class="cf-metric-label">Safe Daily Burn</div>
+          <div id="cf-modal-safe-daily" class="cf-metric-val" style="color:var(--amber)">RM 0.00</div>
+          <div style="font-size:8.5px;color:var(--muted);margin-top:1px">to stay positive</div>
+        </div>
+        <div class="cf-metric-item">
+          <div class="cf-metric-label">Payday Eve Bal</div>
+          <div id="cf-modal-payday-eve" class="cf-metric-val" style="color:var(--green)">RM 0.00</div>
+          <div id="cf-modal-days-to-pay" style="font-size:8.5px;color:var(--muted);margin-top:1px">0 days left</div>
+        </div>
+      </div>
+
+      <!-- 30-Day SVG Projection Curve -->
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:11.5px;font-weight:700;color:var(--text)">📈 Projected Balance (Next 30 Days)</span>
+          <span id="cf-chart-hover-val" style="font-size:11px;font-weight:800;color:var(--cyan)"></span>
+        </div>
+        <div id="cf-modal-chart-svg-wrap" style="width:100%;height:140px;position:relative">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Key Cash Flow Events Timeline -->
+      <div class="sec-hdr" style="margin-top:8px;margin-bottom:6px">
+        <h2 style="font-size:12.5px;font-weight:800;margin:0">Upcoming Recurring & Bills (30 Days)</h2>
+      </div>
+      <div id="cf-events-list" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;margin-bottom:14px">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <button type="button" class="primary-btn" onclick="closeModal('cashflow-modal')">Done</button>
+    </div>
+  </div>
+
+  <!-- 📸 Full Year Spending Heatmap Modal -->
+  <div id="heatmap-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'heatmap-modal')">
+    <div class="modal" style="max-height:92vh;overflow-y:auto">
+      <div class="modal-handle"></div>
+      <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:6px">📸 <span>Spending Activity Heatmap</span></span>
+        <button type="button" class="modal-close-btn" onclick="closeModal('heatmap-modal')">✕</button>
+      </div>
+
+      <!-- Year Selector & Stats Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="display:flex;gap:6px">
+          <button type="button" class="chip on" id="hm-year-cur" onclick="selectHeatmapYear(2026)">2026</button>
+          <button type="button" class="chip" id="hm-year-prev" onclick="selectHeatmapYear(2025)">2025</button>
+        </div>
+        <div id="hm-summary-stats" style="font-size:11px;font-weight:700;color:var(--amber)">
+          🔥 <span id="hm-stat-nospend">0</span> No-Spend Days
+        </div>
+      </div>
+
+      <!-- Heatmap Scroll Grid Container -->
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px 10px;margin-bottom:12px">
+        <div class="heatmap-scroll-wrap" id="hm-full-grid-wrap">
+          <!-- 52 weeks grid rendered dynamically -->
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:10px;color:var(--muted)">
+          <div style="display:flex;align-items:center;gap:4px">
+            <span>Less</span>
+            <span class="heatmap-cell hm-level-0" style="display:inline-block;width:10px;height:10px"></span>
+            <span class="heatmap-cell hm-level-1" style="display:inline-block;width:10px;height:10px"></span>
+            <span class="heatmap-cell hm-level-2" style="display:inline-block;width:10px;height:10px"></span>
+            <span class="heatmap-cell hm-level-3" style="display:inline-block;width:10px;height:10px"></span>
+            <span class="heatmap-cell hm-level-4" style="display:inline-block;width:10px;height:10px"></span>
+            <span>More</span>
+          </div>
+          <div id="hm-stat-total-spent" style="font-weight:700;color:var(--text)">Total: RM 0.00</div>
+        </div>
+      </div>
+
+      <!-- Selected Day Details Card in Heatmap -->
+      <div id="hm-day-inspect-box" style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div>
+            <div id="hm-inspect-date" style="font-size:13px;font-weight:800;color:var(--text)">Select a day on the grid</div>
+            <div id="hm-inspect-sub" style="font-size:10.5px;color:var(--muted)">Tap any square to view transactions</div>
+          </div>
+          <div id="hm-inspect-amt" style="font-size:15px;font-weight:900;color:var(--amber)">—</div>
+        </div>
+        <div id="hm-inspect-txs" style="display:flex;flex-direction:column;gap:5px;max-height:130px;overflow-y:auto;margin-top:8px"></div>
+      </div>
+
+      <button type="button" class="primary-btn" onclick="closeModal('heatmap-modal')">Close</button>
+    </div>
+  </div>
+
+  <!-- 🍯 Pocket Winnie Wrapped Modal -->
+  <div id="wrapped-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'wrapped-modal')">
+    <div class="modal" style="max-height:92vh;overflow-y:auto;background:var(--bg)">
+      <div class="modal-handle"></div>
+      
+      <!-- Story Progress Bars -->
+      <div class="wrapped-story-bars" id="wrapped-story-bars">
+        <div class="wrapped-story-bar"><div class="wrapped-story-bar-fill" id="wsb-0"></div></div>
+        <div class="wrapped-story-bar"><div class="wrapped-story-bar-fill" id="wsb-1"></div></div>
+        <div class="wrapped-story-bar"><div class="wrapped-story-bar-fill" id="wsb-2"></div></div>
+        <div class="wrapped-story-bar"><div class="wrapped-story-bar-fill" id="wsb-3"></div></div>
+        <div class="wrapped-story-bar"><div class="wrapped-story-bar-fill" id="wsb-4"></div></div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:800;color:var(--amber);display:flex;align-items:center;gap:5px">
+          <span>🍯</span> <span>POCKET WINNIE WRAPPED</span>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeModal('wrapped-modal')">✕</button>
+      </div>
+
+      <!-- Slide 0: The Big Picture -->
+      <div class="wrapped-slide active" id="wrapped-slide-0">
+        <div class="wrapped-hero-box" style="background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(239,68,68,.12));border:1.5px solid rgba(245,158,11,.4)">
+          <div style="font-size:42px;margin-bottom:6px">🍯</div>
+          <h2 style="font-size:20px;font-weight:900;color:var(--text);margin:0">The Great Honey Harvest</h2>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px" id="wrap-year-title">Your 2026 Financial Journey</div>
+          <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:14px;border:1px solid var(--border)">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase">Total Spent This Year</div>
+            <div id="wrap-tot-exp" style="font-size:26px;font-weight:900;color:var(--red);margin-top:2px">RM 0.00</div>
+            <div id="wrap-tot-txs" style="font-size:11px;color:var(--muted);margin-top:2px">Across 0 transactions</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+            <div style="background:var(--bg);border-radius:12px;padding:10px;border:1px solid var(--border);text-align:center">
+              <div style="font-size:9.5px;color:var(--muted)">Net Savings Rate</div>
+              <div id="wrap-save-rate" style="font-size:16px;font-weight:900;color:var(--green);margin-top:2px">0%</div>
+            </div>
+            <div style="background:var(--bg);border-radius:12px;padding:10px;border:1px solid var(--border);text-align:center">
+              <div style="font-size:9.5px;color:var(--muted)">Daily Burn</div>
+              <div id="wrap-daily-avg" style="font-size:16px;font-weight:900;color:var(--amber);margin-top:2px">RM 0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 1: Top Categories & Purchases -->
+      <div class="wrapped-slide" id="wrapped-slide-1">
+        <div class="wrapped-hero-box" style="background:linear-gradient(135deg,rgba(16,185,129,.18),rgba(6,182,212,.12));border:1.5px solid rgba(16,185,129,.35)">
+          <div style="font-size:42px;margin-bottom:6px">👑</div>
+          <h2 style="font-size:20px;font-weight:900;color:var(--text);margin:0">Where the Honey Went</h2>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Your top spending kingdoms</div>
+          <div id="wrap-top-cats-list" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;text-align:left"></div>
+          <div style="margin-top:14px;background:var(--bg);border-radius:12px;padding:10px;border:1px solid var(--border);text-align:left">
+            <div style="font-size:10px;color:var(--muted);font-weight:700">💎 Biggest Single Purchase:</div>
+            <div id="wrap-biggest-purchase" style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: Dining & Food Footprint -->
+      <div class="wrapped-slide" id="wrapped-slide-2">
+        <div class="wrapped-hero-box" style="background:linear-gradient(135deg,rgba(236,72,153,.2),rgba(245,158,11,.15));border:1.5px solid rgba(236,72,153,.35)">
+          <div style="font-size:42px;margin-bottom:6px">🌏</div>
+          <h2 style="font-size:20px;font-weight:900;color:var(--text);margin:0">The Food & Dining Odyssey</h2>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Your culinary adventures around the world</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+            <div style="background:var(--bg);border-radius:12px;padding:12px;border:1px solid var(--border)">
+              <div style="font-size:10px;color:var(--muted)">Restaurants Visited</div>
+              <div id="wrap-food-rest-count" style="font-size:22px;font-weight:900;color:#ec4899;margin-top:2px">0</div>
+            </div>
+            <div style="background:var(--bg);border-radius:12px;padding:12px;border:1px solid var(--border)">
+              <div style="font-size:10px;color:var(--muted)">Cuisine Countries</div>
+              <div id="wrap-food-countries" style="font-size:22px;font-weight:900;color:var(--amber);margin-top:2px">0 🇲🇾</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;background:var(--bg);border-radius:12px;padding:10px;border:1px solid var(--border);text-align:left">
+            <div style="font-size:10px;color:var(--muted);font-weight:700">🍜 Total Spent on Food & Dining:</div>
+            <div id="wrap-food-total-spent" style="font-size:15px;font-weight:900;color:var(--amber);margin-top:2px">RM 0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Discipline & Records -->
+      <div class="wrapped-slide" id="wrapped-slide-3">
+        <div class="wrapped-hero-box" style="background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(59,130,246,.15));border:1.5px solid rgba(124,58,237,.35)">
+          <div style="font-size:42px;margin-bottom:6px">🏆</div>
+          <h2 style="font-size:20px;font-weight:900;color:var(--text);margin:0">Discipline & Milestones</h2>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Your self-control achievements</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+            <div style="background:var(--bg);border-radius:12px;padding:12px;border:1px solid var(--border)">
+              <div style="font-size:10px;color:var(--muted)">Longest No-Spend</div>
+              <div id="wrap-best-streak" style="font-size:20px;font-weight:900;color:#10b981;margin-top:2px">0 days 🔥</div>
+            </div>
+            <div style="background:var(--bg);border-radius:12px;padding:12px;border:1px solid var(--border)">
+              <div style="font-size:10px;color:var(--muted)">Total Zero-Spend Days</div>
+              <div id="wrap-zero-spend-days" style="font-size:20px;font-weight:900;color:var(--cyan);margin-top:2px">0 days</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;background:var(--bg);border-radius:12px;padding:10px;border:1px solid var(--border);text-align:left">
+            <div style="font-size:10px;color:var(--muted);font-weight:700">⚡ Most Frequented Merchant:</div>
+            <div id="wrap-top-merchant" style="font-size:13px;font-weight:800;color:var(--text);margin-top:2px">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Persona & Shareable Summary -->
+      <div class="wrapped-slide" id="wrapped-slide-4">
+        <div class="wrapped-hero-box" style="background:linear-gradient(135deg,rgba(245,158,11,.25),rgba(236,72,153,.2));border:2px solid var(--amber)">
+          <div id="wrap-persona-icon" style="font-size:52px;margin-bottom:4px">🍯</div>
+          <div style="font-size:11px;font-weight:800;color:var(--amber);letter-spacing:1px;text-transform:uppercase">2026 Financial Persona</div>
+          <h2 id="wrap-persona-title" style="font-size:22px;font-weight:900;color:var(--text);margin:4px 0 8px 0">Sovereign of the Honey Vault</h2>
+          <p id="wrap-persona-desc" style="font-size:12px;color:var(--text);line-height:1.5;margin:0 0 14px 0;opacity:0.9">
+            You value security and steady honey collection above all else. Your disciplined tracking ensures your honey pot never runs dry!
+          </p>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button type="button" class="primary-btn" onclick="copyWrappedSummaryText()" style="flex:1;background:var(--amber);color:#000;font-weight:800;font-size:12px;margin:0">
+              📋 Copy Summary
+            </button>
+            <button type="button" class="ghost-btn" onclick="shareWrappedWhatsApp()" style="flex:1;font-size:12px;margin:0">
+              💬 Share
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Arrows -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+        <button type="button" class="ghost-btn" onclick="stepWrappedSlide(-1)" style="width:auto;padding:8px 16px;margin:0" id="wrap-prev-btn">‹ Back</button>
+        <div style="font-size:11px;color:var(--muted)" id="wrap-slide-indicator">1 / 5</div>
+        <button type="button" class="primary-btn" onclick="stepWrappedSlide(1)" style="width:auto;padding:8px 18px;margin:0" id="wrap-next-btn">Next ›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🤖 AI Spending Coach Modal -->
+  <div id="ai-coach-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'ai-coach-modal')">
+    <div class="modal" style="max-height:92vh;display:flex;flex-direction:column">
+      <div class="modal-handle"></div>
+      <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:24px">🍯</div>
+          <div>
+            <div style="font-size:14px;font-weight:900;color:var(--text)">Winnie Spending Coach</div>
+            <div style="font-size:10px;color:var(--muted)">Empathetic AI Financial Companion</div>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeModal('ai-coach-modal')">✕</button>
+      </div>
+
+      <!-- API Key Status Banner if missing -->
+      <div id="coach-api-warning" class="hidden" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:8px 10px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;font-size:11px">
+        <span>💡 For deep Gemini thinking, set your API key</span>
+        <button type="button" class="see-all" onclick="openGeminiModal()">Setup Key ›</button>
+      </div>
+
+      <!-- Chat Messages Scroll Container -->
+      <div id="coach-messages-container" style="flex:1;overflow-y:auto;padding:8px 0;min-height:220px;max-height:380px;display:flex;flex-direction:column;gap:8px">
+        <!-- Messages rendered dynamically -->
+      </div>
+
+      <!-- Quick Action Prompt Pills -->
+      <div style="display:flex;gap:5px;overflow-x:auto;padding:6px 0;margin-bottom:8px" id="coach-quick-prompts">
+        <button type="button" class="quick-tag-pill" onclick="sendCoachQuickPrompt('health')">🍯 How is my honey pot?</button>
+        <button type="button" class="quick-tag-pill" onclick="sendCoachQuickPrompt('leaks')">🔍 Find money leaks</button>
+        <button type="button" class="quick-tag-pill" onclick="sendCoachQuickPrompt('afford')">💡 Can I afford this?</button>
+        <button type="button" class="quick-tag-pill" onclick="sendCoachQuickPrompt('save300')">🎯 Save RM 300 tips</button>
+      </div>
+
+      <!-- Input Bar -->
+      <div style="display:flex;gap:6px;align-items:center;margin-top:auto">
+        <input type="text" id="coach-user-input" class="form-input" placeholder="Ask Winnie: e.g. Should I buy a new phone?" style="flex:1;font-size:12px;padding:8px 12px" onkeydown="handleCoachInputKeyDown(event)"/>
+        <button type="button" class="primary-btn" onclick="sendCoachUserMessage()" style="width:auto;padding:8px 14px;margin:0;font-size:12px;font-weight:800;background:var(--amber);color:#000">
+          Send 🍯
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
 </div>
 
-<script src="app.js?v=4.3"></script>
+<script src="app.js?v=4.5"></script>
 <script>
   // Register Service Worker for PWA offline support
   if ('serviceWorker' in navigator) {

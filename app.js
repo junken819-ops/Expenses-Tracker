@@ -383,9 +383,12 @@ const I18N = {
     "view_all": "See all",
     "nav_home": "Home",
     "nav_activity": "Transactions",
+    "nav_passport": "Passport",
     "nav_analytics": "Analytics",
     "nav_period": "Period Care",
     "nav_more": "More Hubs",
+    "passport_page_title": "Dining Passport",
+    "passport_page_sub": "World Restaurant & Dining Passport · Track Worldwide",
     "nav_profile": "Profile",
     "cal_view": "Calendar",
     "list_view": "List",
@@ -433,7 +436,7 @@ const I18N = {
     "hub4_title": "Malaysian Market Toolkit",
     "hub4_sub": "Live Petrol Rates · Currency FX · Inflation Calculator",
     "hub5_title": "Receipts, Tax & Statements",
-    "hub5_sub": "Receipt Gallery · LHDN Tax Relief · PDF Statements",
+    "hub5_sub": "LHDN Tax Relief · PDF Statements · AI Smart Scan",
     "acc_sec_title": "⚙️ Accounts & Settings",
     "row_banks": "Banks & e-Wallets",
     "row_banks_sub": "Maybank, CIMB, TNG & 28+ accounts",
@@ -549,7 +552,7 @@ const I18N = {
     "lbl_account": "Account",
     "btn_add_acc": "➕ Add Account",
     "lbl_paymethod": "Payment Method",
-    "lbl_more_options": "More details (Time, Location, Tax, Reimburse, Photo)",
+    "lbl_more_options": "More details (Time, Location, Tax, Reimburse, Notes)",
     "lbl_date": "Date",
     "lbl_time": "Time",
     "lbl_location": "Location / Merchant",
@@ -560,8 +563,8 @@ const I18N = {
     "tx_advance_sub": "Mark this as paid on behalf of company or friend",
     "tx_advance_debtor": "Reimbursement Source / Person",
     "tx_advance_status": "Status",
-    "lbl_receipt_photo": "📷 Receipt Photo",
-    "ph_receipt_photo": "Tap to attach receipt photo",
+    "lbl_receipt_photo": "📷 AI Receipt Scan (Auto-fill)",
+    "ph_receipt_photo": "Tap or snap receipt to autofill (no photo stored)",
     "btn_save_tx": "Save Transaction",
     "modal_add_acc": "Add Malaysian Bank / Wallet",
     "lbl_select_preset": "🇲🇾 Choose Bank / E-Wallet Preset",
@@ -603,8 +606,6 @@ const I18N = {
     "tx_det_tax_lbl": "🏷️ LHDN Tax Relief",
     "tx_det_items_title": "🛒 Itemized Breakdown & Notes",
     "tx_det_inflation_title": "🇲🇾 Receipt Items vs Market Benchmark",
-    "tx_det_photo_title": "📷 Attached Receipt Photo",
-    "tx_det_tap_zoom": "Tap to Zoom",
     "wallpaper_modal_intro": "Personalize your Honey Pot with high-resolution cute wallpapers.",
     "wp_opacity_lbl": "✨ Wallpaper Visibility (Opacity)",
     "custom_wp_dropdown": "Custom URL or Photo Upload",
@@ -663,6 +664,7 @@ const I18N = {
     "ana_daily_avg": "Daily Average",
     "ana_tab_overview": "📊 Overview",
     "ana_tab_breakdown": "🍩 Breakdown",
+    "ana_tab_calories": "🥗 Calories",
     "ana_tab_ai": "🤖 AI Insights",
     "ana_503020_title": "💰 50/30/20 Financial Health Matrix",
     "ana_needs": "🏠 Needs (50%)",
@@ -717,9 +719,12 @@ const I18N = {
     "view_all": "查看全部",
     "nav_home": "首页",
     "nav_activity": "账单明细",
+    "nav_passport": "美食护照",
     "nav_analytics": "消费分析",
     "nav_period": "经期关怀",
     "nav_more": "功能中心",
+    "passport_page_title": "全球美食护照",
+    "passport_page_sub": "跨国探店与美食足迹 · 待吃清单",
     "nav_profile": "我的",
     "cal_view": "日历视图",
     "list_view": "列表视图",
@@ -767,7 +772,7 @@ const I18N = {
     "hub4_title": "大马本土实用工具箱",
     "hub4_sub": "实时油价查询 · 实时汇率换算 · 大马通胀计算器",
     "hub5_title": "小票凭证与税务导出",
-    "hub5_sub": "小票相册画廊 · LHDN 个人税减免 · 月度 PDF 对账单",
+    "hub5_sub": "LHDN 个人税减免 · 月度 PDF 对账单 · AI 智能识别",
     "acc_sec_title": "⚙️ 账户与基础设置",
     "row_banks": "银行账户与电子钱包",
     "row_banks_sub": "Maybank、CIMB、TNG 及 28+ 种本地账户",
@@ -894,8 +899,8 @@ const I18N = {
     "tx_advance_sub": "帮公司或朋友先行垫付，方便后续一键核销",
     "tx_advance_debtor": "报销来源 / 垫付对象",
     "tx_advance_status": "报销状态",
-    "lbl_receipt_photo": "📷 小票 / 账单照片",
-    "ph_receipt_photo": "点击拍摄或上传小票照片",
+    "lbl_receipt_photo": "📷 AI 智能扫小票 (自动填入)",
+    "ph_receipt_photo": "点击拍摄或上传小票识别 (不留存照片)",
     "btn_save_tx": "保存账单",
     "modal_add_acc": "添加马来西亚银行 / 电子钱包",
     "lbl_select_preset": "🇲🇾 选择银行 / 电子钱包预设",
@@ -937,8 +942,6 @@ const I18N = {
     "tx_det_tax_lbl": "🏷️ LHDN 个人所得税减免",
     "tx_det_items_title": "🛒 单品明细与备注",
     "tx_det_inflation_title": "🇲🇾 小票单品 vs 大马市面均价",
-    "tx_det_photo_title": "📷 附带小票照片",
-    "tx_det_tap_zoom": "点击放大预览",
     "wallpaper_modal_intro": "使用可爱的高清百亩森林插画装扮你的记账空间。",
     "wp_opacity_lbl": "✨ 壁纸清晰度 (透明度调节)",
     "custom_wp_dropdown": "自定义链接或手机相册上传",
@@ -997,6 +1000,7 @@ const I18N = {
     "ana_daily_avg": "日均支出",
     "ana_tab_overview": "📊 收支概览",
     "ana_tab_breakdown": "🍩 消费拆解",
+    "ana_tab_calories": "🥗 热量分析",
     "ana_tab_ai": "🤖 AI 智能洞察",
     "ana_503020_title": "💰 50/30/20 财务健康法则",
     "ana_needs": "🏠 必要开支 (50%)",
@@ -1164,6 +1168,7 @@ const STATE = {
   lastUsedAccId:'',gsheetUrl:'',lastSync:'',
   biometricLock: false,
   pendingMeals: [],
+  restaurantRecords: [],
   paydayDate: 25,
   paydayAmount: 0,
   challenges: [],
@@ -1188,6 +1193,10 @@ const STATE = {
 
 // ── S: GLOBAL BACKWARD-COMPATIBLE STATE ALIAS ──
 let S = STATE;
+if(typeof window !== 'undefined'){
+  window.STATE = STATE;
+  window.S = S;
+}
 
 // ── TEMP STATE ─────────────────────────────────────────
 let txType='expense', selCat=null, selSubCat=null, selBudCat=null, selRemCat=null, selRecCat=null, selQpCat='food';
@@ -1325,7 +1334,8 @@ function formatItemsSummary(data){
         const price = it.price ? ` (${fmt(it.price)})` : '';
         const qty = (it.qty && it.qty > 1) ? ` x${it.qty}` : '';
         const cal = (it.calories && parseInt(it.calories) > 0) ? ` [${it.calories}kcal]` : '';
-        return `${name}${qty}${price}${cal}`.trim();
+        const prot = (it.protein && parseInt(it.protein) > 0) ? ` [${it.protein}g protein]` : '';
+        return `${name}${qty}${price}${cal}${prot}`.trim();
       }
       return String(it);
     }).filter(Boolean).join(', ');
@@ -1418,6 +1428,7 @@ function normalizeGeminiReceiptOutput(data){
             price: itemPrice,
             qty: itemQty,
             calories: it.calories ? parseInt(it.calories) : 0,
+            protein: it.protein ? parseInt(it.protein) : 0,
             subCategory: it.subCategory || null,
             tags: it.tags || []
           });
@@ -1633,28 +1644,18 @@ function canUseLocalStateApi(){
 
 function save(){
   S.lastUpdated = Date.now();
+  if(Array.isArray(S.transactions)){
+    S.transactions.forEach(t => { if(t.photo) delete t.photo; });
+  }
   try {
     const serialized = JSON.stringify(S);
     localStorage.setItem('ff2', serialized);
   } catch(e){
     console.warn('LocalStorage quota exceeded or write error:', e);
     if(e && e.name === 'QuotaExceededError'){
-      // Fallback: persist state without bulky receipt photos to preserve transaction records
-      try {
-        const fallbackState = {
-          ...S,
-          transactions: (S.transactions || []).map(t => {
-            if(!t.photo) return t;
-            const copy = { ...t };
-            delete copy.photo;
-            return copy;
-          })
-        };
-        localStorage.setItem('ff2', JSON.stringify(fallbackState));
-      } catch(e2){}
       toast(S.lang === 'zh'
-        ? '⚠️ 本地存储空间已满，请及时在设置中清理小票相册缓存或同步至云端！'
-        : '⚠️ Local storage is full! Please clear receipt photo cache or sync to cloud in Settings.');
+        ? '⚠️ 本地存储空间已满，请及时同步至云端！'
+        : '⚠️ Local storage is full! Please sync to cloud in Settings.');
     }
   }
 
@@ -1740,6 +1741,7 @@ function applyStateObject(p){
       if(!t.paymentMethod || t.paymentMethod === 'GrabPay'){
         t.paymentMethod = 'Cash';
       }
+      if(t.photo) delete t.photo;
     });
   }
   const migratedInternalTransfers = migrateLegacyInternalTransfers(loadedTx);
@@ -1773,6 +1775,7 @@ function applyStateObject(p){
     lastSync: p.lastSync || '',
     biometricLock: p.biometricLock || false,
     pendingMeals: p.pendingMeals || [],
+    restaurantRecords: Array.isArray(p.restaurantRecords) ? p.restaurantRecords : [],
     paydayDate: p.paydayDate || 25,
     paydayAmount: p.paydayAmount || 0,
     challenges: p.challenges || [],
@@ -1787,6 +1790,11 @@ function applyStateObject(p){
     wallpaperOpacity: p.wallpaperOpacity !== undefined ? p.wallpaperOpacity : 35,
     geminiApiKey: p.geminiApiKey || (typeof S !== 'undefined' && S ? S.geminiApiKey : '') || ''
   };
+
+  if(typeof window !== 'undefined'){
+    window.STATE = S;
+    window.S = S;
+  }
 
   // Keep converted legacy transfers on this device without requiring a server.
   if(migratedInternalTransfers){
@@ -2065,6 +2073,7 @@ function go(page){
     else renderFullTx();
   }
   if(page==='period') renderPeriodTrackerUI();
+  if(page==='passport') renderPassportPage();
   if(page==='analytics') renderAnalytics();
   if(page==='tax') renderTaxRelief();
   if(page==='budgets') renderBudgets();
@@ -3532,6 +3541,16 @@ function openTxDetailModal(txId){
       advBadge.textContent = isReimb ? (isZh ? '✅ 已报销' : '✅ Reimbursed') : (isZh ? '⏳ 待报销垫付' : '⏳ Advance');
       badgeContainer.appendChild(advBadge);
     }
+
+    if(Array.isArray(tx.tags) && tx.tags.length > 0){
+      tx.tags.forEach(tg => {
+        const tagBadge = document.createElement('span');
+        tagBadge.className = 'chip';
+        tagBadge.style.cssText = 'font-size:11px;font-weight:800;background:rgba(245,158,11,.18);color:var(--amber);border:1px solid rgba(245,158,11,.35)';
+        tagBadge.textContent = `#${tg}`;
+        badgeContainer.appendChild(tagBadge);
+      });
+    }
   }
 
   if(el('tx-det-datetime')){
@@ -3574,24 +3593,38 @@ function openTxDetailModal(txId){
   if(itemsBox && itemsContent){
     const items = extractTxReceiptItems(tx);
     const cleanNote = tx.note ? String(tx.note).replace(/\[object Object\],?\s*/g, '').trim() : '';
+    const totalTxCal = getTxCalories(tx);
+    const totalTxProt = getTxProtein(tx);
 
-    if(items.length > 0 || cleanNote){
+    if(items.length > 0 || cleanNote || totalTxCal > 0 || totalTxProt > 0){
       itemsBox.classList.remove('hidden');
       let htmlContent = '';
-      if(items.length > 0 && (items.length > 1 || items[0].name !== tx.desc)){
+      if(totalTxCal > 0 || totalTxProt > 0){
+        htmlContent += `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.08)">
+            <span style="font-size:11.5px;font-weight:800;color:var(--text)">🥗 ${isZh ? '菜品明细与营养' : 'Items & Nutrition Breakdown'}</span>
+            <div style="display:flex;align-items:center;gap:4px">
+              ${totalTxCal > 0 ? `<span style="font-size:11px;font-weight:900;color:#10b981;background:rgba(16,185,129,.14);padding:2px 7px;border-radius:6px;border:1px solid rgba(16,185,129,.28)">🔥 ${totalTxCal} kcal</span>` : ''}
+              ${totalTxProt > 0 ? `<span style="font-size:11px;font-weight:900;color:var(--cyan);background:rgba(6,182,212,.14);padding:2px 7px;border-radius:6px;border:1px solid rgba(6,182,212,.28)">🥩 ${totalTxProt}g</span>` : ''}
+            </div>
+          </div>
+        `;
+      }
+      if(items.length > 0){
         htmlContent += `<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">`;
         items.forEach(it => {
-          const calInfo = (it.calories && parseInt(it.calories) > 0) ? `<span style="font-size:10px;color:#10b981;margin-left:6px;font-weight:700;background:rgba(16,185,129,0.1);padding:2px 4px;border-radius:4px">🔥 ${it.calories} kcal</span>` : '';
+          const calInfo = (it.calories && parseInt(it.calories) > 0) ? `<span style="font-size:9.5px;color:#10b981;margin-left:4px;font-weight:700;background:rgba(16,185,129,0.12);padding:1px 4px;border-radius:4px;border:1px solid rgba(16,185,129,0.25)">🔥 ${it.calories * (it.qty || 1)} kcal</span>` : '';
+          const protInfo = (it.protein && parseInt(it.protein) > 0) ? `<span style="font-size:9.5px;color:var(--cyan);margin-left:4px;font-weight:700;background:rgba(6,182,212,0.12);padding:1px 4px;border-radius:4px;border:1px solid rgba(6,182,212,0.25)">🥩 ${it.protein * (it.qty || 1)}g</span>` : '';
           htmlContent += `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px">
-              <span style="display:flex;align-items:center">${it.qty > 1 ? `<span style="color:var(--cyan);margin-right:4px">${it.qty}x</span> ` : ''}${esc(it.name)}${calInfo}</span>
-              <strong style="color:var(--text)">${fmt(it.price)}</strong>
+              <span style="display:flex;align-items:center;flex-wrap:wrap">${it.qty > 1 ? `<span style="color:var(--cyan);margin-right:4px">${it.qty}x</span> ` : ''}${esc(it.name)}${calInfo}${protInfo}</span>
+              <strong style="color:var(--text)">${it.price > 0 ? fmt(it.price * (it.qty || 1)) : ''}</strong>
             </div>
           `;
         });
         htmlContent += `</div>`;
       }
-      if(cleanNote && cleanNote !== tx.desc){
+      if(cleanNote && cleanNote !== tx.desc && !items.length){
         htmlContent += `<div style="font-size:11.5px;color:var(--muted);background:rgba(255,255,255,.03);padding:8px;border-radius:8px">📝 ${esc(cleanNote)}</div>`;
       }
       itemsContent.innerHTML = htmlContent || `<div style="color:var(--muted)">${isZh ? '无单品备注' : 'No extra notes'}</div>`;
@@ -3667,22 +3700,6 @@ function openTxDetailModal(txId){
       }
     } else {
       infBox.classList.add('hidden');
-    }
-  }
-
-  // Photo
-  const photoBox = el('tx-det-photo-box');
-  const photoImg = el('tx-det-photo-img');
-  const noPhotoBox = el('tx-det-no-photo-box');
-  if(photoBox && photoImg){
-    if(tx.photo){
-      photoBox.classList.remove('hidden');
-      photoImg.src = tx.photo;
-      if(noPhotoBox) noPhotoBox.classList.add('hidden');
-    } else {
-      photoBox.classList.add('hidden');
-      photoImg.src = '';
-      if(noPhotoBox) noPhotoBox.classList.remove('hidden');
     }
   }
 
@@ -3821,36 +3838,10 @@ function unmarkDetailTxAdvance(){
 }
 
 function handleDetailPhotoUpload(input){
-  const file = input?.files?.[0];
-  if(!file) return;
-  const tx = S.transactions.find(t => t.id === currentDetailTxId);
-  if(!tx) return;
-  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    tx.photo = e.target.result;
-    save();
-    renderAll();
-    openTxDetailModal(tx.id);
-    toast(isZh ? '📸 小票图片已成功上传并关联此账单！' : '📸 Receipt photo attached to transaction!');
-    input.value = '';
-  };
-  reader.readAsDataURL(file);
+  if(input) input.value = '';
 }
 
-function removeDetailTxPhoto(){
-  const tx = S.transactions.find(t => t.id === currentDetailTxId);
-  if(!tx) return;
-  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-  if(!confirm(isZh ? '确定删除此发票收据照片？' : 'Delete attached receipt photo?')) return;
-
-  tx.photo = null;
-  save();
-  renderAll();
-  openTxDetailModal(tx.id);
-  toast(isZh ? '🗑️ 已移除发票小票照片' : '🗑️ Receipt photo removed');
-}
+function removeDetailTxPhoto(){}
 
 function splitDetailTx(){
   const tx = S.transactions.find(t => t.id === currentDetailTxId);
@@ -3880,7 +3871,7 @@ function splitDetailTx(){
     paymentMethod: tx.paymentMethod || 'Cash',
     accountId: tx.accountId || '',
     note: tx.note || '',
-    photo: tx.photo || null,
+    photo: null,
     items: txItems || []
   };
 
@@ -3927,7 +3918,7 @@ function splitCurrentTxModal(){
     paymentMethod: el('tx-paymethod-val')?.value || 'Cash',
     accountId: el('tx-acc-select')?.value || '',
     note: el('tx-note')?.value || '',
-    photo: photoData || null,
+    photo: null,
     items: (currentOcrItems && currentOcrItems.length > 0) ? JSON.parse(JSON.stringify(currentOcrItems)) : []
   };
 
@@ -3952,22 +3943,7 @@ function splitCurrentTxModal(){
   toast(isZh ? `🍕 已将此账单带入分摊器: ${desc || '账单'} (RM ${amt.toFixed(2)})` : `🍕 Splitting ${desc || 'Bill'} (RM ${amt.toFixed(2)})!`);
 }
 
-function openFullPhotoView(){
-  const tx = S.transactions.find(t => t.id === currentDetailTxId);
-  if(!tx || !tx.photo) return;
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:18px;cursor:pointer;animation:fadeIn .2s';
-  overlay.innerHTML = `
-    <img src="${tx.photo}" style="max-width:100%;max-height:82vh;border-radius:14px;object-fit:contain;box-shadow:0 10px 40px rgba(0,0,0,.8)"/>
-    <div style="color:#fff;margin-top:14px;text-align:center">
-      <div style="font-size:15px;font-weight:800">${esc(tx.desc)}</div>
-      <div style="font-size:12px;opacity:.8">${fmt(tx.amount)} · ${tx.date} · ${catInfo(tx.type, tx.category).name}</div>
-    </div>
-    <div style="color:rgba(255,255,255,.5);font-size:11px;margin-top:10px">Tap anywhere to close preview</div>
-  `;
-  overlay.onclick = () => overlay.remove();
-  document.body.appendChild(overlay);
-}
+function openFullPhotoView(){}
 
 function openEditTxModal(txId){
   currentDetailTxId = txId;
@@ -4002,17 +3978,7 @@ function editTxFromDetail(){
   if(el('tx-cats')) buildCats('tx-cats', tx.type, id => selCat = id);
   if(tx.accountId) setTxAccount(tx.accountId);
   if(tx.paymentMethod) selectPaymentMethod(tx.paymentMethod);
-
-  if(tx.photo){
-    photoData = tx.photo;
-    const prevEl = el('photo-prev');
-    const phEl = el('photo-ph');
-    if(prevEl){
-      prevEl.src = photoData;
-      prevEl.classList.remove('hidden');
-    }
-    if(phEl) phEl.classList.add('hidden');
-  }
+  photoData = null;
 
   // Preserve extracted OCR items so editing doesn't lose them!
   const txItems = extractTxReceiptItems(tx);
@@ -4028,6 +3994,11 @@ function editTxFromDetail(){
     const inp = el('tx-advance-person'); if(inp) inp.value = tx.advancePerson || tx.advanceDebtor || '';
     const st = el('tx-advance-status'); if(st) st.value = tx.advanceStatus || (tx.advanceReimbursed ? 'reimbursed' : 'pending');
   }
+
+  // Load existing tags
+  currentTxTags = Array.isArray(tx.tags) ? [...tx.tags] : [];
+  if(typeof renderTxTagChips === 'function') renderTxTagChips();
+  if(currentTxTags.length > 0) toggleTxMoreDetails(true);
 
   // Store the editing ID — the old transaction is updated when saveTx() runs
   editingTxId = currentDetailTxId;
@@ -4071,6 +4042,8 @@ function makeTxEl(tx){
   const accIco = acc ? getAccIcon(acc) : '💳';
   const payM = tx.paymentMethod || '';
   const cleanNote = tx.note ? String(tx.note).replace(/\[object Object\],?\s*/g, '').trim() : '';
+  const txCal = getTxCalories(tx);
+  const txProt = getTxProtein(tx);
 
   const div=document.createElement('div');
   div.className='tx-item';
@@ -4079,20 +4052,21 @@ function makeTxEl(tx){
   div.innerHTML=`
     <div class="tx-item-inner" style="cursor:pointer">
       <div class="tx-cat-icon" style="background:${col}22;overflow:hidden">
-        ${tx.photo ? `<img src="${tx.photo}" alt="Receipt" style="width:100%;height:100%;object-fit:cover"/>` : cat.icon}
+        ${cat.icon}
       </div>
       <div class="tx-info">
         <div class="tx-desc" style="display:flex;align-items:center;gap:6px">
           <span>${esc(tx.desc)}</span>
-          ${tx.photo ? '<span style="font-size:11px;color:var(--cyan);font-weight:700">📷</span>' : ''}
         </div>
         <div class="tx-sub">
           <span>${subCat ? `${subCat.icon} ${esc(subCat.name)}` : esc(cat.name)}</span>
+          ${txCal > 0 ? `<span class="tx-badge" style="background:rgba(16,185,129,.14);color:#10b981;font-weight:800;border:1px solid rgba(16,185,129,.3);padding:1px 5px">🔥 ${txCal} kcal${txProt > 0 ? ` · 🥩 ${txProt}g` : ''}</span>` : ''}
           ${tx.isAdvance ? `<span class="tx-badge" style="background:${tx.advanceStatus==='reimbursed'?'rgba(74,222,128,.16)':'rgba(255,179,0,.16)'};color:${tx.advanceStatus==='reimbursed'?'var(--green)':'var(--amber)'};font-weight:700">📌 ${tx.advanceStatus==='reimbursed'? (isZh?'已报销':'Reimbursed') : (isZh?'待报销':'Claimable')}</span>` : ''}
           ${tx.time ? `<span class="tx-badge" style="background:rgba(255,255,255,0.05);color:var(--dim)">⏰ ${tx.time}</span>` : ''}
           ${payM ? `<span class="tx-badge tx-badge-method">⚡ ${esc(payM)}</span>` : ''}
           ${tx.location ? `<span class="tx-badge tx-badge-loc">📍 ${esc(tx.location)}</span>` : ''}
           ${cleanNote ? `<span style="color:var(--text)">· ${esc(cleanNote)}</span>` : ''}
+          ${(Array.isArray(tx.tags) && tx.tags.length > 0) ? tx.tags.map(tg => `<span class="tx-badge" style="background:rgba(245,158,11,.14);color:var(--amber);font-weight:700">#${esc(tg)}</span>`).join('') : ''}
         </div>
       </div>
       <div class="tx-amt ${tx.type}" style="color:${presentation.amountColor}">${presentation.amountPrefix}${fmt(tx.amount)}</div>
@@ -4624,12 +4598,11 @@ function renderCalModalTxList(dateStr){
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
         <div style="display:flex;align-items:flex-start;gap:10px;flex:1;overflow:hidden">
           <div style="width:36px;height:36px;border-radius:10px;background:${col}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden">
-            ${tx.photo ? `<img src="${tx.photo}" alt="Receipt" style="width:100%;height:100%;object-fit:cover"/>` : c.icon}
+            ${c.icon}
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px">
               <strong style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(tx.desc || c.name)}</strong>
-              ${tx.photo ? '<span style="font-size:11px;color:var(--cyan)">📷</span>' : ''}
             </div>
             <div style="font-size:11px;color:var(--muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:4px;align-items:center">
               <span>${subCat ? `${subCat.icon} ${esc(subCat.name)}` : esc(c.name)}</span>
@@ -4842,6 +4815,12 @@ function renderFullTx(){
   }
 
   if(txFilter!=='all') txs=txs.filter(t=>t.type===txFilter);
+
+  // Tag filter
+  if(typeof renderTxTagFilterBar === 'function') renderTxTagFilterBar();
+  if(activeTxTagFilter && activeTxTagFilter !== 'all'){
+    txs = txs.filter(t => Array.isArray(t.tags) && t.tags.map(x => String(x).toLowerCase().trim()).includes(activeTxTagFilter.toLowerCase().trim()));
+  }
   if(srch) txs=txs.filter(t=>{
     const acc=S.accounts.find(a=>a.id===t.accountId);
     const accName=acc?acc.name.toLowerCase():'';
@@ -5616,6 +5595,11 @@ function openTxModal(type = 'expense'){
   const advPerson = el('tx-advance-person'); if(advPerson) advPerson.value = '';
   const advStatus = el('tx-advance-status'); if(advStatus) advStatus.value = 'pending';
 
+  // Reset tags state
+  currentTxTags = [];
+  if(typeof renderTxTagChips === 'function') renderTxTagChips();
+  if(el('tx-tag-inp')) el('tx-tag-inp').value = '';
+
   txMoreOpen = false;
   showAllPayMethods = false;
   showAllCats = false;
@@ -5675,10 +5659,9 @@ function saveTx(){
     paymentMethod: payMethod,
     location: location || null,
     note: el('tx-note') ? el('tx-note').value.trim() : '',
-    photo: photoData || existingTx?.photo || null,
+    photo: null,
     items: (currentOcrItems && currentOcrItems.length > 0) ? JSON.parse(JSON.stringify(currentOcrItems)) : (existingTx?.items || []),
-    
-    
+    tags: Array.isArray(currentTxTags) && currentTxTags.length > 0 ? [...currentTxTags] : (existingTx?.tags || []),
     
     isAdvance: isAdvance || false,
     advance: isAdvance || false,
@@ -5826,14 +5809,7 @@ async function handlePhoto(inp){
     });
 
     const compressed = await compressReceiptForStorage(rawDataUrl);
-    photoData = compressed;
-    const prevEl = el('photo-prev');
-    const phEl = el('photo-ph');
-    if(prevEl){
-      prevEl.src = photoData;
-      prevEl.classList.remove('hidden');
-    }
-    if(phEl) phEl.classList.add('hidden');
+    photoData = null; // Receipt image is processed in memory for OCR extraction only, never stored
     toggleTxMoreDetails(true);
 
     const result = await analyzeUnifiedUploadWithGemini(compressed);
@@ -5845,12 +5821,13 @@ async function handlePhoto(inp){
       applyReceiptStructuredData(result, 'AI');
       toast(`🤖 Auto-filled from receipt: ${result.merchant || 'Store'} · ${fmt(result.amount)}`);
     } else {
-      toast('📷 Photo attached! Please check amount.');
+      toast('🔍 Receipt scanned! Please verify amount.');
     }
   } catch(err){
     console.warn('Photo handle notice:', err);
-    toast('📷 Photo attached!');
+    toast('🔍 Receipt scanned!');
   } finally {
+    photoData = null;
     stopAiScanAnimation();
     if(scanBtn) scanBtn.style.display = 'flex';
   }
@@ -6188,7 +6165,7 @@ function handleUniversalUploadBack(){
 
     renderUniversalPreview();
     const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-    toast(isZh ? '📸 请选择新小票照片' : '📸 Ready to upload new receipt photo');
+    toast(isZh ? '🔍 准备扫描新发票' : '🔍 Ready to scan receipt');
   } else {
     closeModal('universal-upload-modal');
   }
@@ -6553,8 +6530,8 @@ async function handleUniversalFile(inputOrFile){
     });
 
     const compressed = await compressReceiptForStorage(rawDataUrl);
-    uniImageDataUrl = compressed;
-    photoData = compressed;
+    uniImageDataUrl = null;
+    photoData = null;
 
     if(imgPrev){
       imgPrev.src = compressed;
@@ -6651,7 +6628,7 @@ Extract ALL information accurately into a single raw JSON object matching this s
   "paymentMethod": "Cash",
   "location": "Mall / Street / Area",
   "items": [
-    { "name": "Item or Dish Name", "price": 19.80, "qty": 1, "subCategory": "food_restaurant", "tags": ["noodle"], "calories": 450 }
+    { "name": "Item or Dish Name", "price": 19.80, "qty": 1, "subCategory": "food_restaurant", "tags": ["noodle"], "calories": 450, "protein": 22 }
   ],
   "itemsSummary": "Dish 1, Dish 2, Dish 3...",
   "serviceChargePct": 10,
@@ -6671,7 +6648,7 @@ CRITICAL RULES:
 3. "originalAmount" & "amount": The final total payable in the receipt's native currency as a floating number.
 4. "subtotal": The subtotal before taxes/service charge.
 5. "category": Choose the main category: "drinks" (coffee, boba, tea, juice, bar), "food" (restaurant, hawker, fast food, bakery), "groceries" (supermarket, convenience 7-11/FamilyMart, fresh produce), "period_care" (sanitary pads, tampon, cramp relief, Midol), "fuel" (Petronas, Shell, Caltex, BHP, Petron), "toll_parking" (Toll, RFID, Parking), "transport" (Grab, LRT/MRT, flights), "shopping" (clothing, electronics, Shopee, IKEA), "beauty" (skincare, haircut, salon, spa), "bills" (TNB electric, water, telco, wifi, Netflix), "rent_housing", "health" (pharmacy Watsons/Guardian, clinic, doctor, dental, vitamins), "entertainment" (cinema GSC/TGV, gaming, outings), "education" (books, tuition, courses), "pets" (pet food, vet), "donation", "other".
-6. "calories": If it is a food or drink item in the items array, accurately estimate the calories (kcal) per item and include it as an integer 'calories' property. If unknown or not a food/drink item, omit it or set it to 0.
+6. "calories" & "protein": If it is a food or drink item in the items array, accurately estimate the calories (kcal) per item as an integer 'calories' property, and estimate the protein (in grams) as an integer 'protein' property (e.g. 25 for chicken/meat, 18 for fish/seafood, 6 for an egg, 14 for noodles, 0 for plain tea/water). If unknown or not a food/drink item, omit it or set it to 0.
 7. "subCategory": Accurately assign one of the 40+ granular sub-categories:
    - Food: "food_restaurant", "food_cafe_coffee", "food_drinks_boba", "food_fastfood", "food_hawker_mamak", "food_dessert_snack", "food_delivery", "food_bar_alcohol"
    - Groceries: "groc_fresh_produce", "groc_meat_seafood", "groc_dairy_eggs", "groc_pantry_staples", "groc_snacks_sweets", "groc_household_cleaning", "groc_personal_care"
@@ -6760,8 +6737,8 @@ function renderUniversalPreview(){
   if(!uniParsedData){
     container.innerHTML = `
       <div style="text-align:center;padding:16px 0;color:var(--muted);font-size:12px">
-        <div style="font-size:28px;margin-bottom:6px">📸</div>
-        <div style="font-weight:700;color:var(--text);margin-bottom:2px">Upload or take a receipt photo above</div>
+        <div style="font-size:28px;margin-bottom:6px">🔍</div>
+        <div style="font-weight:700;color:var(--text);margin-bottom:2px">Upload or scan a receipt above</div>
         <div style="font-size:11px">Google AI will extract merchant, total, date & itemized breakdown</div>
       </div>
     `;
@@ -6894,7 +6871,10 @@ function renderUniversalPreview(){
       <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:8px;margin-bottom:6px">
         <div>
           <label class="form-label" style="font-size:10.5px;margin-bottom:2px">Date</label>
-          <input type="date" id="uni-edit-date" class="form-input" value="${rawDate}" style="padding:7px 8px;font-size:11.5px"/>
+          <div style="display:flex;gap:4px;align-items:center">
+            <input type="date" id="uni-edit-date" class="form-input" value="${rawDate}" style="padding:7px 8px;font-size:11.5px;flex:1"/>
+            <button type="button" onclick="const di=el('uni-edit-date');if(di){di.value=today();toast(S.lang==='zh'?'已设为今天':'Set to today');}" style="padding:6px 7px;font-size:10.5px;font-weight:800;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:var(--green);border-radius:8px;cursor:pointer;white-space:nowrap" title="Set date to Today">📅 Today</button>
+          </div>
         </div>
         <div>
           <label class="form-label" style="font-size:10.5px;margin-bottom:2px">Category</label>
@@ -7082,13 +7062,17 @@ function renderUniPreviewItemsList(){
     row.style.cssText = 'display:flex;align-items:center;gap:6px;background:var(--bg3);padding:4px 6px;border-radius:8px;border:1px solid var(--border)';
     row.innerHTML = `
       <input type="text" class="form-input" value="${esc(it.name || '')}" placeholder="Item name" style="flex:1;padding:4px 6px;font-size:11px;background:transparent;border:none" oninput="updateUniPreviewItem(${idx}, 'name', this.value)"/>
-      <div style="display:flex;align-items:center;width:60px">
+      <div style="display:flex;align-items:center;width:55px" title="Estimated Calories (kcal)">
         <span style="font-size:10px;color:var(--muted);margin-right:2px">🔥</span>
-        <input type="number" class="form-input" value="${it.calories !== undefined ? it.calories : ''}" placeholder="kcal" style="padding:4px 4px;font-size:11px;font-weight:700;background:transparent;border:none;color:var(--text)" oninput="updateUniPreviewItem(${idx}, 'calories', this.value)"/>
+        <input type="number" class="form-input" value="${it.calories !== undefined ? it.calories : ''}" placeholder="kcal" style="padding:4px 2px;font-size:11px;font-weight:700;background:transparent;border:none;color:var(--text)" oninput="updateUniPreviewItem(${idx}, 'calories', this.value)"/>
       </div>
-      <div style="display:flex;align-items:center;width:75px">
+      <div style="display:flex;align-items:center;width:55px" title="Estimated Protein (g)">
+        <span style="font-size:10px;color:var(--cyan);margin-right:2px">🥩</span>
+        <input type="number" class="form-input" value="${it.protein !== undefined ? it.protein : ''}" placeholder="g" style="padding:4px 2px;font-size:11px;font-weight:700;background:transparent;border:none;color:var(--cyan)" oninput="updateUniPreviewItem(${idx}, 'protein', this.value)"/>
+      </div>
+      <div style="display:flex;align-items:center;width:68px">
         <span style="font-size:10px;color:var(--muted);margin-right:2px">RM</span>
-        <input type="number" step="0.01" class="form-input" value="${it.price !== undefined ? it.price : ''}" placeholder="0.00" style="padding:4px 4px;font-size:11px;font-weight:700;background:transparent;border:none;color:var(--text)" oninput="updateUniPreviewItem(${idx}, 'price', this.value)"/>
+        <input type="number" step="0.01" class="form-input" value="${it.price !== undefined ? it.price : ''}" placeholder="0.00" style="padding:4px 2px;font-size:11px;font-weight:700;background:transparent;border:none;color:var(--text)" oninput="updateUniPreviewItem(${idx}, 'price', this.value)"/>
       </div>
       <button type="button" onclick="removeUniPreviewItem(${idx})" style="background:rgba(239,68,68,.15);border:none;color:var(--red);border-radius:6px;width:20px;height:20px;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center">✕</button>
     `;
@@ -7099,7 +7083,7 @@ function renderUniPreviewItemsList(){
 function addUniPreviewItem(){
   if(!uniParsedData) uniParsedData = {};
   if(!uniParsedData.items) uniParsedData.items = [];
-  uniParsedData.items.push({ name: '', price: 0, qty: 1, calories: 0 });
+  uniParsedData.items.push({ name: '', price: 0, qty: 1, calories: 0, protein: 0 });
   renderUniPreviewItemsList();
 }
 
@@ -7118,6 +7102,8 @@ function updateUniPreviewItem(idx, field, val){
     uniParsedData.items[idx].price = parseFloat(val) || 0;
   } else if(field === 'calories'){
     uniParsedData.items[idx].calories = parseInt(val) || 0;
+  } else if(field === 'protein'){
+    uniParsedData.items[idx].protein = parseInt(val) || 0;
   } else {
     uniParsedData.items[idx][field] = val;
   }
@@ -7150,7 +7136,7 @@ function confirmUniversalUpload(openFormToEdit = false){
   const selectedPay = (payInp?.value !== undefined ? payInp.value.trim() : (uniParsedData?.paymentMethod || 'Cash')) || 'Cash';
   const selectedAcc = 'default';
   const formattedNote = (noteInp?.value !== undefined ? noteInp.value : formatItemsSummary(uniParsedData)).trim();
-  const photoToSave = uniImageDataUrl || photoData || null;
+  const photoToSave = null;
 
   closeModal('universal-upload-modal');
   closeModal('tx-modal');
@@ -7172,14 +7158,7 @@ function confirmUniversalUpload(openFormToEdit = false){
       setTxAccount(selectedAcc);
       selectPaymentMethod(selectedPay);
       if(formattedNote && el('tx-note')) el('tx-note').value = formattedNote;
-      photoData = photoToSave;
-      const prevEl = el('photo-prev');
-      const phEl = el('photo-ph');
-      if(prevEl && photoData){
-        prevEl.src = photoData;
-        prevEl.classList.remove('hidden');
-      }
-      if(phEl && photoData) phEl.classList.add('hidden');
+      photoData = null;
       // Preserve parsed items (with calories) for saveTx()
       if(uniParsedData.items && Array.isArray(uniParsedData.items) && uniParsedData.items.length > 0){
         currentOcrItems = JSON.parse(JSON.stringify(uniParsedData.items));
@@ -7204,7 +7183,7 @@ function confirmUniversalUpload(openFormToEdit = false){
         paymentMethod: selectedPay,
         location: uniParsedData.location || null,
         note: formattedNote,
-        photo: photoToSave,
+        photo: null,
         items: (uniParsedData.items && Array.isArray(uniParsedData.items)) ? JSON.parse(JSON.stringify(uniParsedData.items)) : [],
         sstPct: uniParsedData.sstPct || 0,
         sstAmount: uniParsedData.sstAmount || 0,
@@ -7252,7 +7231,7 @@ function confirmUniversalUpload(openFormToEdit = false){
       paymentMethod: selectedPay,
       location: uniParsedData.location || null,
       note: taxNote,
-      photo: photoToSave,
+      photo: null,
       createdAt: new Date().toISOString()
     };
     S.transactions.unshift(newTx);
@@ -7291,7 +7270,7 @@ function confirmUniversalUpload(openFormToEdit = false){
       paymentMethod: chosenPay,
       accountId: chosenAcc,
       note: formattedNote || '',
-      photo: photoToSave,
+      photo: null,
       items: (uniParsedData.items && Array.isArray(uniParsedData.items)) ? JSON.parse(JSON.stringify(uniParsedData.items)) : []
     };
     updateSplitterContextBanner();
@@ -7385,7 +7364,7 @@ function applyUploadToSplitterAndPromo(){
   const chosenPay = (payInp?.value !== undefined ? payInp.value.trim() : (d.paymentMethod || 'Cash')) || 'Cash';
   const chosenAcc = 'default';
   const chosenNote = (noteInp?.value !== undefined ? noteInp.value : formatItemsSummary(d)).trim();
-  const photoToSave = uniImageDataUrl || photoData || null;
+  const photoToSave = null;
 
   activeSplitContext = {
     source: 'upload',
@@ -7398,7 +7377,7 @@ function applyUploadToSplitterAndPromo(){
     paymentMethod: chosenPay,
     accountId: chosenAcc,
     note: chosenNote,
-    photo: photoToSave,
+    photo: null,
     items: (d.items && Array.isArray(d.items)) ? JSON.parse(JSON.stringify(d.items)) : []
   };
   updateSplitterContextBanner();
@@ -7486,7 +7465,6 @@ function handleTxModalBack(){
     if(noteVal !== undefined) uniParsedData.note = noteVal;
     if(locVal !== undefined) uniParsedData.location = locVal;
     if(payVal) uniParsedData.paymentMethod = payVal;
-    if(photoData) uniImageDataUrl = photoData;
 
     backToUniversalUploadPreview();
     const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
@@ -7762,16 +7740,7 @@ function applyReceiptStructuredData(rawInput, source = 'AI'){
     el('tx-note').value = noteText.trim();
   }
 
-  // 9. Attach & Display Receipt Photo Preview
-  if(photoData){
-    const prevEl = el('photo-prev');
-    const phEl = el('photo-ph');
-    if(prevEl){
-      prevEl.src = photoData;
-      prevEl.classList.remove('hidden');
-    }
-    if(phEl) phEl.classList.add('hidden');
-  }
+  photoData = null;
 
   // 10. Automatically Expand More Details Panel so user sees all auto-filled fields
   toggleTxMoreDetails(true);
@@ -7975,73 +7944,127 @@ function saveBudget(){
 
 // ── GOALS ──────────────────────────────────────────────
 function openGoalModal(){
-  selGoalIcon=GOAL_ICONS[0];
-  el('goal-name-inp').value=''; el('goal-target-inp').value=''; el('goal-deadline-inp').value='';
-  const picker=el('goal-icon-picker'); picker.innerHTML='';
-  GOAL_ICONS.forEach(ico=>{
-    const btn=document.createElement('button');
-    btn.type='button';
-    btn.className='icon-opt'+(ico===selGoalIcon?' on':'');
-    btn.textContent=ico;
-    btn.onclick=()=>{picker.querySelectorAll('.icon-opt').forEach(x=>x.classList.remove('on'));btn.classList.add('on');selGoalIcon=ico;};
-    picker.appendChild(btn);
-  });
+  selGoalIcon = (typeof GOAL_ICONS !== 'undefined' && GOAL_ICONS.length) ? GOAL_ICONS[0] : '🎯';
+  const nameInp = el('goal-name') || el('goal-name-inp'); if(nameInp) nameInp.value = '';
+  const targetInp = el('goal-target') || el('goal-target-inp'); if(targetInp) targetInp.value = '';
+  const dateInp = el('goal-date') || el('goal-deadline-inp'); if(dateInp) dateInp.value = '';
+  const picker = el('goal-icon-picker');
+  if(picker && typeof GOAL_ICONS !== 'undefined'){
+    picker.innerHTML = '';
+    GOAL_ICONS.forEach(ico => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'icon-opt' + (ico === selGoalIcon ? ' on' : '');
+      btn.textContent = ico;
+      btn.onclick = () => { picker.querySelectorAll('.icon-opt').forEach(x => x.classList.remove('on')); btn.classList.add('on'); selGoalIcon = ico; };
+      picker.appendChild(btn);
+    });
+  }
   openModal('goal-modal');
 }
 function saveGoal(){
-  const name=el('goal-name-inp').value.trim(), target=parseFloat(el('goal-target-inp').value);
-  if(!name){toast('⚠️ Enter a goal name');return;}
-  if(!target||target<=0){toast('⚠️ Enter a target amount');return;}
-  S.goals.push({id: uid('item'),name,icon:selGoalIcon,target,saved:0,deadline:el('goal-deadline-inp').value||null,createdAt:new Date().toISOString()});
-  save();renderGoals();closeModal('goal-modal');toast('🎯 Goal created!');
+  const name = (el('goal-name') || el('goal-name-inp'))?.value.trim();
+  const target = parseFloat((el('goal-target') || el('goal-target-inp'))?.value);
+  const deadline = (el('goal-date') || el('goal-deadline-inp'))?.value || null;
+  if(!name){ toast('⚠️ Enter a goal name'); return; }
+  if(!target || target <= 0){ toast('⚠️ Enter a target amount'); return; }
+  S.goals.push({ id: uid('item'), name, icon: selGoalIcon || '🎯', target, saved: 0, deadline, createdAt: new Date().toISOString() });
+  save(); renderGoals(); closeModal('goal-modal'); toast('🎯 Goal created!');
 }
 
 function openDepositModal(id){
-  el('dep-goal-id').value=id; el('dep-amount').value='';
+  const idInp = el('deposit-goal-id') || el('dep-goal-id');
+  if(idInp) idInp.value = id;
+  const amtInp = el('deposit-amt') || el('dep-amount');
+  if(amtInp) amtInp.value = '';
   openModal('deposit-modal');
-  setTimeout(()=>el('dep-amount').focus(),200);
+  if(amtInp) setTimeout(() => amtInp.focus(), 200);
 }
 function saveDeposit(){
-  const id=el('dep-goal-id').value, amount=parseFloat(el('dep-amount').value);
-  if(!amount||amount<=0){toast('⚠️ Enter an amount');return;}
-  const g=S.goals.find(x=>x.id===id); if(!g) return;
-  g.saved=Math.min(Number(g.saved||0)+amount,Number(g.target));
-  save();renderGoals();closeModal('deposit-modal');toast('✅ '+fmt(amount)+' added!');
-  if(g.saved>=g.target) setTimeout(()=>toast('🎉 Goal "'+g.name+'" reached!'),600);
+  const id = (el('deposit-goal-id') || el('dep-goal-id'))?.value;
+  const amtInp = el('deposit-amt') || el('dep-amount');
+  const amount = parseFloat(amtInp?.value);
+  if(!amount || amount <= 0){ toast('⚠️ Enter an amount'); return; }
+  const g = S.goals.find(x => x.id === id); if(!g) return;
+  g.saved = Math.min(Number(g.saved || 0) + amount, Number(g.target));
+  save(); renderGoals(); closeModal('deposit-modal'); toast('✅ ' + fmt(amount) + ' added!');
+  if(g.saved >= g.target) setTimeout(() => toast('🎉 Goal "' + g.name + '" reached!'), 600);
 }
 
 // ── REMINDERS ──────────────────────────────────────────
-function openReminderModal(){selRemCat=null;el('rem-name-inp').value='';el('rem-amount-inp').value='';el('rem-date-inp').value='';buildCats('rem-cats','expense',id=>selRemCat=id);openModal('reminder-modal');}
+function openReminderModal(){
+  selRemCat = null;
+  const nameInp = el('rem-name') || el('rem-name-inp'); if(nameInp) nameInp.value = '';
+  const amtInp = el('rem-amt') || el('rem-amount-inp'); if(amtInp) amtInp.value = '';
+  const dateInp = el('rem-date') || el('rem-date-inp'); if(dateInp) dateInp.value = '';
+  if(el('rem-cats')) buildCats('rem-cats', 'expense', id => selRemCat = id);
+  openModal('reminder-modal');
+}
 function saveReminder(){
-  const name=el('rem-name-inp').value.trim(), amount=parseFloat(el('rem-amount-inp').value), date=el('rem-date-inp').value;
-  if(!name){toast('⚠️ Enter a name');return;}
-  if(!amount||amount<=0){toast('⚠️ Enter an amount');return;}
-  if(!date){toast('⚠️ Pick a due date');return;}
-  S.reminders.push({id: uid('item'),name,amount,date,category:selRemCat||'bills',paid:false,createdAt:new Date().toISOString()});
-  save();renderReminders();renderDueSoon();closeModal('reminder-modal');toast('🔔 Reminder set!');
+  const name = (el('rem-name') || el('rem-name-inp'))?.value.trim();
+  const amount = parseFloat((el('rem-amt') || el('rem-amount-inp'))?.value);
+  const date = (el('rem-date') || el('rem-date-inp'))?.value;
+  if(!name){ toast('⚠️ Enter a name'); return; }
+  if(!amount || amount <= 0){ toast('⚠️ Enter an amount'); return; }
+  if(!date){ toast('⚠️ Pick a due date'); return; }
+  S.reminders.push({ id: uid('item'), name, amount, date, category: selRemCat || 'bills', paid: false, createdAt: new Date().toISOString() });
+  save(); renderReminders(); renderDueSoon(); closeModal('reminder-modal'); toast('🔔 Reminder set!');
 }
 
 // ── RECURRING ──────────────────────────────────────────
-function openRecModal(){selRecType='expense';selRecCat=null;el('rec-desc-inp').value='';el('rec-amount-inp').value='';el('rec-start-inp').value=today();el('rec-freq-sel').value='monthly';setRecType('expense');openModal('rec-modal');}
-function setRecType(type){selRecType=type;el('rec-type-exp').classList.toggle('on',type==='expense');el('rec-type-inc').classList.toggle('on',type==='income');buildCats('rec-cats',type,id=>selRecCat=id);}
+function openRecModal(){
+  selRecType = 'expense'; selRecCat = null;
+  const dInp = el('rec-desc') || el('rec-desc-inp'); if(dInp) dInp.value = '';
+  const aInp = el('rec-amt') || el('rec-amount-inp'); if(aInp) aInp.value = '';
+  const sInp = el('rec-start') || el('rec-start-inp'); if(sInp) sInp.value = today();
+  const fInp = el('rec-freq') || el('rec-freq-sel'); if(fInp) fInp.value = 'monthly';
+  setRecType('expense');
+  openModal('rec-modal');
+}
+function setRecType(type){
+  selRecType = type;
+  const expBtn = el('rec-type-exp'); if(expBtn) expBtn.classList.toggle('on', type === 'expense');
+  const incBtn = el('rec-type-inc'); if(incBtn) incBtn.classList.toggle('on', type === 'income');
+  if(el('rec-cats')) buildCats('rec-cats', type, id => selRecCat = id);
+}
 function saveRecurring(){
-  const desc=el('rec-desc-inp').value.trim(), amount=parseFloat(el('rec-amount-inp').value), start=el('rec-start-inp').value;
-  if(!desc){toast('⚠️ Enter a description');return;}
-  if(!amount||amount<=0){toast('⚠️ Enter an amount');return;}
-  if(!selRecCat){toast('⚠️ Pick a category');return;}
-  S.recurring.push({id: uid('item'),type:selRecType,desc,amount,category:selRecCat,freq:el('rec-freq-sel').value,nextDue:start,paymentMethod:'Auto-Debit',createdAt:new Date().toISOString()});
-  applyRecurring();renderAll();closeModal('rec-modal');toast('🔁 Recurring saved!');
+  const desc = (el('rec-desc') || el('rec-desc-inp'))?.value.trim();
+  const amount = parseFloat((el('rec-amt') || el('rec-amount-inp'))?.value);
+  const start = (el('rec-start') || el('rec-start-inp'))?.value;
+  const freq = (el('rec-freq') || el('rec-freq-sel'))?.value || 'monthly';
+  if(!desc){ toast('⚠️ Enter a description'); return; }
+  if(!amount || amount <= 0){ toast('⚠️ Enter an amount'); return; }
+  if(!selRecCat){ toast('⚠️ Pick a category'); return; }
+  S.recurring.push({ id: uid('item'), type: selRecType, desc, amount, category: selRecCat, freq, nextDue: start, paymentMethod: 'Auto-Debit', createdAt: new Date().toISOString() });
+  applyRecurring(); renderAll(); closeModal('rec-modal'); toast('🔁 Recurring saved!');
 }
 
 // ── DEBTS ──────────────────────────────────────────────
-function openDebtModal(){selDebtDir='owe';el('debt-person-inp').value='';el('debt-amount-inp').value='';el('debt-note-inp').value='';el('debt-due-inp').value='';setDebtDir('owe');openModal('debt-modal');}
-function setDebtDir(dir){selDebtDir=dir;el('debt-owe-btn').classList.toggle('on',dir==='owe');el('debt-lent-btn').classList.toggle('on',dir==='lent');}
+function openDebtModal(){
+  selDebtDir = 'owe';
+  const pInp = el('debt-person') || el('debt-person-inp'); if(pInp) pInp.value = '';
+  const aInp = el('debt-amt') || el('debt-amount-inp'); if(aInp) aInp.value = '';
+  const nInp = el('debt-note') || el('debt-note-inp'); if(nInp) nInp.value = '';
+  const dInp = el('debt-due') || el('debt-due-inp'); if(dInp) dInp.value = '';
+  setDebtDir('owe');
+  openModal('debt-modal');
+}
+function setDebtDir(dir){
+  selDebtDir = dir;
+  const oweBtn = el('debt-dir-owe') || el('debt-owe-btn');
+  const lentBtn = el('debt-dir-lent') || el('debt-lent-btn');
+  if(oweBtn) oweBtn.classList.toggle('on', dir === 'owe');
+  if(lentBtn) lentBtn.classList.toggle('on', dir === 'lent');
+}
 function saveDebt(){
-  const person=el('debt-person-inp').value.trim(), amount=parseFloat(el('debt-amount-inp').value);
-  if(!person){toast('⚠️ Enter a name');return;}
-  if(!amount||amount<=0){toast('⚠️ Enter an amount');return;}
-  S.debts.push({id: uid('item'),dir:selDebtDir,person,amount,remaining:amount,note:el('debt-note-inp').value.trim(),due:el('debt-due-inp').value||null,settled:false,createdAt:new Date().toISOString()});
-  save();renderDebts();closeModal('debt-modal');toast('💸 Debt logged!');
+  const person = (el('debt-person') || el('debt-person-inp'))?.value.trim();
+  const amount = parseFloat((el('debt-amt') || el('debt-amount-inp'))?.value);
+  const note = (el('debt-note') || el('debt-note-inp'))?.value.trim() || '';
+  const due = (el('debt-due') || el('debt-due-inp'))?.value || null;
+  if(!person){ toast('⚠️ Enter a name'); return; }
+  if(!amount || amount <= 0){ toast('⚠️ Enter an amount'); return; }
+  S.debts.push({ id: uid('item'), dir: selDebtDir, person, amount, remaining: amount, note, due, settled: false, createdAt: new Date().toISOString() });
+  save(); renderDebts(); closeModal('debt-modal'); toast('💸 Debt logged!');
 }
 
 // ── TRANSFERS & BALANCING (REMOVED) ───
@@ -9456,14 +9479,19 @@ let anaInspectedDate = new Date();
 let anaPeriod = 'month';
 let currentAnaViewTab = 'overview';
 
+let anaCurrentFilteredTxs = [];
+
 function switchAnaViewTab(tab){
   currentAnaViewTab = tab;
-  ['overview', 'breakdown', 'ai'].forEach(t => {
+  ['overview', 'breakdown', 'calories', 'ai'].forEach(t => {
     const btn = el('ana-view-tab-' + t);
     const pane = el('ana-pane-' + t);
     if(btn) btn.classList.toggle('on', t === tab);
     if(pane) pane.style.display = t === tab ? 'block' : 'none';
   });
+  if(tab === 'calories' && typeof renderCalorieAnalytics === 'function'){
+    renderCalorieAnalytics(anaCurrentFilteredTxs, anaPeriod, anaInspectedDate);
+  }
 }
 
 function setAnaPeriod(p){
@@ -9681,6 +9709,13 @@ function renderAnalytics(){
   renderIncomeVsExpenseChart(inc, exp, prevInc, prevExp);
   renderMonthlyTrendChart(allTxs, d);
   renderBudgetGauge(exp);
+
+  // 🥗 Calorie & Dietary Analytics Integration
+  anaCurrentFilteredTxs = txs;
+  renderCalorieOverviewCard(txs, anaPeriod, d);
+  if(currentAnaViewTab === 'calories'){
+    renderCalorieAnalytics(txs, anaPeriod, d);
+  }
 }
 
 
@@ -9796,24 +9831,28 @@ function renderMonthlyTrendChart(allTxs, baseDate){
     `;
 
     // Interactive click
-    col.querySelector('.mtrend-bar').addEventListener('click', () => {
-      if(tipEl){
-        const delta = idx > 0 && months[idx-1].spend > 0
-          ? Math.round(((d.spend - months[idx-1].spend) / months[idx-1].spend) * 100)
-          : null;
-        const deltaStr = delta !== null
-          ? ` · <span style="color:${delta <= 0 ? 'var(--green)' : 'var(--red)'}">
-              ${delta <= 0 ? '▼' : '▲'}${Math.abs(delta)}% vs prev
-            </span>`
-          : '';
-        tipEl.innerHTML = `<strong>${d.label} ${d.y}</strong> · ${fmt(d.spend)} (${d.count} ${isZh ? '笔' : 'txs'})${deltaStr}`;
-      }
-      // Highlight active bar
-      barsEl.querySelectorAll('.mtrend-bar').forEach(b => b.classList.remove('active'));
-      col.querySelector('.mtrend-bar').classList.add('active');
-      barsEl.querySelectorAll('.mtrend-label').forEach(l => l.classList.remove('active'));
-      col.querySelector('.mtrend-label').classList.add('active');
-    });
+    const bar = col.querySelector('.mtrend-bar');
+    if(bar){
+      bar.addEventListener('click', () => {
+        if(tipEl){
+          const delta = idx > 0 && months[idx-1].spend > 0
+            ? Math.round(((d.spend - months[idx-1].spend) / months[idx-1].spend) * 100)
+            : null;
+          const deltaStr = delta !== null
+            ? ` · <span style="color:${delta <= 0 ? 'var(--green)' : 'var(--red)'}">
+                ${delta <= 0 ? '▼' : '▲'}${Math.abs(delta)}% vs prev
+              </span>`
+            : '';
+          tipEl.innerHTML = `<strong>${d.label} ${d.y}</strong> · ${fmt(d.spend)} (${d.count} ${isZh ? '笔' : 'txs'})${deltaStr}`;
+        }
+        // Highlight active bar
+        barsEl.querySelectorAll('.mtrend-bar').forEach(b => b.classList.remove('active'));
+        bar.classList.add('active');
+        barsEl.querySelectorAll('.mtrend-label').forEach(l => l.classList.remove('active'));
+        const lbl = col.querySelector('.mtrend-label');
+        if(lbl) lbl.classList.add('active');
+      });
+    }
 
     barsEl.appendChild(col);
   });
@@ -9911,6 +9950,364 @@ function renderBudgetGauge(currentExp){
       ${isOver ? `<div style="font-size:10.5px;color:var(--red);font-weight:700;margin-top:4px;text-align:center">⚠️ ${isZh ? '本月已超出预算！' : 'Over budget this month!'}</div>` : ''}
     `;
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CALORIE & NUTRITION ANALYTICS
+// ═══════════════════════════════════════════════════════════════════
+
+function extractPeriodCalorieData(txs){
+  let totalKcal = 0;
+  let totalProtein = 0;
+  let foodSpend = 0;
+  let itemCount = 0;
+  const dailyMap = {};
+  const dishes = [];
+  const catMap = {};
+
+  (txs || []).forEach(tx => {
+    if(tx.type !== 'expense') return;
+    const isFood = (tx.category === 'food' || tx.category === 'drinks' || getTxCalories(tx) > 0);
+    if(!isFood) return;
+
+    foodSpend += (Number(tx.amount) || 0);
+    const txCal = getTxCalories(tx);
+    const txProt = getTxProtein(tx);
+    const dt = tx.date || today();
+
+    if(!dailyMap[dt]) dailyMap[dt] = { kcal: 0, protein: 0, spend: 0, receipts: 0, dishes: [] };
+    dailyMap[dt].spend += (Number(tx.amount) || 0);
+    dailyMap[dt].receipts += 1;
+
+    const items = extractTxReceiptItems(tx);
+    items.forEach(it => {
+      const cal = parseInt(it.calories) || 0;
+      const prot = parseInt(it.protein) || 0;
+      const qty = parseInt(it.qty) || 1;
+      const price = parseFloat(it.price) || 0;
+      if(cal > 0 || prot > 0){
+        const dishTotalKcal = cal * qty;
+        const dishTotalProt = prot * qty;
+        totalKcal += dishTotalKcal;
+        totalProtein += dishTotalProt;
+        itemCount += qty;
+        dailyMap[dt].kcal += dishTotalKcal;
+        dailyMap[dt].protein += dishTotalProt;
+        
+        const dishObj = {
+          name: it.name || tx.desc || 'Dish',
+          cal,
+          totalCal: dishTotalKcal,
+          protein: prot,
+          totalProtein: dishTotalProt,
+          qty,
+          price,
+          merchant: tx.desc || '',
+          date: dt,
+          subCategory: it.subCategory || tx.subCategory || 'food_other'
+        };
+        dishes.push(dishObj);
+        dailyMap[dt].dishes.push(dishObj);
+
+        let catKey = it.subCategory || tx.subCategory || 'other';
+        catMap[catKey] = (catMap[catKey] || 0) + dishTotalKcal;
+      }
+    });
+  });
+
+  const activeDays = Object.keys(dailyMap).filter(k => dailyMap[k].kcal > 0 || dailyMap[k].protein > 0).length;
+  const avgDailyKcal = activeDays > 0 ? Math.round(totalKcal / activeDays) : 0;
+  const avgDailyProtein = activeDays > 0 ? Math.round(totalProtein / activeDays) : 0;
+  const costPer100Kcal = totalKcal > 0 ? ((foodSpend / totalKcal) * 100) : 0;
+
+  return {
+    totalKcal,
+    totalProtein,
+    foodSpend,
+    itemCount,
+    activeDays,
+    avgDailyKcal,
+    avgDailyProtein,
+    costPer100Kcal,
+    dailyMap,
+    dishes,
+    catMap
+  };
+}
+
+function renderCalorieOverviewCard(txs, period, baseDate){
+  const card = el('ana-cal-overview-card');
+  if(!card) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const data = extractPeriodCalorieData(txs);
+
+  const totalEl = el('ana-cal-ov-total');
+  const daysEl = el('ana-cal-ov-days');
+  const avgEl = el('ana-cal-ov-avg');
+  const costEl = el('ana-cal-ov-cost');
+  const topDishEl = el('ana-cal-ov-topdish');
+
+  if(totalEl) totalEl.textContent = `${data.totalKcal.toLocaleString()} kcal`;
+  if(daysEl) daysEl.textContent = isZh ? `${data.activeDays} 饮食日 · 🥩 ${data.totalProtein}g` : `${data.activeDays} meal days · 🥩 ${data.totalProtein}g`;
+  if(avgEl) avgEl.textContent = `${data.avgDailyKcal.toLocaleString()} kcal`;
+  if(costEl) costEl.textContent = `RM ${data.costPer100Kcal.toFixed(2)}`;
+
+  if(topDishEl){
+    if(data.dishes.length > 0){
+      const sortedDishes = [...data.dishes].sort((a,b) => b.totalCal - a.totalCal);
+      const top = sortedDishes[0];
+      topDishEl.innerHTML = `
+        <span>🍽️</span>
+        <span>${isZh ? '最高热量菜品' : 'Top Calorie Dish'}: <strong>${esc(top.name)}</strong> (🔥 ${top.totalCal} kcal · 🥩 ${top.totalProtein}g) ${top.merchant ? '· ' + esc(top.merchant) : ''}</span>
+      `;
+    } else {
+      topDishEl.innerHTML = `
+        <span>🍽️</span>
+        <span>${isZh ? '本期尚未记录食物热量，使用小票扫描自动记录！' : 'No calories logged in this period. Scan receipts to track automatically!'}</span>
+      `;
+    }
+  }
+}
+
+function renderCalorieAnalytics(txs, period, baseDate){
+  const pane = el('ana-pane-calories');
+  if(!pane) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const data = extractPeriodCalorieData(txs);
+
+  // 1. Status badge & Header
+  const badge = el('ana-cal-status-badge');
+  if(badge){
+    if(data.totalKcal === 0){
+      badge.textContent = isZh ? '暂无热量数据' : 'No Food Data';
+      badge.style.background = 'rgba(255,255,255,0.06)';
+      badge.style.color = 'var(--muted)';
+    } else if(data.avgDailyKcal <= 1800){
+      badge.textContent = isZh ? '🥗 饮食清淡' : '🥗 Light Diet';
+      badge.style.background = 'rgba(16,185,129,0.2)';
+      badge.style.color = '#10b981';
+    } else if(data.avgDailyKcal <= 2300){
+      badge.textContent = isZh ? '✅ 摄入达标' : '✅ Balanced Intake';
+      badge.style.background = 'rgba(245,158,11,0.2)';
+      badge.style.color = '#f59e0b';
+    } else {
+      badge.textContent = isZh ? '⚠️ 热量偏高' : '⚠️ High Calorie';
+      badge.style.background = 'rgba(239,68,68,0.2)';
+      badge.style.color = '#ef4444';
+    }
+  }
+
+  // 2. Metrics cards
+  if(el('ana-cal-total-val')) el('ana-cal-total-val').textContent = `${data.totalKcal.toLocaleString()} kcal`;
+  if(el('ana-cal-total-sub')) el('ana-cal-total-sub').textContent = isZh ? `${data.activeDays} 个饮食日 · 🥩 共 ${data.totalProtein}g 蛋白质` : `${data.activeDays} meal days · 🥩 ${data.totalProtein}g protein`;
+  if(el('ana-cal-avg-val')) el('ana-cal-avg-val').textContent = `${data.avgDailyKcal.toLocaleString()} kcal`;
+  if(el('ana-cal-avg-sub')) el('ana-cal-avg-sub').textContent = isZh ? `日均 (🥩 蛋白质 ${data.avgDailyProtein}g)` : `Daily avg (🥩 ${data.avgDailyProtein}g protein)`;
+  if(el('ana-cal-spend-val')) el('ana-cal-spend-val').textContent = fmt(data.foodSpend);
+  if(el('ana-cal-spend-sub')) el('ana-cal-spend-sub').textContent = isZh ? `共记录 ${data.itemCount} 样食物` : `${data.itemCount} item${data.itemCount !== 1 ? 's' : ''} logged`;
+  if(el('ana-cal-eff-val')) el('ana-cal-eff-val').textContent = `RM ${data.costPer100Kcal.toFixed(2)}`;
+  if(el('ana-cal-eff-sub')) el('ana-cal-eff-sub').textContent = isZh ? '每 100 kcal 花费' : 'per 100 kcal consumed';
+
+  // Benchmark progress against 2000 kcal target
+  const pct = Math.min(100, Math.round((data.avgDailyKcal / 2000) * 100));
+  if(el('ana-cal-progress-pct')) el('ana-cal-progress-pct').textContent = `${pct}%`;
+  if(el('ana-cal-progress-fill')){
+    el('ana-cal-progress-fill').style.width = `${pct}%`;
+    el('ana-cal-progress-fill').style.background = data.avgDailyKcal <= 1800 ? 'linear-gradient(90deg,#10b981,#34d399)' : (data.avgDailyKcal <= 2300 ? 'linear-gradient(90deg,#f59e0b,#fbbf24)' : 'linear-gradient(90deg,#ef4444,#f87171)');
+  }
+
+  // 3. Daily Calorie Bar Chart
+  renderCalorieBarChart(data.dailyMap, period, baseDate, isZh);
+
+  // 4. Top Dishes List
+  const topList = el('ana-cal-top-dishes-list');
+  if(topList){
+    const sortedDishes = [...data.dishes].sort((a,b) => b.totalCal - a.totalCal).slice(0, 5);
+    if(sortedDishes.length === 0){
+      topList.innerHTML = `<div style="text-align:center;padding:12px;font-size:12px;color:var(--muted)">${isZh ? '本期暂无单品数据' : 'No dish data for this period'}</div>`;
+    } else {
+      topList.innerHTML = sortedDishes.map((dish, i) => {
+        const medal = ['🥇','🥈','🥉','4️⃣','5️⃣'][i] || '•';
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 10px">
+            <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+              <span style="font-size:14px;flex-shrink:0">${medal}</span>
+              <div style="min-width:0;flex:1">
+                <div style="font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  ${dish.qty > 1 ? `<span style="color:var(--cyan);font-weight:900;margin-right:2px">${dish.qty}x</span> ` : ''}${esc(dish.name)}
+                </div>
+                <div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  ${dish.merchant ? `📍 ${esc(dish.merchant)} · ` : ''}${fmtDate(dish.date)}
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;margin-left:8px">
+              <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
+                <span style="font-size:11px;font-weight:900;color:#10b981;background:rgba(16,185,129,.14);padding:2px 5px;border-radius:5px;border:1px solid rgba(16,185,129,.28)">🔥 ${dish.totalCal} kcal</span>
+                ${dish.totalProtein > 0 ? `<span style="font-size:10.5px;font-weight:900;color:var(--cyan);background:rgba(6,182,212,.14);padding:2px 5px;border-radius:5px;border:1px solid rgba(6,182,212,.28)">🥩 ${dish.totalProtein}g</span>` : ''}
+              </div>
+              ${dish.price > 0 ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${fmt(dish.price * dish.qty)}</div>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 5. Food Calorie Category Breakdown
+  const catBreakdown = el('ana-cal-cat-breakdown');
+  if(catBreakdown){
+    const entries = Object.entries(data.catMap).sort((a,b) => b[1] - a[1]);
+    if(entries.length === 0){
+      catBreakdown.innerHTML = `<div style="text-align:center;padding:12px;font-size:12px;color:var(--muted)">${isZh ? '暂无分类数据' : 'No meal categories in this period'}</div>`;
+    } else {
+      catBreakdown.innerHTML = entries.map(([key, kcal]) => {
+        const subInfo = getSubCatInfo(key);
+        const name = subInfo ? `${subInfo.icon} ${subInfo.name}` : (isZh ? '餐饮杂项' : 'Food & Drinks');
+        const pct = data.totalKcal > 0 ? Math.round((kcal / data.totalKcal) * 100) : 0;
+        return `
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;margin-bottom:3px">
+              <span style="color:var(--text)">${name}</span>
+              <span style="color:#10b981">${kcal.toLocaleString()} kcal (${pct}%)</span>
+            </div>
+            <div style="background:var(--bg2);height:7px;border-radius:5px;overflow:hidden">
+              <div style="background:#10b981;height:100%;width:${pct}%;border-radius:5px"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 6. Food Receipts List
+  const receiptsList = el('ana-cal-receipts-list');
+  if(receiptsList){
+    const foodTxs = (txs || []).filter(t => t.type === 'expense' && (t.category === 'food' || t.category === 'drinks' || getTxCalories(t) > 0));
+    if(foodTxs.length === 0){
+      receiptsList.innerHTML = `<div style="text-align:center;padding:12px;font-size:12px;color:var(--muted)">${isZh ? '本期暂无餐饮小票' : 'No food receipts for this period'}</div>`;
+    } else {
+      receiptsList.innerHTML = foodTxs.map(t => {
+        const c = getTxCalories(t);
+        const p = getTxProtein(t);
+        const items = extractTxReceiptItems(t);
+        const itemsSummary = items.map(it => it.name).filter(Boolean).slice(0, 3).join(', ');
+        return `
+          <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:8px 10px;cursor:pointer" onclick="openTxDetailModal('${t.id}')">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                ${esc(t.desc || 'Restaurant')}
+              </div>
+              <div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                ${fmtDate(t.date)}${itemsSummary ? ' · ' + esc(itemsSummary) : ''}
+              </div>
+            </div>
+            <div style="text-align:right;margin-left:8px;flex-shrink:0">
+              <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
+                ${c > 0 ? `<span style="font-size:11px;font-weight:900;color:#10b981">🔥 ${c} kcal</span>` : ''}
+                ${p > 0 ? `<span style="font-size:10.5px;font-weight:800;color:var(--cyan)">🥩 ${p}g</span>` : ''}
+              </div>
+              <div style="font-size:10px;font-weight:700;color:var(--text);margin-top:1px">${fmt(t.amount)}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
+function renderCalorieBarChart(dailyMap, period, baseDate, isZh){
+  const chart = el('ana-cal-bars');
+  const tip = el('ana-cal-chart-tooltip');
+  if(!chart) return;
+  chart.innerHTML = '';
+  if(tip) tip.textContent = '';
+
+  let labels = [];
+  const curYear = baseDate.getFullYear();
+  const curMonth = baseDate.getMonth();
+
+  if(period === 'week'){
+    const wStart = new Date(baseDate);
+    wStart.setDate(baseDate.getDate() - baseDate.getDay());
+    const dayNames = isZh ? ['周日','周一','周二','周三','周四','周五','周六'] : ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    for(let i = 0; i < 7; i++){
+      const dt = new Date(wStart);
+      dt.setDate(wStart.getDate() + i);
+      const ds = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      labels.push({ label: dayNames[i], date: ds, title: `${dayNames[i]} (${ds})` });
+    }
+  } else if(period === 'year'){
+    const monthNames = isZh ? ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'] : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    for(let m = 0; m < 12; m++){
+      labels.push({ label: monthNames[m], month: m, year: curYear, title: isZh ? `${curYear}年${m+1}月` : `${monthNames[m]} ${curYear}` });
+    }
+  } else {
+    // Month (6 intervals of ~5 days)
+    const dim = new Date(curYear, curMonth + 1, 0).getDate();
+    const bucketCount = 6;
+    const bucketSize = Math.ceil(dim / bucketCount);
+    for(let b = 0; b < bucketCount; b++){
+      const s = b * bucketSize + 1;
+      const e = Math.min((b + 1) * bucketSize, dim);
+      labels.push({
+        label: `${s}-${e}`,
+        start: s,
+        end: e,
+        month: curMonth,
+        year: curYear,
+        title: isZh ? `${curMonth+1}月${s}日 - ${e}日` : `${s}-${e} ${baseDate.toLocaleString('en-MY', {month:'short'})}`
+      });
+    }
+  }
+
+  // Calculate totals for each bucket
+  const totals = labels.map(l => {
+    let kcal = 0;
+    if(period === 'week'){
+      kcal = dailyMap[l.date] ? dailyMap[l.date].kcal : 0;
+    } else if(period === 'year'){
+      Object.keys(dailyMap).forEach(d => {
+        const dt = new Date(d + 'T00:00:00');
+        if(dt.getFullYear() === l.year && dt.getMonth() === l.month){
+          kcal += dailyMap[d].kcal;
+        }
+      });
+    } else {
+      Object.keys(dailyMap).forEach(d => {
+        const dt = new Date(d + 'T00:00:00');
+        const day = dt.getDate();
+        if(dt.getFullYear() === l.year && dt.getMonth() === l.month && day >= l.start && day <= l.end){
+          kcal += dailyMap[d].kcal;
+        }
+      });
+    }
+    return { kcal, label: l.label, title: l.title };
+  });
+
+  const maxKcal = Math.max(...totals.map(t => t.kcal), 2500);
+
+  totals.forEach(t => {
+    const col = document.createElement('div');
+    col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;cursor:pointer;position:relative';
+
+    const pct = Math.min(100, Math.max(t.kcal > 0 ? 8 : 2, Math.round((t.kcal / maxKcal) * 100)));
+    const barColor = t.kcal === 0 ? 'var(--border)' : (t.kcal <= 1800 ? '#10b981' : (t.kcal <= 2300 ? '#f59e0b' : '#ef4444'));
+
+    col.innerHTML = `
+      <div style="font-size:9px;font-weight:700;color:var(--muted);margin-bottom:2px">${t.kcal > 0 ? t.kcal : ''}</div>
+      <div style="width:100%;max-width:26px;height:${pct}%;background:${barColor};border-radius:6px 6px 0 0;transition:height .3s"></div>
+      <div style="font-size:10px;font-weight:700;color:var(--muted);margin-top:4px">${t.label}</div>
+    `;
+
+    col.onmouseenter = () => {
+      if(tip) tip.textContent = `${t.title}: ${t.kcal.toLocaleString()} kcal ${t.kcal > 0 ? (t.kcal <= 2000 ? '✅' : '⚠️') : ''}`;
+    };
+    col.onclick = () => {
+      if(tip) tip.textContent = `${t.title}: ${t.kcal.toLocaleString()} kcal ${t.kcal > 0 ? (t.kcal <= 2000 ? '✅' : '⚠️') : ''}`;
+    };
+
+    chart.appendChild(col);
+  });
 }
 
 function renderEnhancedBarChart(txs, period, baseDate){
@@ -10706,6 +11103,7 @@ function renderAll(){
   renderSpendingPrediction();
   renderStreakCard();
   renderCalorieWidget();
+  renderRestaurantPassportWidget();
   renderHealth();
   renderBudgets();
   renderGoals();
@@ -10713,6 +11111,8 @@ function renderAll(){
   renderRecurring();
   renderDebts();
   renderAnalytics();
+  if(typeof renderCashFlowForecast === 'function') renderCashFlowForecast();
+  if(typeof renderSpendingHeatmap === 'function') renderSpendingHeatmap();
   initFloatingAiAlerts();
 }
 
@@ -10759,6 +11159,7 @@ function clearData(){
     lastSync: '',
     biometricLock: false,
     pendingMeals: [],
+    restaurantRecords: [],
     paydayDate: 25,
     paydayAmount: 0,
     challenges: [],
@@ -10779,7 +11180,12 @@ function clearData(){
       history: []
     },
     geminiApiKey: ''
-};
+  };
+
+  if(typeof window !== 'undefined'){
+    window.STATE = S;
+    window.S = S;
+  }
 
   dismissedAlertTitles.clear();
   activeAiAlerts = [];
@@ -10835,7 +11241,7 @@ function importFullBackupJSON(){
         const parsed = JSON.parse(ev.target.result);
         const newState = parsed.state || parsed;
         if(newState.transactions && Array.isArray(newState.transactions)){
-          S = { ...S, ...newState };
+          applyStateObject(newState);
           save();
           renderAll();
           renderCalendar();
@@ -10853,20 +11259,11 @@ function importFullBackupJSON(){
 }
 
 function purgePhotoCache(){
-  const photoCount = S.transactions.filter(t => t.photo).length;
-  if(!photoCount){
-    toast('ℹ️ No receipt photos currently taking up storage.');
-    return;
+  if(Array.isArray(S.transactions)){
+    S.transactions.forEach(t => { if(t.photo) delete t.photo; });
   }
-  if(confirm(`Clean photo storage for ${photoCount} receipts?\n\n✅ ALL transactions, numbers, dates, locations, and dish notes will be 100% PRESERVED.\n\nOnly the raw image files will be freed to save storage space.`)){
-    S.transactions.forEach(t => {
-      t.photo = null;
-    });
-    save();
-    renderAll();
-    renderCalendar();
-    toast('🧹 Photo storage cleaned! All transaction records preserved.');
-  }
+  save();
+  toast(S.lang === 'zh' ? '✨ 小票照片已清空，系统不保留收据图片' : '✨ Receipt photos cleared; photos are never stored');
 }
 
 // ── 📄 PDF MONTHLY STATEMENT GENERATOR (JSPDF + AUTOTABLE) ──
@@ -11063,26 +11460,40 @@ function extractTxReceiptItems(tx){
         const estimated = typeof estimateCaloriesFromName === 'function' ? estimateCaloriesFromName(it.name || it.desc || '') : -1;
         cal = estimated >= 0 ? estimated : 0;
       }
+      let prot = parseInt(it.protein);
+      if(isNaN(prot) || prot <= 0){
+        const estProt = typeof estimateProteinFromName === 'function' ? estimateProteinFromName(it.name || it.desc || '') : -1;
+        if(estProt >= 0) prot = estProt;
+        else if(cal > 0) prot = Math.max(1, Math.round(cal * 0.04));
+        else prot = 0;
+      }
       return {
         name: it.name || it.desc || 'Item',
         price: Number(it.price || it.amount) || 0,
         qty: Number(it.qty) || 1,
-        calories: cal
+        calories: cal,
+        protein: prot
       };
     });
   }
 
-  // If note contains itemized breakdown (e.g. "Item A (RM 10.00) [400kcal], Item B (RM 5.00)" or lines)
+  // If note contains itemized breakdown (e.g. "Item A (RM 10.00) [400kcal] [25g protein], Item B (RM 5.00)" or lines)
   if(tx.note && typeof tx.note === 'string'){
     const lines = tx.note.split(/[\n,;]+/).map(s => s.trim()).filter(Boolean);
     const parsed = [];
 
     lines.forEach(l => {
       let calFromNote = 0;
+      let protFromNote = 0;
       const calMatch = l.match(/\[(\d+)\s*kcal\]/i);
       if(calMatch){
         calFromNote = parseInt(calMatch[1]) || 0;
         l = l.replace(/\[\d+\s*kcal\]/i, '').trim();
+      }
+      const protMatch = l.match(/\[(\d+)\s*g(?:\s*protein)?\]/i);
+      if(protMatch){
+        protFromNote = parseInt(protMatch[1]) || 0;
+        l = l.replace(/\[\d+\s*g(?:\s*protein)?\]/i, '').trim();
       }
       const itemRegex = /(?:(\d+)\s*x\s*)?(.+?)(?:\s*x(\d+))?\s*(?:\((?:RM|\$)?\s*([0-9]+(?:\.[0-9]{1,2})?)\)|(?:[-–:]|\bRM\b|\$)?\s*(?:RM|\$)?\s*([0-9]+(?:\.[0-9]{1,2})?))?$/i;
       const m = l.match(itemRegex);
@@ -11095,12 +11506,20 @@ function extractTxReceiptItems(tx){
           const estimated = estimateCaloriesFromName(itemName);
           cal = estimated >= 0 ? estimated : 0;
         }
+        let prot = protFromNote;
+        if(prot <= 0 && typeof estimateProteinFromName === 'function' && (tx.category === 'food' || tx.category === 'drinks')){
+          const estProt = estimateProteinFromName(itemName);
+          if(estProt >= 0) prot = estProt;
+          else if(cal > 0) prot = Math.max(1, Math.round(cal * 0.04));
+          else prot = 0;
+        }
         if(itemName && (price > 0 || cal > 0 || itemName.length > 1)){
           parsed.push({
             name: itemName,
             qty,
             price,
-            calories: cal
+            calories: cal,
+            protein: prot
           });
         }
       }
@@ -11112,19 +11531,54 @@ function extractTxReceiptItems(tx){
   // Fallback: Use description as a single item entry if amount > 0
   if(tx.desc && Number(tx.amount) > 0){
     let cal = 0;
+    let prot = 0;
     if(typeof estimateCaloriesFromName === 'function' && (tx.category === 'food' || tx.category === 'drinks')){
       const estimated = estimateCaloriesFromName(tx.desc);
       cal = estimated >= 0 ? estimated : 0;
+    }
+    if(typeof estimateProteinFromName === 'function' && (tx.category === 'food' || tx.category === 'drinks')){
+      const estProt = estimateProteinFromName(tx.desc);
+      if(estProt >= 0) prot = estProt;
+      else if(cal > 0) prot = Math.max(1, Math.round(cal * 0.04));
     }
     return [{
       name: tx.desc,
       price: Number(tx.amount),
       qty: 1,
-      calories: cal
+      calories: cal,
+      protein: prot
     }];
   }
 
   return [];
+}
+
+// Helper to calculate total estimated calories for a transaction
+function getTxCalories(tx){
+  if(!tx) return 0;
+  const items = extractTxReceiptItems(tx);
+  if(!items || !Array.isArray(items) || items.length === 0) return 0;
+  let total = 0;
+  items.forEach(it => {
+    const cal = parseInt(it.calories) || 0;
+    const qty = parseInt(it.qty) || 1;
+    if(cal > 0) total += (cal * qty);
+  });
+  return total;
+}
+
+// Helper to calculate total estimated protein (in grams) for a transaction
+function getTxProtein(tx){
+  if(!tx) return 0;
+  const items = extractTxReceiptItems(tx);
+  if(!items || !Array.isArray(items) || items.length === 0) return 0;
+  let total = 0;
+  items.forEach(it => {
+    const prot = parseInt(it.protein) || 0;
+    const qty = parseInt(it.qty) || 1;
+    if(prot > 0) total += (prot * qty);
+  });
+  return total;
 }
 
 // Helper to match scanned receipt item against Malaysian market benchmark
@@ -12377,7 +12831,6 @@ function logSplitUserShare(){
       origTx.note = origTx.note ? `${origTx.note} | ${splitNote}` : splitNote;
       if(ctx.category) origTx.category = ctx.category;
       if(ctx.subCategory) origTx.subCategory = ctx.subCategory;
-      if(ctx.photo && !origTx.photo) origTx.photo = ctx.photo;
 
       save();
       renderAll();
@@ -12402,7 +12855,6 @@ function logSplitUserShare(){
   const targetDate = (ctx && ctx.date) ? ctx.date : today();
   const targetPay = (ctx && ctx.paymentMethod) ? ctx.paymentMethod : 'Cash';
   const targetAcc = (ctx && ctx.accountId) ? ctx.accountId : (S.lastUsedAccId || (S.accounts[0]?.id) || 'default');
-  const targetPhoto = (ctx && ctx.photo) ? ctx.photo : null;
   const targetItems = (ctx && ctx.items && ctx.items.length > 0) ? JSON.parse(JSON.stringify(ctx.items)) : [];
 
   closeModal('splitter-modal');
@@ -12417,17 +12869,6 @@ function logSplitUserShare(){
   if(el('tx-cats')) buildCats('tx-cats', 'expense', id => selCat = id);
   if(targetPay) selectPaymentMethod(targetPay);
   if(targetAcc) setTxAccount(targetAcc);
-
-  if(targetPhoto){
-    photoData = targetPhoto;
-    const prevEl = el('photo-prev');
-    const phEl = el('photo-ph');
-    if(prevEl){
-      prevEl.src = photoData;
-      prevEl.classList.remove('hidden');
-    }
-    if(phEl) phEl.classList.add('hidden');
-  }
 
   if(targetItems.length > 0){
     currentOcrItems = targetItems;
@@ -13047,99 +13488,11 @@ function init(){
 function detectRecurringPattern(tx) { return false; }
 
 function openReceiptGallery(){
-  renderReceiptGallery();
-  openModal('receipt-gallery-modal');
-}
-
-function renderReceiptGallery(){
-  const container = el('receipt-gallery-content');
-  if(!container) return;
-  container.innerHTML = '';
-  
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-  const txsWithPhotos = S.transactions.filter(t => t.photo && t.photo.length > 50);
-  
-  if(txsWithPhotos.length === 0){
-    container.innerHTML = `
-      <div style="text-align:center;padding:36px 16px;color:var(--muted)">
-        <div style="font-size:36px;margin-bottom:8px">📸</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">${isZh ? '暂无拍照小票' : 'No Receipt Photos'}</div>
-        <div style="font-size:12px">${isZh ? '记账时上传收据照片，即可在这里集中查看小票相册！' : 'Attach receipt photos when adding expenses to view them here.'}</div>
-      </div>
-    `;
-    return;
-  }
-
-  // Group by Month
-  const byMonth = {};
-  txsWithPhotos.forEach(t => {
-    const m = (t.date || today()).slice(0, 7);
-    if(!byMonth[m]) byMonth[m] = [];
-    byMonth[m].push(t);
-  });
-  
-  const localeStr = isZh ? 'zh-CN' : 'en-MY';
-  Object.keys(byMonth).sort().reverse().forEach(monthKey => {
-    const txs = byMonth[monthKey];
-    const [y,m] = monthKey.split('-');
-    const monthName = new Date(parseInt(y), parseInt(m)-1).toLocaleDateString(localeStr, {month:'long', year:'numeric'});
-    
-    const hdr = document.createElement('div');
-    hdr.style.cssText = 'font-size:12px;font-weight:800;color:var(--text);margin:12px 0 8px;display:flex;justify-content:space-between';
-    hdr.innerHTML = `<span>📅 ${monthName}</span><span style="color:var(--muted);font-weight:600">${txs.length} ${isZh ? '张小票' : (txs.length>1?'receipts':'receipt')}</span>`;
-    container.appendChild(hdr);
-    
-    const grid = document.createElement('div');
-    grid.className = 'receipt-grid';
-    
-    txs.forEach(tx => {
-      const thumb = document.createElement('div');
-      thumb.className = 'receipt-thumb';
-      const c = catInfo(tx.type, tx.category);
-      thumb.innerHTML = `
-        <img src="${tx.photo}" alt="Receipt" loading="lazy" style="width:100%;height:100%;object-fit:cover"/>
-        <div class="receipt-thumb-overlay">
-          <div class="receipt-thumb-desc">${c.icon} ${esc(tx.desc || c.name)}</div>
-          <div class="receipt-thumb-amt">${fmt(tx.amount)} · ${tx.date}</div>
-        </div>
-      `;
-      thumb.onclick = () => {
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:20px;backdrop-filter:blur(10px)';
-        overlay.innerHTML = `
-          <div style="position:relative;max-width:100%;max-height:75vh;display:flex;align-items:center;justify-content:center">
-            <img src="${tx.photo}" style="max-width:100%;max-height:75vh;border-radius:14px;object-fit:contain;box-shadow:0 10px 40px rgba(0,0,0,.6)"/>
-          </div>
-          <div style="color:#fff;margin-top:14px;text-align:center;width:100%;max-width:320px">
-            <div style="font-size:16px;font-weight:800">${esc(tx.desc || c.name)}</div>
-            <div style="font-size:13px;opacity:.8;margin:4px 0">${fmt(tx.amount)} · ${tx.date} · ${c.icon} ${c.name}</div>
-            <div style="display:flex;gap:8px;margin-top:12px">
-              <button type="button" class="primary-btn" style="padding:10px;font-size:12px;margin:0" id="lightbox-edit-btn">✏️ ${isZh ? '编辑账单' : 'Edit Transaction'}</button>
-              <button type="button" class="ghost-btn" style="padding:10px;font-size:12px;color:#fff;border-color:rgba(255,255,255,.3);margin:0" id="lightbox-close-btn">✕ ${isZh ? '关闭' : 'Close'}</button>
-            </div>
-          </div>
-        `;
-        overlay.querySelector('#lightbox-close-btn').onclick = (ev) => {
-          ev.stopPropagation();
-          overlay.remove();
-        };
-        overlay.querySelector('#lightbox-edit-btn').onclick = (ev) => {
-          ev.stopPropagation();
-          overlay.remove();
-          closeModal('receipt-gallery-modal');
-          openEditTxModal(tx.id);
-        };
-        overlay.onclick = (ev) => {
-          if(ev.target === overlay) overlay.remove();
-        };
-        document.body.appendChild(overlay);
-      };
-      grid.appendChild(thumb);
-    });
-    
-    container.appendChild(grid);
-  });
+  toast(isZh ? 'ℹ️ 系统采用轻量设计，发票智能扫描后不保留底图' : 'ℹ️ Lightweight mode: receipt images are parsed in memory and not stored');
 }
+
+function renderReceiptGallery(){}
 
 const MY_LOCATION_CHAINS = [
   { keywords: ['shell', 'petronas', 'petron', 'caltex', 'bhp'], category: 'fuel', desc: 'Petrol', icon: '⛽' },
@@ -13307,6 +13660,69 @@ const CALORIE_DB = {
   'rice': 200, 'instant noodle': 350, 'biscuit': 150
 };
 
+// Built-in protein lookup for common Malaysian food items (grams per serving)
+const PROTEIN_DB = {
+  // Rice & Noodles
+  'nasi lemak': 12, 'nasi goreng': 14, 'nasi ayam': 26, 'nasi kandar': 28,
+  'nasi kerabu': 18, 'nasi dagang': 20, 'nasi briyani': 22, 'nasi campur': 25,
+  'mee goreng': 12, 'mee rebus': 14, 'mee bandung': 15, 'mee kari': 16,
+  'mee hoon goreng': 10, 'mee hoon soup': 12, 'char kuey teow': 16,
+  'kuey teow goreng': 14, 'kuey teow soup': 12, 'wan tan mee': 18,
+  'pan mee': 18, 'loh mee': 16, 'curry mee': 16, 'laksa': 18,
+  'asam laksa': 15, 'bihun goreng': 10, 'bihun soup': 10,
+  'maggi goreng': 10, 'indomie': 9, 'braised pork noodle': 30, 'braised pork loin': 35,
+  'braised pork': 28, 'pork loin': 32, 'pork meat': 26, 'pork': 24, 'beef': 26, 'mutton': 25,
+  // Chicken
+  'ayam goreng': 24, 'chicken rice': 26, 'chicken chop': 32,
+  'ayam penyet': 28, 'ayam bakar': 26, 'satay ayam': 20,
+  'fried chicken': 25, 'chicken wing': 16, 'nugget': 12, 'chicken': 25,
+  'kfc': 26, 'mcchicken': 16,
+  // Roti & Bread
+  'roti canai': 6, 'roti telur': 12, 'roti bom': 6, 'roti tisu': 4,
+  'roti jala': 5, 'chapati': 6, 'naan': 9, 'tosai': 5,
+  'roti bakar': 6,
+  // Drinks
+  'teh tarik': 3, 'teh o': 0, 'teh ais': 2, 'kopi': 2,
+  'kopi o': 0, 'kopi ais': 2, 'milo': 5, 'milo ais': 6,
+  'milo dinosaur': 8, 'sirap bandung': 2, 'air bandung': 2,
+  'teh c': 3, 'cham': 3, 'neslo': 4, 'horlick': 5,
+  'barli': 1, 'limau ais': 0, 'air kelapa': 1,
+  'americano': 1, 'latte': 8, 'cappuccino': 7, 'mocha': 8,
+  'espresso': 1, 'flat white': 8, 'matcha latte': 6,
+  'boba': 2, 'bubble tea': 2, 'milk tea': 3,
+  'iced coffee': 2, 'frappe': 4, 'smoothie': 3,
+  'juice': 1, 'orange juice': 1, 'apple juice': 1,
+  'coke': 0, 'coca cola': 0, 'pepsi': 0, 'sprite': 0,
+  '100 plus': 0, 'mineral water': 0, 'plain water': 0,
+  'soy milk': 8, 'soya': 8, 'protein shake': 25, 'whey': 25,
+  // Soup
+  'sup kambing': 25, 'sup tulang': 28, 'bak kut teh': 32,
+  'tom yam': 18, 'soup': 8,
+  // Seafood
+  'ikan bakar': 28, 'udang goreng': 22, 'sotong goreng': 20,
+  'fish and chips': 24, 'sushi': 9, 'salmon': 25, 'tuna': 28, 'fish': 22, 'prawn': 20,
+  // Mamak / Indian
+  'tandoori': 34, 'briyani': 24, 'murtabak': 26,
+  'thosai': 5, 'idli': 4, 'vadai': 6, 'dhal': 9,
+  // Chinese
+  'char siu': 28, 'roast duck': 26, 'dim sum': 15,
+  'wonton': 12, 'dumpling': 14, 'spring roll': 5,
+  'fried rice': 14, 'chow mein': 14, 'congee': 8, 'porridge': 8,
+  // Snacks & Desserts
+  'pisang goreng': 2, 'keropok': 4, 'kuih': 2,
+  'cendol': 3, 'ais kacang': 4, 'ais cream': 4,
+  'cake': 4, 'pastry': 5, 'donut': 4, 'waffle': 6,
+  'pancake': 6, 'toast': 4, 'croissant': 5, 'taro ball': 3, 'sweet potato': 3,
+  // Fast Food
+  'burger': 22, 'big mac': 26, 'cheeseburger': 24,
+  'fries': 4, 'french fries': 4, 'mcnugget': 14,
+  'pizza': 14, 'hotdog': 12, 'sandwich': 16, 'wrap': 18,
+  'kebab': 26, 'shawarma': 28, 'subway': 22,
+  // Groceries (per item/serving)
+  'egg': 6, 'eggs': 12, 'braised egg': 6, 'bread': 4, 'milk': 8, 'cheese': 7,
+  'rice': 4, 'instant noodle': 8, 'biscuit': 2, 'tofu': 10, 'tauhu': 10
+};
+
 function estimateCaloriesFromName(itemName){
   if(!itemName) return -1;
   const lower = itemName.toLowerCase().trim();
@@ -13328,7 +13744,28 @@ function estimateCaloriesFromName(itemName){
   return -1; // Not found in DB
 }
 
-// Enriches items array with calorie estimates using built-in DB + optional AI fallback
+function estimateProteinFromName(itemName){
+  if(!itemName) return -1;
+  const lower = itemName.toLowerCase().trim();
+  
+  // Exact match first
+  if(PROTEIN_DB[lower] !== undefined) return PROTEIN_DB[lower];
+  
+  // Partial match — find the best (longest) keyword match
+  let bestMatch = null;
+  let bestLen = 0;
+  for(const key of Object.keys(PROTEIN_DB)){
+    if(lower.includes(key) && key.length > bestLen){
+      bestMatch = key;
+      bestLen = key.length;
+    }
+  }
+  if(bestMatch !== null) return PROTEIN_DB[bestMatch];
+  
+  return -1; // Not found in DB
+}
+
+// Enriches items array with calorie & protein estimates using built-in DB + optional AI fallback
 async function enrichItemsWithCalories(items){
   if(!items || !Array.isArray(items) || items.length === 0) return;
   
@@ -13336,22 +13773,32 @@ async function enrichItemsWithCalories(items){
   
   // Step 1: Try built-in lookup for each item
   items.forEach((it, idx) => {
-    if(it.calories && parseInt(it.calories) > 0) return; // Already has calories
-    const cal = estimateCaloriesFromName(it.name);
-    if(cal >= 0){
-      it.calories = cal; // 0 for water, >0 for food
-    } else {
-      unknownItems.push({ idx, name: it.name }); // -1 = not found
+    // Calorie lookup
+    if(!it.calories || parseInt(it.calories) <= 0){
+      const cal = estimateCaloriesFromName(it.name);
+      if(cal >= 0) it.calories = cal;
+    }
+    // Protein lookup
+    if(!it.protein || parseInt(it.protein) <= 0){
+      const prot = estimateProteinFromName(it.name);
+      if(prot >= 0){
+        it.protein = prot;
+      } else if(it.calories && parseInt(it.calories) > 0){
+        it.protein = Math.max(1, Math.round(parseInt(it.calories) * 0.04));
+      }
+    }
+    if(!it.calories || it.calories < 0){
+      unknownItems.push({ idx, name: it.name });
     }
   });
   
-  // Step 2: For items not in DB, use Gemini to estimate
+  // Step 2: For items not in DB, use Gemini to estimate both calories and protein
   if(unknownItems.length > 0){
     const apiKey = (typeof S !== 'undefined' && S) ? S.geminiApiKey : null;
     if(apiKey){
       try {
         const itemNames = unknownItems.map(u => u.name).join(', ');
-        const prompt = `Estimate calories (kcal) per serving for these food/drink items. Return ONLY a JSON array of integers in the same order. If not food, return 0. Items: ${itemNames}`;
+        const prompt = `Estimate calories (kcal) and protein (grams) per serving for these food/drink items. Return ONLY a raw JSON array of objects with integer properties "calories" and "protein" in the same order, e.g. [{"calories":450,"protein":25}]. If not food, return {"calories":0,"protein":0}. Items: ${itemNames}`;
         const payload = {
           contents: [{ parts: [{ text: prompt }] }]
         };
@@ -13361,19 +13808,50 @@ async function enrichItemsWithCalories(items){
           const rawText = parts.map(p => p.text || '').join('');
           const jsonStr = rawText.match(/\[[\s\S]*?\]/);
           if(jsonStr){
-            const cals = JSON.parse(jsonStr[0]);
+            const parsed = JSON.parse(jsonStr[0]);
             unknownItems.forEach((u, i) => {
-              if(cals[i] && parseInt(cals[i]) > 0){
-                items[u.idx].calories = parseInt(cals[i]);
+              if(parsed[i]){
+                if(parsed[i].calories && parseInt(parsed[i].calories) > 0){
+                  items[u.idx].calories = parseInt(parsed[i].calories);
+                }
+                if(parsed[i].protein !== undefined){
+                  items[u.idx].protein = parseInt(parsed[i].protein) || 0;
+                } else if(items[u.idx].calories > 0){
+                  items[u.idx].protein = Math.max(1, Math.round(items[u.idx].calories * 0.04));
+                }
               }
             });
           }
         }
       } catch(e){
-        console.log('Calorie AI estimation fallback error:', e);
+        console.log('Calorie & Protein AI estimation fallback error:', e);
       }
     }
   }
+}
+
+// Helper to group and calculate calories & protein across all dates
+function getDatesWithCalories(){
+  const dateMap = {};
+  (S.transactions || []).forEach(tx => {
+    if(tx.type === 'expense' && tx.date){
+      const c = getTxCalories(tx);
+      const p = getTxProtein(tx);
+      if(c > 0 || p > 0){
+        if(!dateMap[tx.date]) dateMap[tx.date] = { totalKcal: 0, totalProtein: 0, itemCount: 0, txs: [] };
+        dateMap[tx.date].totalKcal += c;
+        dateMap[tx.date].totalProtein += p;
+        dateMap[tx.date].txs.push(tx);
+        const items = extractTxReceiptItems(tx);
+        items.forEach(it => {
+          if((parseInt(it.calories) || 0) > 0 || (parseInt(it.protein) || 0) > 0){
+            dateMap[tx.date].itemCount += (parseInt(it.qty) || 1);
+          }
+        });
+      }
+    }
+  });
+  return dateMap;
 }
 
 function renderCalorieWidget(){
@@ -13386,60 +13864,106 @@ function renderCalorieWidget(){
   
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const dStr = today();
-  const txs = (S.transactions || []).filter(t => t.date === dStr && t.type === 'expense');
+  const dateMap = getDatesWithCalories();
+
+  let targetDate = dStr;
+  let isToday = true;
   let totalKcal = 0;
+  let totalProtein = 0;
   let itemCount = 0;
-  txs.forEach(tx => {
-    const items = extractTxReceiptItems(tx);
-    if(items && Array.isArray(items)){
-      items.forEach(it => {
-        const cal = parseInt(it.calories) || 0;
-        const qty = parseInt(it.qty) || 1;
-        if(cal > 0){
-          totalKcal += (cal * qty);
-          itemCount += qty;
-        }
-      });
-    }
-  });
-  
-  numEl.textContent = totalKcal;
-  
-  if(titleEl){
-    if(totalKcal === 0){
-      titleEl.textContent = isZh ? '今日卡路里摄入' : "Today's Intake";
-    } else if(totalKcal < 1500){
-      titleEl.textContent = isZh ? '🥗 饮食清淡' : '🥗 Light Day';
-    } else if(totalKcal < 2200){
-      titleEl.textContent = isZh ? '✅ 摄入达标' : '✅ On Track';
-    } else {
-      titleEl.textContent = isZh ? '⚠️ 热量偏高' : '⚠️ High Intake';
+
+  if(dateMap[dStr] && (dateMap[dStr].totalKcal > 0 || (dateMap[dStr].totalProtein && dateMap[dStr].totalProtein > 0))){
+    totalKcal = dateMap[dStr].totalKcal;
+    totalProtein = dateMap[dStr].totalProtein || 0;
+    itemCount = dateMap[dStr].itemCount;
+  } else {
+    // If today has 0, check for the most recent day with calories/protein
+    const sortedDates = Object.keys(dateMap).sort().reverse();
+    if(sortedDates.length > 0){
+      targetDate = sortedDates[0];
+      isToday = false;
+      totalKcal = dateMap[targetDate].totalKcal;
+      totalProtein = dateMap[targetDate].totalProtein || 0;
+      itemCount = dateMap[targetDate].itemCount;
     }
   }
-  
-  if(subEl){
-    if(totalKcal === 0){
-      subEl.textContent = isZh ? '扫描餐饮小票自动记录热量 · 点击详情 ›' : 'Scan a food receipt to track · Tap details ›';
+
+  numEl.textContent = totalKcal.toLocaleString();
+
+  // Protein badge
+  const protPill = el('cal-protein-pill');
+  const protNum = el('cal-protein-num');
+  if(protPill && protNum){
+    if(totalProtein > 0){
+      protNum.textContent = totalProtein;
+      protPill.style.display = 'block';
     } else {
-      subEl.textContent = isZh ? `今日已记录 ${itemCount} 样食物 · 点击查看详情 ›` : `${itemCount} item${itemCount !== 1 ? 's' : ''} tracked · Tap for details ›`;
+      protPill.style.display = 'none';
+    }
+  }
+
+  if(titleEl){
+    if(totalKcal === 0 && totalProtein === 0){
+      titleEl.textContent = isZh ? '今日卡路里与营养' : "Today's Intake";
+    } else if(isToday){
+      if(totalKcal < 1500) titleEl.textContent = isZh ? '🥗 饮食清淡' : '🥗 Light Day';
+      else if(totalKcal < 2200) titleEl.textContent = isZh ? '✅ 摄入达标' : '✅ On Track';
+      else titleEl.textContent = isZh ? '⚠️ 热量偏高' : '⚠️ High Intake';
+    } else {
+      const parts = targetDate.split('-');
+      const moNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const moStr = moNames[parseInt(parts[1], 10) - 1] || parts[1];
+      const dDisplay = isZh ? `${parseInt(parts[1],10)}月${parseInt(parts[2],10)}日` : `${parseInt(parts[2],10)} ${moStr}`;
+      titleEl.textContent = isZh ? `🍽️ 最近记录 (${dDisplay})` : `🍽️ Latest (${dDisplay})`;
+    }
+  }
+
+  if(subEl){
+    if(totalKcal === 0 && totalProtein === 0){
+      subEl.textContent = isZh ? '扫描餐饮小票自动记录热量与蛋白质 · 点击详情 ›' : 'Scan a food receipt to track calories & protein · Tap details ›';
+    } else if(isToday){
+      const protStr = totalProtein > 0 ? (isZh ? ` · 🥩 ${totalProtein}g 蛋白质` : ` · 🥩 ${totalProtein}g protein`) : '';
+      subEl.textContent = isZh ? `今日已记录 ${itemCount} 样食物${protStr} · 点击查看详情 ›` : `${itemCount} item${itemCount !== 1 ? 's' : ''} tracked${protStr} · Tap for details ›`;
+    } else {
+      const protStr = totalProtein > 0 ? ` · 🥩 ${totalProtein}g` : '';
+      subEl.textContent = isZh ? `今日 0 kcal (记录: ${totalKcal} kcal${protStr}) · 点击查看历史 ›` : `Today: 0 kcal (${totalKcal} kcal${protStr}) · Tap for details ›`;
     }
   }
 }
 
-function openCalorieModal(){
-  renderCalorieModalContent();
+let calorieModalActiveDate = null;
+
+function openCalorieModal(preferredDate){
+  const dateMap = getDatesWithCalories();
+  const dStr = today();
+  if(preferredDate){
+    calorieModalActiveDate = preferredDate;
+  } else if(dateMap[dStr] && (dateMap[dStr].totalKcal > 0 || (dateMap[dStr].totalProtein && dateMap[dStr].totalProtein > 0))){
+    calorieModalActiveDate = dStr;
+  } else {
+    const sortedDates = Object.keys(dateMap).sort().reverse();
+    calorieModalActiveDate = sortedDates.length > 0 ? sortedDates[0] : dStr;
+  }
+  renderCalorieModalContent(calorieModalActiveDate);
   openModal('calorie-modal');
 }
 window.openCalorieModal = openCalorieModal;
 
-function renderCalorieModalContent(){
+function renderCalorieModalContent(targetDate){
   const container = el('calorie-modal-content');
   if(!container) return;
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const dStr = today();
-  const txs = (S.transactions || []).filter(t => t.date === dStr && t.type === 'expense');
+  const dateMap = getDatesWithCalories();
+  const sortedDates = Object.keys(dateMap).sort().reverse();
+
+  const viewDate = targetDate || calorieModalActiveDate || (sortedDates.length > 0 ? sortedDates[0] : dStr);
+  calorieModalActiveDate = viewDate;
+
+  const txs = (S.transactions || []).filter(t => t.date === viewDate && t.type === 'expense');
 
   let totalKcal = 0;
+  let totalProtein = 0;
   const trackedItems = [];
 
   txs.forEach(tx => {
@@ -13447,14 +13971,23 @@ function renderCalorieModalContent(){
     if(items && Array.isArray(items)){
       items.forEach(it => {
         const cal = parseInt(it.calories) || 0;
+        let prot = parseInt(it.protein) || 0;
+        if(prot <= 0 && it.name){
+          prot = estimateProteinFromName(it.name);
+        }
+        if(prot <= 0 && cal > 0){
+          prot = Math.max(1, Math.round(cal * 0.04));
+        }
         const qty = parseInt(it.qty) || 1;
-        if(cal > 0){
+        if(cal > 0 || prot > 0){
           totalKcal += (cal * qty);
+          totalProtein += (prot * qty);
           trackedItems.push({
             name: it.name || 'Dish',
             price: it.price || 0,
             qty: qty,
             calories: cal,
+            protein: prot,
             merchant: tx.desc || ''
           });
         }
@@ -13463,35 +13996,98 @@ function renderCalorieModalContent(){
   });
 
   const dailyGoal = 2000;
+  const proteinGoal = 60; // 60g daily recommended protein benchmark
   const pct = Math.min(100, Math.round((totalKcal / dailyGoal) * 100));
+  const protPct = Math.min(100, Math.round((totalProtein / proteinGoal) * 100));
   const barColor = totalKcal <= 1800 ? '#10b981' : (totalKcal <= 2300 ? '#f59e0b' : '#ef4444');
 
+  // Format date display
+  const parts = viewDate.split('-');
+  const moNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const moStr = moNames[parseInt(parts[1], 10) - 1] || parts[1];
+  const formattedDateTitle = isZh ? `${parts[0]}年${parseInt(parts[1],10)}月${parseInt(parts[2],10)}日` : `${parseInt(parts[2],10)} ${moStr} ${parts[0]}`;
+
   let html = `
-    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:16px;text-align:center;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">
-        ${isZh ? '今日总热量摄入' : "Today's Calorie Intake"}
+    <!-- Date Navigation Header -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:8px 10px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:12px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px">
+        <span>📅</span>
+        <span>${formattedDateTitle}</span>
+        ${viewDate === dStr ? `<span style="font-size:9.5px;background:rgba(16,185,129,.18);color:#10b981;padding:1px 6px;border-radius:4px;font-weight:700">${isZh ? '今天' : 'Today'}</span>` : ''}
       </div>
-      <div style="font-size:32px;font-weight:900;color:${barColor};margin:4px 0">
-        ${totalKcal} <span style="font-size:14px;font-weight:700">kcal</span>
+      <div style="display:flex;align-items:center;gap:5px">
+        <input type="date" value="${viewDate}" onchange="renderCalorieModalContent(this.value)" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:11px;padding:3px 6px;border-radius:6px"/>
+        ${viewDate !== dStr ? `<button type="button" onclick="renderCalorieModalContent('${dStr}')" style="font-size:10.5px;font-weight:700;color:#10b981;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);padding:3px 8px;border-radius:6px;cursor:pointer">${isZh ? '回今天' : 'Today'}</button>` : ''}
       </div>
-      <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">
-        ${isZh ? `标准参考值：${dailyGoal} kcal · 已达 ${pct}%` : `Recommended reference: ${dailyGoal} kcal · ${pct}% reached`}
+    </div>
+  `;
+
+  // Quick Date Chips if other days exist
+  if(sortedDates.length > 1){
+    html += `
+      <div style="display:flex;align-items:center;gap:5px;overflow-x:auto;padding-bottom:8px;margin-bottom:6px">
+        <span style="font-size:10px;color:var(--muted);white-space:nowrap">${isZh ? '有记录日期:' : 'Tracked Days:'}</span>
+        ${sortedDates.slice(0, 5).map(dt => {
+          const isAct = (dt === viewDate);
+          const p = dt.split('-');
+          const label = isZh ? `${parseInt(p[1],10)}月${parseInt(p[2],10)}日` : `${parseInt(p[2],10)} ${moNames[parseInt(p[1],10)-1]||p[1]}`;
+          const protTag = (dateMap[dt].totalProtein && dateMap[dt].totalProtein > 0) ? ` · ${dateMap[dt].totalProtein}g` : '';
+          return `
+            <button type="button" onclick="renderCalorieModalContent('${dt}')" style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;cursor:pointer;white-space:nowrap;${isAct ? 'background:#10b981;color:#fff;border:none;' : 'background:var(--bg3);color:var(--muted);border:1px solid var(--border);'}">
+              ${label} (${dateMap[dt].totalKcal} kcal${protTag})
+            </button>
+          `;
+        }).join('')}
       </div>
-      <div style="background:var(--bg2);height:8px;border-radius:6px;overflow:hidden">
-        <div style="background:${barColor};height:100%;width:${pct}%;transition:width .3s"></div>
+    `;
+  }
+
+  // Nutrition summary boxes for this day (Calories & Protein side-by-side)
+  html += `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <!-- Calorie Box -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:12px 10px;text-align:center">
+        <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">
+          🔥 ${isZh ? '总热量摄入' : "Calorie Intake"}
+        </div>
+        <div style="font-size:24px;font-weight:900;color:${barColor};margin:4px 0">
+          ${totalKcal.toLocaleString()} <span style="font-size:11px;font-weight:700">kcal</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px">
+          ${isZh ? `参考：${dailyGoal} kcal · 达 ${pct}%` : `Ref: ${dailyGoal} kcal · ${pct}%`}
+        </div>
+        <div style="background:var(--bg2);height:6px;border-radius:4px;overflow:hidden">
+          <div style="background:${barColor};height:100%;width:${pct}%;transition:width .3s"></div>
+        </div>
+      </div>
+
+      <!-- Protein Box -->
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:12px 10px;text-align:center">
+        <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">
+          🥩 ${isZh ? '总蛋白质摄入' : "Protein Intake"}
+        </div>
+        <div style="font-size:24px;font-weight:900;color:var(--cyan);margin:4px 0">
+          ${totalProtein} <span style="font-size:11px;font-weight:700">g</span>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px">
+          ${isZh ? `参考：${proteinGoal}g · 达 ${protPct}%` : `Ref: ${proteinGoal}g · ${protPct}%`}
+        </div>
+        <div style="background:var(--bg2);height:6px;border-radius:4px;overflow:hidden">
+          <div style="background:linear-gradient(90deg,#06b6d4,#0ea5e9);height:100%;width:${protPct}%;transition:width .3s"></div>
+        </div>
       </div>
     </div>
   `;
 
   if(trackedItems.length === 0){
     html += `
-      <div style="text-align:center;padding:24px 12px;color:var(--muted)">
+      <div style="text-align:center;padding:20px 12px;color:var(--muted)">
         <div style="font-size:32px;margin-bottom:8px">🥗</div>
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">
-          ${isZh ? '今天尚未记录食物热量' : 'No food calories logged today'}
+          ${isZh ? '该日期尚未记录食物营养' : 'No food calories logged for this date'}
         </div>
         <div style="font-size:11px;line-height:1.4;margin-bottom:14px">
-          ${isZh ? '用相机扫描餐厅发票或菜单，AI 将自动识别菜品并计算卡路里！' : 'Scan a food receipt or menu to have AI automatically estimate and log calories.'}
+          ${isZh ? '用相机扫描餐饮发票，AI 将自动识别菜品并计算卡路里与蛋白质！' : 'Scan a food receipt to have AI automatically estimate calories & protein.'}
         </div>
         <button type="button" class="btn" onclick="closeModal('calorie-modal');openUniversalUpload('expense');" style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff">
           📸 ${isZh ? '扫描餐饮小票' : 'Scan Food Receipt'}
@@ -13501,10 +14097,10 @@ function renderCalorieModalContent(){
   } else {
     html += `
       <div style="font-size:11.5px;font-weight:800;color:var(--text);margin-bottom:8px;display:flex;justify-content:space-between">
-        <span>${isZh ? `今日明细 (${trackedItems.length} 样)` : `Today's Food (${trackedItems.length} items)`}</span>
-        <span style="color:var(--muted)">${isZh ? '热量估算' : 'Est. Calories'}</span>
+        <span>${isZh ? `食物明细 (${trackedItems.length} 样)` : `Food Breakdown (${trackedItems.length} items)`}</span>
+        <span style="color:var(--muted)">${isZh ? '热量 / 蛋白质' : 'Calories & Protein'}</span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;padding-right:2px">
+      <div style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;padding-right:2px">
     `;
     trackedItems.forEach(item => {
       html += `
@@ -13515,9 +14111,12 @@ function renderCalorieModalContent(){
             </div>
             ${item.merchant ? `<div style="font-size:10px;color:var(--muted)">📍 ${esc(item.merchant)}</div>` : ''}
           </div>
-          <div style="text-align:right;margin-left:8px">
-            <div style="font-size:12px;font-weight:900;color:#10b981">🔥 ${item.calories * item.qty} kcal</div>
-            ${item.price > 0 ? `<div style="font-size:10px;color:var(--muted)">${fmt(item.price * item.qty)}</div>` : ''}
+          <div style="text-align:right;margin-left:8px;flex-shrink:0">
+            <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
+              <span style="font-size:11px;font-weight:900;color:#10b981;background:rgba(16,185,129,.14);padding:2px 5px;border-radius:5px">🔥 ${item.calories * item.qty} kcal</span>
+              ${item.protein > 0 ? `<span style="font-size:10.5px;font-weight:900;color:var(--cyan);background:rgba(6,182,212,.14);padding:2px 5px;border-radius:5px">🥩 ${item.protein * item.qty}g</span>` : ''}
+            </div>
+            ${item.price > 0 ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">${fmt(item.price * item.qty)}</div>` : ''}
           </div>
         </div>
       `;
@@ -13525,7 +14124,7 @@ function renderCalorieModalContent(){
     html += `
       </div>
       <button type="button" class="ghost-btn" onclick="closeModal('calorie-modal');openUniversalUpload('expense');" style="width:100%;margin-top:12px;color:#10b981;border-color:rgba(16,185,129,.3)">
-        📸 ${isZh ? '扫描更多小票' : 'Scan Another Receipt'}
+        📸 ${isZh ? '扫描更多餐饮小票' : 'Scan Another Receipt'}
       </button>
     `;
   }
@@ -14046,6 +14645,2087 @@ if(_origRenderWeeklyReport){
     _origRenderWeeklyReport();
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// 🌏 GLOBAL DINING & RESTAURANT PASSPORT (跨国探店与美食足迹)
+// ═══════════════════════════════════════════════════════════════════
+
+const RESTAURANT_COUNTRIES = [
+  { name: 'Malaysia', code: 'MY', flag: '🇲🇾', currency: 'MYR', keywords: ['malaysia', 'kuala lumpur', 'kl', 'penang', 'georgetown', 'ipoh', 'petaling jaya', 'pj', 'subang', 'damansara', 'uptown', 'bangsar', 'cheras', 'puchong', 'johor bahru', 'jb', 'melaka', 'malacca', 'sarawak', 'kuching', 'sabah', 'kota kinabalu', 'mamak', 'kopitiam', 'myr', 'rm', 'tai ho jiak', 'nasi lemak', 'roti canai', 'bak kut teh', 'malaysian'] },
+  { name: 'Japan', code: 'JP', flag: '🇯🇵', currency: 'JPY', keywords: ['japan', 'tokyo', 'osaka', 'kyoto', 'fukuoka', 'sapporo', 'nagoya', 'shinjuku', 'shibuya', 'ginza', 'ramen', 'sushi', 'izakaya', 'jpy', 'yen', '日本', 'ichiran', 'udon', 'yakitori', 'tempura', 'matcha'] },
+  { name: 'Thailand', code: 'TH', flag: '🇹🇭', currency: 'THB', keywords: ['thailand', 'bangkok', 'phuket', 'chiang mai', 'pattaya', 'krabi', 'pratunam', 'sukhumvit', 'thb', 'baht', 'pad thai', 'tom yam', '泰国', '曼谷', 'jay fai', 'som tum', 'mookata'] },
+  { name: 'Singapore', code: 'SG', flag: '🇸🇬', currency: 'SGD', keywords: ['singapore', 'orchard', 'marina bay', 'changi', 'sentosa', 'chinatown sg', 'sgd', 'singapore dollar', '新加坡', 'jumbo seafood', 'song fa', 'lau pa sat'] },
+  { name: 'Taiwan', code: 'TW', flag: '🇹🇼', currency: 'TWD', keywords: ['taiwan', 'taipei', 'kaohsiung', 'taichung', 'tainan', 'ximending', 'shilin', 'jiufen', 'twd', 'ntd', '台湾', '台北', 'din tai fung', 'beef noodle', 'bubble tea', 'night market'] },
+  { name: 'South Korea', code: 'KR', flag: '🇰🇷', currency: 'KRW', keywords: ['korea', 'south korea', 'seoul', 'busan', 'incheon', 'jeju', 'myeongdong', 'gangnam', 'hongdae', 'krw', 'won', '韩国', '首尔', 'korean bbq', 'kimchi', 'bibimbap', 'tteokbokki'] },
+  { name: 'China', code: 'CN', flag: '🇨🇳', currency: 'CNY', keywords: ['china', 'shanghai', 'beijing', 'guangzhou', 'shenzhen', 'chengdu', 'cny', 'rmb', 'yuan', '中国', '上海', '北京', 'haidilao', 'hotpot', 'sichuan'] },
+  { name: 'United Kingdom', code: 'GB', flag: '🇬🇧', currency: 'GBP', keywords: ['uk', 'united kingdom', 'london', 'manchester', 'edinburgh', 'gbp', 'pound', 'england', 'britain', '英国', '伦敦', 'fish and chips', 'pub'] },
+  { name: 'United States', code: 'US', flag: '🇺🇸', currency: 'USD', keywords: ['usa', 'united states', 'new york', 'los angeles', 'san francisco', 'california', 'las vegas', 'usd', 'dollar', '美国', '纽约', 'shake shack', 'burger', 'in-n-out'] },
+  { name: 'Australia', code: 'AU', flag: '🇦🇺', currency: 'AUD', keywords: ['australia', 'sydney', 'melbourne', 'brisbane', 'perth', 'aud', 'australian dollar', '澳洲', '澳大利亚', '悉尼', 'brunch', 'flat white'] },
+  { name: 'Vietnam', code: 'VN', flag: '🇻🇳', currency: 'VND', keywords: ['vietnam', 'ho chi minh', 'saigon', 'hanoi', 'da nang', 'vnd', 'dong', 'pho', 'banh mi', '越南'] },
+  { name: 'Indonesia', code: 'ID', flag: '🇮🇩', currency: 'IDR', keywords: ['indonesia', 'jakarta', 'bali', 'ubud', 'seminyak', 'bandung', 'surabaya', 'idr', 'rupiah', '印尼', '巴厘岛', 'nasi goreng', 'mie goreng', 'babi guling'] },
+  { name: 'Hong Kong', code: 'HK', flag: '🇭🇰', currency: 'HKD', keywords: ['hong kong', 'hk', 'kowloon', 'central hk', 'mong kok', 'hkd', '香港', 'cha chaan teng', 'dim sum', 'roast goose'] }
+];
+
+function getCountryInfo(nameOrCode){
+  if(!nameOrCode) return RESTAURANT_COUNTRIES[0];
+  const q = String(nameOrCode).toLowerCase().trim();
+  const found = RESTAURANT_COUNTRIES.find(c => c.name.toLowerCase() === q || c.code.toLowerCase() === q);
+  if(found) return found;
+  return { name: nameOrCode, code: 'XX', flag: '🌐', currency: 'USD' };
+}
+
+function detectCountryFromText(text){
+  if(!text) return null;
+  const lower = String(text).toLowerCase();
+  for(const c of RESTAURANT_COUNTRIES){
+    if(c.keywords && c.keywords.some(k => lower.includes(k))){
+      return c;
+    }
+  }
+  return null;
+}
+
+function convertAmountToMYR(amount, currency){
+  const num = parseFloat(amount) || 0;
+  if(num <= 0) return 0;
+  if(!currency || currency === 'MYR') return num;
+  const rate = (typeof liveRates !== 'undefined' && liveRates[currency]) ? liveRates[currency] : 1;
+  return Math.round(num * rate * 100) / 100;
+}
+
+let passportActiveStatusFilter = 'all'; // 'all' | 'visited' | 'pending'
+let passportActiveCountryFilter = 'all'; // 'all' | specific country name
+
+function renderRestaurantPassportWidget(){
+  const card = el('passport-card');
+  if(!card) return;
+  const countriesEl = el('passport-widget-countries');
+  const countsEl = el('passport-widget-counts');
+  const subEl = el('passport-widget-sub');
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+
+  const records = S.restaurantRecords || [];
+  const distinctCountries = [...new Set(records.map(r => r.country).filter(Boolean))];
+  const visitedCount = records.filter(r => r.status === 'visited').length;
+  const pendingCount = records.filter(r => r.status === 'pending').length;
+
+  if(countriesEl) countriesEl.textContent = distinctCountries.length;
+  if(countsEl){
+    countsEl.textContent = isZh 
+      ? `${visitedCount} 打卡 · ${pendingCount} 待探店` 
+      : `${visitedCount} visited · ${pendingCount} pending`;
+  }
+  if(subEl){
+    if(records.length === 0){
+      subEl.textContent = isZh ? '记录全球美食与待吃清单 · 点击开启 ›' : 'Track visited & pending restaurants · Tap ›';
+    } else {
+      const flags = distinctCountries.map(c => getCountryInfo(c).flag).slice(0, 4).join(' ');
+      subEl.textContent = isZh 
+        ? `${flags} 已记录 ${records.length} 家餐厅 · 点击查看 ›` 
+        : `${flags} ${records.length} restaurant${records.length!==1?'s':''} logged · Tap ›`;
+    }
+  }
+}
+
+function openRestaurantPassportModal(){
+  if(!S.restaurantRecords) S.restaurantRecords = [];
+  // If first time and empty, offer to auto-sync existing food transactions
+  if(S.restaurantRecords.length === 0 && Array.isArray(S.transactions)){
+    const foodTxs = S.transactions.filter(t => t.type === 'expense' && (t.category === 'food' || t.category === 'drinks'));
+    if(foodTxs.length > 0){
+      syncExistingFoodTxsToPassport(true);
+    }
+  }
+  renderRestaurantPassport();
+  openModal('restaurant-passport-modal');
+}
+window.openRestaurantPassportModal = openRestaurantPassportModal;
+
+let passportSearchQuery = '';
+let passportPageStatusFilter = 'all'; // 'all' | 'visited' | 'pending'
+let passportPageCountryFilter = 'all'; // 'all' | country name
+
+function onPassportSearchInput(val){
+  passportSearchQuery = (val || '').trim().toLowerCase();
+  const clearBtn = el('passport-search-clear-btn');
+  if(clearBtn) clearBtn.style.display = passportSearchQuery ? 'block' : 'none';
+  renderPassportPage();
+}
+window.onPassportSearchInput = onPassportSearchInput;
+
+function clearPassportSearch(){
+  passportSearchQuery = '';
+  const inp = el('passport-search-inp');
+  if(inp) inp.value = '';
+  const clearBtn = el('passport-search-clear-btn');
+  if(clearBtn) clearBtn.style.display = 'none';
+  renderPassportPage();
+}
+window.clearPassportSearch = clearPassportSearch;
+
+let passportViewMode = 'compact'; // 'compact' | 'detailed'
+let passportCollapsedCountries = {}; // { [country]: boolean }
+let passportExpandedCards = {}; // { [recordId]: boolean }
+
+function togglePassportViewMode(){
+  passportViewMode = (passportViewMode === 'compact' ? 'detailed' : 'compact');
+  renderPassportPage();
+}
+window.togglePassportViewMode = togglePassportViewMode;
+
+function togglePassportCountryCollapse(country){
+  passportCollapsedCountries[country] = !passportCollapsedCountries[country];
+  renderPassportPage();
+}
+window.togglePassportCountryCollapse = togglePassportCountryCollapse;
+
+function togglePassportCardExpand(id, e){
+  if(e && e.target && e.target.closest('button, a, input, select')) return;
+  passportExpandedCards[id] = !passportExpandedCards[id];
+  renderPassportPage();
+}
+window.togglePassportCardExpand = togglePassportCardExpand;
+
+function filterPassportPageStatus(status){
+  passportPageStatusFilter = status;
+  ['all', 'visited', 'pending'].forEach(s => {
+    const btn = el('passport-page-filter-' + s);
+    if(btn){
+      if(s === status) btn.classList.add('on');
+      else btn.classList.remove('on');
+    }
+  });
+  renderPassportPage();
+}
+window.filterPassportPageStatus = filterPassportPageStatus;
+
+function filterPassportPageCountry(country){
+  passportPageCountryFilter = country;
+  renderPassportPage();
+}
+window.filterPassportPageCountry = filterPassportPageCountry;
+
+function renderPassportPage(){
+  const container = el('passport-page-country-list');
+  const pillsContainer = el('passport-page-country-pills');
+  if(!container) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+
+  if(!S.restaurantRecords) S.restaurantRecords = [];
+  if(S.restaurantRecords.length === 0 && Array.isArray(S.transactions)){
+    const foodTxs = S.transactions.filter(t => t.type === 'expense' && (t.category === 'food' || t.category === 'drinks'));
+    if(foodTxs.length > 0){
+      syncExistingFoodTxsToPassport(true);
+    }
+  }
+
+  const records = S.restaurantRecords || [];
+
+  // Group all records by country for stats
+  const allCountryGroups = {};
+  let totalVisited = 0;
+  let totalPending = 0;
+  let totalWorldSpend = 0;
+  let totalKcalAll = 0;
+  let totalProteinAll = 0;
+
+  records.forEach(r => {
+    const cName = r.country || 'Malaysia';
+    if(!allCountryGroups[cName]){
+      const info = getCountryInfo(cName);
+      allCountryGroups[cName] = {
+        name: cName,
+        code: r.countryCode || info.code,
+        flag: r.flag || info.flag,
+        currency: r.currency || info.currency,
+        records: [],
+        totalMYR: 0,
+        totalKcal: 0,
+        totalProtein: 0,
+        visitedCount: 0,
+        pendingCount: 0
+      };
+    }
+    allCountryGroups[cName].records.push(r);
+    if(r.status === 'visited'){
+      totalVisited++;
+      totalWorldSpend += (parseFloat(r.amountMYR) || 0);
+      totalKcalAll += (parseInt(r.totalCalories) || 0);
+      totalProteinAll += (parseInt(r.totalProtein) || 0);
+      allCountryGroups[cName].visitedCount++;
+      allCountryGroups[cName].totalMYR += (parseFloat(r.amountMYR) || 0);
+      allCountryGroups[cName].totalKcal += (parseInt(r.totalCalories) || 0);
+      allCountryGroups[cName].totalProtein += (parseInt(r.totalProtein) || 0);
+    } else {
+      totalPending++;
+      allCountryGroups[cName].pendingCount++;
+    }
+  });
+
+  const allCountryKeys = Object.keys(allCountryGroups).sort((a,b) => {
+    return allCountryGroups[b].records.length - allCountryGroups[a].records.length;
+  });
+
+  // Update hero stats
+  if(el('passport-page-stat-countries')) el('passport-page-stat-countries').textContent = allCountryKeys.length;
+  if(el('passport-page-stat-visited')) el('passport-page-stat-visited').textContent = totalVisited;
+  if(el('passport-page-stat-pending')) el('passport-page-stat-pending').textContent = totalPending;
+  if(el('passport-page-stat-spend')) el('passport-page-stat-spend').textContent = fmt(totalWorldSpend);
+  if(el('passport-hero-tot-kcal')) el('passport-hero-tot-kcal').textContent = `🔥 ${totalKcalAll.toLocaleString()} kcal`;
+  if(el('passport-hero-tot-protein')) el('passport-hero-tot-protein').textContent = `🥩 ${totalProteinAll}g`;
+
+  if(el('passport-hero-flags')){
+    if(allCountryKeys.length > 0){
+      const flagsStr = allCountryKeys.map(k => allCountryGroups[k].flag).join(' ');
+      el('passport-hero-flags').textContent = `${flagsStr} (${allCountryKeys.length} ${isZh ? '国' : 'Countries'})`;
+    } else {
+      el('passport-hero-flags').textContent = isZh ? '探索全球美食' : 'World Explorer';
+    }
+  }
+
+  // Update view mode toggle label
+  const viewModeLabel = el('passport-view-mode-label');
+  if(viewModeLabel){
+    viewModeLabel.textContent = passportViewMode === 'compact' 
+      ? (isZh ? '简洁' : 'Compact') 
+      : (isZh ? '详细' : 'Detailed');
+  }
+
+  // Render Country Pills: only detected countries self-open!
+  if(pillsContainer){
+    pillsContainer.innerHTML = `
+      <button type="button" class="pp-country-pill ${passportPageCountryFilter === 'all' ? 'on' : ''}" onclick="filterPassportPageCountry('all')">
+        🌐 ${isZh ? '全部' : 'All'} (${records.length})
+      </button>
+      ${allCountryKeys.map(k => {
+        const cg = allCountryGroups[k];
+        const isAct = (passportPageCountryFilter === k);
+        return `
+          <button type="button" class="pp-country-pill ${isAct ? 'on' : ''}" onclick="filterPassportPageCountry('${esc(k)}')">
+            ${cg.flag} ${esc(k)} (${cg.records.length})
+          </button>
+        `;
+      }).join('')}
+    `;
+  }
+
+  // Filter records by search query, status, and country
+  const filteredRecords = records.filter(r => {
+    // 1. Status filter
+    if(passportPageStatusFilter === 'visited' && r.status !== 'visited') return false;
+    if(passportPageStatusFilter === 'pending' && r.status !== 'pending') return false;
+    // 2. Country filter
+    if(passportPageCountryFilter !== 'all' && (r.country || 'Malaysia') !== passportPageCountryFilter) return false;
+    // 3. Search query
+    if(passportSearchQuery){
+      const q = passportSearchQuery;
+      const inName = (r.name || '').toLowerCase().includes(q);
+      const inCity = (r.city || '').toLowerCase().includes(q);
+      const inCountry = (r.country || '').toLowerCase().includes(q);
+      const inNotes = (r.notes || '').toLowerCase().includes(q);
+      const inItems = (r.items || []).some(it => (it.name || '').toLowerCase().includes(q));
+      if(!inName && !inCity && !inCountry && !inNotes && !inItems) return false;
+    }
+    return true;
+  });
+
+  // Update toolbar counter
+  if(el('passport-list-counter')){
+    el('passport-list-counter').textContent = `${filteredRecords.length} ${isZh ? '家餐厅' : 'Places'}`;
+  }
+
+  if(records.length === 0){
+    container.innerHTML = `
+      <div style="text-align:center;padding:28px 16px;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:14px">
+        <div style="font-size:36px;margin-bottom:6px">🌏</div>
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px">
+          ${isZh ? '尚未记录任何餐厅' : 'No restaurants logged yet'}
+        </div>
+        <div style="font-size:11px;line-height:1.5;margin-bottom:14px;max-width:280px;margin-left:auto;margin-right:auto">
+          ${isZh ? '添加或导入美食账单，系统将自动自启所属国家分类！' : 'Add a restaurant to automatically self-open its country category!'}
+        </div>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+          <button type="button" class="primary-btn" onclick="openAddRestaurantModal()" style="font-size:11.5px;padding:6px 14px;width:auto;background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff">
+            ➕ ${isZh ? '添加第一家' : 'Add Place'}
+          </button>
+          <button type="button" class="ghost-btn" onclick="syncExistingFoodTxsToPassport()" style="font-size:11.5px;padding:6px 14px;width:auto;color:var(--amber);border-color:rgba(245,158,11,.3)">
+            🔄 ${isZh ? '导入现有账单' : 'Sync Food Txs'}
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if(filteredRecords.length === 0){
+    container.innerHTML = `
+      <div style="text-align:center;padding:24px 16px;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:12px">
+        <div style="font-size:26px;margin-bottom:4px">🔍</div>
+        <div style="font-size:12.5px;font-weight:800;color:var(--text);margin-bottom:2px">
+          ${isZh ? '无匹配餐厅' : 'No matches found'}
+        </div>
+        <div style="font-size:11px;margin-bottom:10px">
+          ${isZh ? '尝试更换搜索词或筛选条件' : 'Try adjusting search or filters'}
+        </div>
+        <button type="button" class="ghost-btn" onclick="clearPassportSearch();filterPassportPageStatus('all');filterPassportPageCountry('all')" style="font-size:10.5px;padding:4px 10px;width:auto">
+          ${isZh ? '重置筛选' : 'Reset Filters'}
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  // Group filtered records by country
+  const filteredCountryGroups = {};
+  filteredRecords.forEach(r => {
+    const cName = r.country || 'Malaysia';
+    if(!filteredCountryGroups[cName]){
+      const fullGroup = allCountryGroups[cName] || {};
+      filteredCountryGroups[cName] = {
+        name: cName,
+        code: r.countryCode || fullGroup.code || 'MY',
+        flag: r.flag || fullGroup.flag || '🇲🇾',
+        currency: r.currency || fullGroup.currency || 'MYR',
+        records: [],
+        totalMYR: 0,
+        totalKcal: 0,
+        totalProtein: 0,
+        visitedCount: 0,
+        pendingCount: 0
+      };
+    }
+    filteredCountryGroups[cName].records.push(r);
+    if(r.status === 'visited'){
+      filteredCountryGroups[cName].visitedCount++;
+      filteredCountryGroups[cName].totalMYR += (parseFloat(r.amountMYR) || 0);
+      filteredCountryGroups[cName].totalKcal += (parseInt(r.totalCalories) || 0);
+      filteredCountryGroups[cName].totalProtein += (parseInt(r.totalProtein) || 0);
+    } else {
+      filteredCountryGroups[cName].pendingCount++;
+    }
+  });
+
+  const visibleCountryKeys = Object.keys(filteredCountryGroups).sort((a,b) => {
+    return filteredCountryGroups[b].records.length - filteredCountryGroups[a].records.length;
+  });
+
+  let html = '';
+  visibleCountryKeys.forEach(cName => {
+    const cg = filteredCountryGroups[cName];
+    const sortedRestList = [...cg.records].sort((a,b) => {
+      if(a.status !== b.status) return a.status === 'pending' ? -1 : 1;
+      return (b.date || '').localeCompare(a.date || '');
+    });
+
+    const isCollapsed = !!passportCollapsedCountries[cName];
+    const currRate = (typeof liveRates !== 'undefined' && liveRates[cg.currency] && cg.currency !== 'MYR') 
+      ? ` · 1 ${cg.currency} ≈ RM ${liveRates[cg.currency].toFixed(3)}` 
+      : '';
+
+    html += `
+      <div class="pp-group ${isCollapsed ? 'collapsed' : ''}">
+        <!-- Country Group Accordion Header -->
+        <div class="pp-group-hdr" onclick="togglePassportCountryCollapse('${esc(cName)}')">
+          <div class="pp-group-left">
+            <span class="pp-group-flag">${cg.flag}</span>
+            <div>
+              <div class="pp-group-title">
+                ${esc(cg.name)} <span style="font-size:10px;font-weight:600;color:var(--muted)">(${cg.records.length})</span>
+              </div>
+              <div class="pp-group-sub">
+                ${cg.visitedCount > 0 ? `<span style="color:#10b981;font-weight:700">${cg.visitedCount} ${isZh ? '打卡' : 'visited'}</span>` : ''}
+                ${(cg.visitedCount > 0 && cg.pendingCount > 0) ? ' · ' : ''}
+                ${cg.pendingCount > 0 ? `<span style="color:var(--amber);font-weight:700">${cg.pendingCount} ${isZh ? '待探店' : 'wishlist'}</span>` : ''}
+                ${currRate}
+              </div>
+            </div>
+          </div>
+          <div class="pp-group-right">
+            <div>
+              <div class="pp-group-spend">${fmt(cg.totalMYR)}</div>
+              ${cg.totalKcal > 0 ? `<div style="font-size:9.5px;color:#10b981;font-weight:700">🔥 ${cg.totalKcal.toLocaleString()} kcal</div>` : ''}
+            </div>
+            <span class="pp-group-arrow">▼</span>
+          </div>
+        </div>
+
+        <!-- Restaurant List in this Country -->
+        <div class="pp-group-list">
+          ${sortedRestList.map(r => {
+            const isPending = (r.status === 'pending');
+            const isExpanded = (passportViewMode === 'detailed') || !!passportExpandedCards[r.id];
+            const items = r.items || [];
+            const stars = r.rating ? '⭐'.repeat(r.rating) : '';
+            const priceDisplay = r.amountOriginal > 0 
+              ? (r.currency !== 'MYR' ? `${r.currency} ${r.amountOriginal} ≈ ${fmt(r.amountMYR)}` : fmt(r.amountMYR))
+              : (isPending ? (isZh ? '待安排' : 'Wishlist') : 'RM 0');
+
+            return `
+              <div class="pp-item ${isExpanded ? 'expanded' : ''}" onclick="togglePassportCardExpand('${r.id}', event)">
+                <div class="pp-item-main">
+                  <div class="pp-item-name">
+                    <span>${esc(r.name)}</span>
+                    <span class="pp-item-badge ${isPending ? 'pending' : 'visited'}">
+                      ${isPending ? (isZh ? '📌 待探店' : '📌 Wishlist') : (isZh ? '✅ 已打卡' : '✅ Visited')}
+                    </span>
+                  </div>
+                  <div class="pp-item-price" style="${isPending ? 'color:var(--amber)' : ''}">
+                    ${priceDisplay}
+                  </div>
+                </div>
+
+                <div class="pp-item-sub">
+                  <div class="pp-item-meta">
+                    ${r.city ? `<span>📍 ${esc(r.city)}</span>` : ''}
+                    ${r.date ? `<span>📅 ${fmtDate(r.date)}</span>` : ''}
+                    ${stars ? `<span>${stars}</span>` : ''}
+                    ${r.totalCalories > 0 ? `<span style="color:#10b981;font-weight:700">🔥 ${r.totalCalories} kcal</span>` : ''}
+                    ${r.totalProtein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩 ${r.totalProtein}g</span>` : ''}
+                  </div>
+                  <span class="pp-item-expand-arrow">▼</span>
+                </div>
+
+                <!-- Collapsible Drawer (Details, Dishes, Actions) -->
+                <div class="pp-item-drawer" onclick="event.stopPropagation()">
+                  ${items.length > 0 ? `
+                    <div class="pp-item-dishes">
+                      ${items.map(it => `
+                        <span class="pp-dish-chip">
+                          ${it.qty > 1 ? `<strong style="color:var(--cyan)">${it.qty}x</strong> ` : ''}<span>${esc(it.name)}</span>
+                          ${it.calories > 0 ? `<span style="color:#10b981;font-weight:700">🔥${it.calories * (it.qty||1)}</span>` : ''}
+                          ${it.protein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩${it.protein * (it.qty||1)}g</span>` : ''}
+                        </span>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+
+                  ${r.notes ? `
+                    <div class="pp-item-notes">
+                      📝 ${esc(r.notes)}
+                    </div>
+                  ` : ''}
+
+                  <div class="pp-item-actions">
+                    ${isPending ? `
+                      <button type="button" class="primary-btn" onclick="markRestaurantVisited('${r.id}')" style="font-size:10.5px;padding:3px 10px;border-radius:6px;background:linear-gradient(135deg,#10b981,#059669);margin-bottom:0;width:auto">
+                        ✅ ${isZh ? '打卡记账' : 'Check-in & Log'}
+                      </button>
+                    ` : ''}
+                    <button type="button" class="ghost-btn" onclick="openAddRestaurantModal('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px">
+                      ✏️ ${isZh ? '编辑' : 'Edit'}
+                    </button>
+                    <button type="button" class="ghost-btn" onclick="deleteRestaurantRecord('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px;color:var(--red);border-color:rgba(239,68,68,.3)">
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+window.renderPassportPage = renderPassportPage;
+
+function filterPassportStatus(status){
+  passportActiveStatusFilter = status;
+  ['all', 'visited', 'pending'].forEach(s => {
+    const btn = el('passport-filter-' + s);
+    if(btn){
+      if(s === status) btn.classList.add('on');
+      else btn.classList.remove('on');
+    }
+  });
+  renderRestaurantPassport();
+}
+window.filterPassportStatus = filterPassportStatus;
+
+function filterPassportCountry(country){
+  passportActiveCountryFilter = country;
+  renderRestaurantPassport();
+}
+window.filterPassportCountry = filterPassportCountry;
+
+function renderRestaurantPassport(){
+  const container = el('passport-country-list');
+  const pillsContainer = el('passport-country-pills');
+  if(!container) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+
+  const records = S.restaurantRecords || [];
+
+  // Group records by country
+  const countryGroups = {};
+  records.forEach(r => {
+    const cName = r.country || 'Malaysia';
+    if(!countryGroups[cName]){
+      const info = getCountryInfo(cName);
+      countryGroups[cName] = {
+        name: cName,
+        code: r.countryCode || info.code,
+        flag: r.flag || info.flag,
+        currency: r.currency || info.currency,
+        records: [],
+        totalMYR: 0,
+        totalKcal: 0,
+        totalProtein: 0,
+        visitedCount: 0,
+        pendingCount: 0
+      };
+    }
+    countryGroups[cName].records.push(r);
+    if(r.status === 'visited'){
+      countryGroups[cName].visitedCount++;
+      countryGroups[cName].totalMYR += (parseFloat(r.amountMYR) || 0);
+      countryGroups[cName].totalKcal += (parseInt(r.totalCalories) || 0);
+      countryGroups[cName].totalProtein += (parseInt(r.totalProtein) || 0);
+    } else {
+      countryGroups[cName].pendingCount++;
+    }
+  });
+
+  const countryKeys = Object.keys(countryGroups).sort((a,b) => {
+    return countryGroups[b].records.length - countryGroups[a].records.length;
+  });
+
+  // Calculate overall stats
+  let totalVisited = 0;
+  let totalPending = 0;
+  let totalWorldSpend = 0;
+  records.forEach(r => {
+    if(r.status === 'visited'){
+      totalVisited++;
+      totalWorldSpend += (parseFloat(r.amountMYR) || 0);
+    } else {
+      totalPending++;
+    }
+  });
+
+  // Update top stats
+  if(el('passport-stat-countries')) el('passport-stat-countries').textContent = countryKeys.length;
+  if(el('passport-stat-visited')) el('passport-stat-visited').textContent = totalVisited;
+  if(el('passport-stat-pending')) el('passport-stat-pending').textContent = totalPending;
+  if(el('passport-stat-spend')) el('passport-stat-spend').textContent = fmt(totalWorldSpend);
+
+  // Render Country Pills: only detected countries self-open!
+  if(pillsContainer){
+    pillsContainer.innerHTML = `
+      <button type="button" class="chip ${passportActiveCountryFilter === 'all' ? 'on' : ''}" onclick="filterPassportCountry('all')" style="font-size:10.5px;padding:3px 9px;border-radius:12px;white-space:nowrap;cursor:pointer">
+        🌐 ${isZh ? '全部' : 'All'} (${records.length})
+      </button>
+      ${countryKeys.map(k => {
+        const cg = countryGroups[k];
+        const isAct = (passportActiveCountryFilter === k);
+        return `
+          <button type="button" class="chip ${isAct ? 'on' : ''}" onclick="filterPassportCountry('${esc(k)}')" style="font-size:10.5px;padding:3px 9px;border-radius:12px;white-space:nowrap;cursor:pointer">
+            ${cg.flag} ${esc(k)} (${cg.records.length})
+          </button>
+        `;
+      }).join('')}
+    `;
+  }
+
+  // Filter country groups based on country pill
+  const visibleCountries = passportActiveCountryFilter === 'all' 
+    ? countryKeys 
+    : countryKeys.filter(k => k === passportActiveCountryFilter);
+
+  if(visibleCountries.length === 0){
+    container.innerHTML = `
+      <div style="text-align:center;padding:32px 16px;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:16px">
+        <div style="font-size:36px;margin-bottom:8px">🌏</div>
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px">
+          ${isZh ? '尚未开启任何国家美食分类' : 'No Country Dining Categories Yet'}
+        </div>
+        <div style="font-size:11.5px;line-height:1.5;margin-bottom:16px">
+          ${isZh ? '当您添加或扫描来自新国家（如马来西亚 🇲🇾、日本 🇯🇵、泰国 🇹🇭）的美食账单时，系统将自动自启该国家分类！' : 'Add a restaurant or scan a food receipt to automatically open that country category!'}
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button type="button" class="primary-btn" onclick="openAddRestaurantModal()" style="font-size:11.5px;padding:8px 14px;width:auto">
+            ➕ ${isZh ? '添加第一家餐厅' : 'Add First Restaurant'}
+          </button>
+          <button type="button" class="ghost-btn" onclick="syncExistingFoodTxsToPassport()" style="font-size:11.5px;padding:8px 14px;width:auto">
+            🔄 ${isZh ? '导入现有餐饮账单' : 'Sync Food Expenses'}
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Render each visible country category section
+  let html = '';
+  visibleCountries.forEach(cName => {
+    const cg = countryGroups[cName];
+    // Filter records by active status
+    const filteredRecords = cg.records.filter(r => {
+      if(passportActiveStatusFilter === 'visited') return r.status === 'visited';
+      if(passportActiveStatusFilter === 'pending') return r.status === 'pending';
+      return true;
+    }).sort((a,b) => {
+      // Pending first, or sort by date desc
+      if(a.status !== b.status) return a.status === 'pending' ? -1 : 1;
+      return (b.date || '').localeCompare(a.date || '');
+    });
+
+    if(filteredRecords.length === 0 && passportActiveStatusFilter !== 'all') return;
+
+    const isCollapsed = !!passportCollapsedCountries[cName];
+    html += `
+      <div class="pp-group ${isCollapsed ? 'collapsed' : ''}">
+        <!-- Country Category Header -->
+        <div class="pp-group-hdr" onclick="togglePassportCountryCollapse('${esc(cName)}')">
+          <div class="pp-group-left">
+            <span class="pp-group-flag">${cg.flag}</span>
+            <div>
+              <div class="pp-group-title">${esc(cg.name)}</div>
+              <div class="pp-group-sub">
+                ${cg.visitedCount} ${isZh ? '已打卡' : 'visited'} · ${cg.pendingCount} ${isZh ? '待探店' : 'pending'}
+              </div>
+            </div>
+          </div>
+          <div class="pp-group-right">
+            <div>
+              <div class="pp-group-spend">${fmt(cg.totalMYR)}</div>
+              ${cg.totalKcal > 0 ? `<div style="font-size:9.5px;font-weight:700;color:#10b981">🔥 ${cg.totalKcal.toLocaleString()} kcal</div>` : ''}
+            </div>
+            <span class="pp-group-arrow">▼</span>
+          </div>
+        </div>
+
+        <!-- Restaurant Cards in this Country -->
+        <div class="pp-group-list">
+          ${filteredRecords.map(r => {
+            const isPending = (r.status === 'pending');
+            const isExpanded = (passportViewMode === 'detailed') || !!passportExpandedCards[r.id];
+            const items = r.items || [];
+            const stars = r.rating ? '⭐'.repeat(r.rating) : '';
+            const priceDisplay = r.amountOriginal > 0 
+              ? (r.currency !== 'MYR' ? `${r.currency} ${r.amountOriginal} ≈ ${fmt(r.amountMYR)}` : fmt(r.amountMYR))
+              : (isPending ? (isZh ? '待安排' : 'Wishlist') : 'RM 0');
+
+            return `
+              <div class="pp-item ${isExpanded ? 'expanded' : ''}" onclick="togglePassportCardExpand('${r.id}', event)">
+                <div class="pp-item-main">
+                  <div class="pp-item-name">
+                    <span>${esc(r.name)}</span>
+                    <span class="pp-item-badge ${isPending ? 'pending' : 'visited'}">
+                      ${isPending ? (isZh ? '📌 待探店' : '📌 Wishlist') : (isZh ? '✅ 已打卡' : '✅ Visited')}
+                    </span>
+                  </div>
+                  <div class="pp-item-price" style="${isPending ? 'color:var(--amber)' : ''}">
+                    ${priceDisplay}
+                  </div>
+                </div>
+
+                <div class="pp-item-sub">
+                  <div class="pp-item-meta">
+                    ${r.city ? `<span>📍 ${esc(r.city)}</span>` : ''}
+                    ${r.date ? `<span>📅 ${fmtDate(r.date)}</span>` : ''}
+                    ${stars ? `<span>${stars}</span>` : ''}
+                    ${r.totalCalories > 0 ? `<span style="color:#10b981;font-weight:700">🔥 ${r.totalCalories} kcal</span>` : ''}
+                    ${r.totalProtein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩 ${r.totalProtein}g</span>` : ''}
+                  </div>
+                  <span class="pp-item-expand-arrow">▼</span>
+                </div>
+
+                <!-- Collapsible Drawer -->
+                <div class="pp-item-drawer" onclick="event.stopPropagation()">
+                  ${items.length > 0 ? `
+                    <div class="pp-item-dishes">
+                      ${items.map(it => `
+                        <span class="pp-dish-chip">
+                          ${it.qty > 1 ? `<strong style="color:var(--cyan)">${it.qty}x</strong> ` : ''}<span>${esc(it.name)}</span>
+                          ${it.calories > 0 ? `<span style="color:#10b981;font-weight:700">🔥${it.calories * (it.qty||1)}</span>` : ''}
+                          ${it.protein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩${it.protein * (it.qty||1)}g</span>` : ''}
+                        </span>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+
+                  ${r.notes ? `
+                    <div class="pp-item-notes">
+                      📝 ${esc(r.notes)}
+                    </div>
+                  ` : ''}
+
+                  <div class="pp-item-actions">
+                    ${isPending ? `
+                      <button type="button" class="primary-btn" onclick="markRestaurantVisited('${r.id}')" style="font-size:10px;padding:3px 10px;border-radius:6px;background:linear-gradient(135deg,#10b981,#059669);margin-bottom:0;width:auto">
+                        ✅ ${isZh ? '打卡记账' : 'Check-in & Log'}
+                      </button>
+                    ` : ''}
+                    <button type="button" class="ghost-btn" onclick="openAddRestaurantModal('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px">
+                      ✏️ ${isZh ? '编辑' : 'Edit'}
+                    </button>
+                    <button type="button" class="ghost-btn" onclick="deleteRestaurantRecord('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px;color:var(--red);border-color:rgba(239,68,68,.3)">
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function openAddRestaurantModal(editId, defaultCountry, defaultStatus){
+  const form = el('add-restaurant-form');
+  if(form) form.reset();
+
+  const idInp = el('rest-edit-id');
+  const titleEl = el('add-rest-modal-title');
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const dishesContainer = el('rest-dishes-container');
+  if(dishesContainer) dishesContainer.innerHTML = '';
+
+  if(editId){
+    const record = (S.restaurantRecords || []).find(r => r.id === editId);
+    if(record){
+      if(idInp) idInp.value = record.id;
+      if(titleEl) titleEl.textContent = isZh ? '✏️ 编辑餐厅记录' : '✏️ Edit Restaurant Record';
+      setRestStatus(record.status || 'visited');
+      if(el('rest-name-inp')) el('rest-name-inp').value = record.name || '';
+      if(el('rest-country-sel')){
+        el('rest-country-sel').value = record.country || 'Malaysia';
+        onRestCountryChange(record.country || 'Malaysia');
+      }
+      if(el('rest-city-inp')) el('rest-city-inp').value = record.city || '';
+      if(el('rest-date-inp')) el('rest-date-inp').value = record.date || '';
+      if(el('rest-rating-sel')) el('rest-rating-sel').value = record.rating || 5;
+      if(el('rest-curr-sel')) el('rest-curr-sel').value = record.currency || 'MYR';
+      if(el('rest-amount-inp')) el('rest-amount-inp').value = record.amountOriginal || '';
+      if(el('rest-notes-inp')) el('rest-notes-inp').value = record.notes || '';
+      if(el('rest-sync-tx-chk')) el('rest-sync-tx-chk').checked = false;
+
+      calcRestConvertedMYR();
+
+      if(record.items && record.items.length > 0){
+        record.items.forEach(it => {
+          addRestFoodItemRow(it.name, it.price, it.calories, it.protein);
+        });
+      } else {
+        addRestFoodItemRow();
+      }
+      recalcRestDishTotals();
+      openModal('add-restaurant-modal');
+      return;
+    }
+  }
+
+  // Adding new record
+  if(idInp) idInp.value = '';
+  if(titleEl) titleEl.textContent = isZh ? '🍽️ 添加跨国探店记录' : '🍽️ Add Restaurant Record';
+  setRestStatus(defaultStatus || 'visited');
+  if(el('rest-date-inp')) el('rest-date-inp').value = today();
+  if(el('rest-rating-sel')) el('rest-rating-sel').value = 5;
+
+  const initialCountry = defaultCountry || 'Malaysia';
+  if(el('rest-country-sel')){
+    el('rest-country-sel').value = initialCountry;
+    onRestCountryChange(initialCountry);
+  }
+  if(el('rest-sync-tx-chk')) el('rest-sync-tx-chk').checked = true;
+
+  addRestFoodItemRow();
+  calcRestConvertedMYR();
+  recalcRestDishTotals();
+  openModal('add-restaurant-modal');
+}
+window.openAddRestaurantModal = openAddRestaurantModal;
+
+function setRestStatus(status){
+  const inp = el('rest-status-inp');
+  const visitedBtn = el('rest-status-visited-btn');
+  const pendingBtn = el('rest-status-pending-btn');
+  const dateLbl = el('rest-date-lbl');
+  const syncTxBox = el('rest-sync-tx-box');
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+
+  if(inp) inp.value = status;
+  if(status === 'visited'){
+    if(visitedBtn) visitedBtn.classList.add('on');
+    if(pendingBtn) pendingBtn.classList.remove('on');
+    if(dateLbl) dateLbl.textContent = isZh ? 'Visited Date (打卡日期)' : 'Visited Date';
+    if(syncTxBox) syncTxBox.style.display = 'block';
+  } else {
+    if(pendingBtn) pendingBtn.classList.add('on');
+    if(visitedBtn) visitedBtn.classList.remove('on');
+    if(dateLbl) dateLbl.textContent = isZh ? 'Target Date (计划前往日期)' : 'Target Date (Optional)';
+    if(syncTxBox) syncTxBox.style.display = 'none';
+  }
+}
+window.setRestStatus = setRestStatus;
+
+function onRestCountryChange(countryVal){
+  const customRow = el('rest-custom-country-row');
+  const currSel = el('rest-curr-sel');
+  if(!countryVal) return;
+
+  if(countryVal === 'Other'){
+    if(customRow) customRow.classList.remove('hidden');
+    if(currSel) currSel.value = 'USD';
+  } else {
+    if(customRow) customRow.classList.add('hidden');
+    const info = getCountryInfo(countryVal);
+    if(currSel && info && info.currency){
+      currSel.value = info.currency;
+    }
+  }
+  calcRestConvertedMYR();
+}
+window.onRestCountryChange = onRestCountryChange;
+
+function autoDetectCountryFromRestName(name){
+  if(!name) return;
+  const detected = detectCountryFromText(name);
+  if(detected){
+    const sel = el('rest-country-sel');
+    if(sel && sel.value !== detected.name){
+      sel.value = detected.name;
+      onRestCountryChange(detected.name);
+    }
+  }
+}
+window.autoDetectCountryFromRestName = autoDetectCountryFromRestName;
+
+function calcRestConvertedMYR(){
+  const amtInp = el('rest-amount-inp');
+  const currSel = el('rest-curr-sel');
+  const disp = el('rest-converted-myr-display');
+  if(!disp) return;
+
+  const amt = amtInp ? parseFloat(amtInp.value) || 0 : 0;
+  const curr = currSel ? currSel.value : 'MYR';
+
+  if(amt <= 0){
+    disp.textContent = 'RM 0.00';
+    return;
+  }
+  const myrVal = convertAmountToMYR(amt, curr);
+  disp.textContent = `RM ${myrVal.toFixed(2)}`;
+}
+window.calcRestConvertedMYR = calcRestConvertedMYR;
+
+function addRestFoodItemRow(name = '', price = '', cal = '', prot = ''){
+  const container = el('rest-dishes-container');
+  if(!container) return;
+
+  const row = document.createElement('div');
+  row.className = 'rest-dish-row';
+  row.style.cssText = 'display:grid;grid-template-columns:1.5fr 1fr 1fr 28px;gap:6px;align-items:center';
+  row.innerHTML = `
+    <input type="text" class="form-input rest-dish-name" placeholder="Dish Name (菜品名)" value="${esc(name)}" onblur="autoEstimateDishNutrition(this)" style="font-size:11.5px;padding:6px 8px"/>
+    <input type="number" class="form-input rest-dish-cal" placeholder="🔥 kcal" value="${cal > 0 ? cal : ''}" oninput="recalcRestDishTotals()" style="font-size:11px;padding:6px 6px;text-align:center"/>
+    <input type="number" class="form-input rest-dish-prot" placeholder="🥩 prot(g)" value="${prot > 0 ? prot : ''}" oninput="recalcRestDishTotals()" style="font-size:11px;padding:6px 6px;text-align:center"/>
+    <button type="button" onclick="removeRestFoodItemRow(this)" style="background:rgba(239,68,68,.12);border:none;color:var(--red);border-radius:6px;height:30px;cursor:pointer;font-size:12px;font-weight:900">✕</button>
+  `;
+  container.appendChild(row);
+  recalcRestDishTotals();
+}
+window.addRestFoodItemRow = addRestFoodItemRow;
+
+function removeRestFoodItemRow(btn){
+  const row = btn.closest('.rest-dish-row');
+  if(row){
+    row.remove();
+    recalcRestDishTotals();
+  }
+}
+window.removeRestFoodItemRow = removeRestFoodItemRow;
+
+function autoEstimateDishNutrition(input){
+  if(!input) return;
+  const row = input.closest('.rest-dish-row');
+  if(!row) return;
+  const name = input.value.trim();
+  const calInp = row.querySelector('.rest-dish-cal');
+  const protInp = row.querySelector('.rest-dish-prot');
+  
+  if(name && (!calInp.value || parseInt(calInp.value) === 0)){
+    const estCal = (typeof estimateCaloriesFromName === 'function') ? estimateCaloriesFromName(name) : -1;
+    if(estCal >= 0) calInp.value = estCal;
+  }
+  if(name && (!protInp.value || parseInt(protInp.value) === 0)){
+    const estProt = (typeof estimateProteinFromName === 'function') ? estimateProteinFromName(name) : -1;
+    if(estProt >= 0) protInp.value = estProt;
+    else if(calInp.value && parseInt(calInp.value) > 0){
+      protInp.value = Math.max(1, Math.round(parseInt(calInp.value) * 0.04));
+    }
+  }
+  recalcRestDishTotals();
+}
+window.autoEstimateDishNutrition = autoEstimateDishNutrition;
+
+function recalcRestDishTotals(){
+  const container = el('rest-dishes-container');
+  if(!container) return;
+  const rows = container.querySelectorAll('.rest-dish-row');
+  let totCal = 0;
+  let totProt = 0;
+
+  rows.forEach(r => {
+    const c = parseInt(r.querySelector('.rest-dish-cal').value) || 0;
+    const p = parseInt(r.querySelector('.rest-dish-prot').value) || 0;
+    totCal += c;
+    totProt += p;
+  });
+
+  const totCalEl = el('rest-tot-cal');
+  const totProtEl = el('rest-tot-prot');
+  if(totCalEl) totCalEl.textContent = `🔥 ${totCal} kcal`;
+  if(totProtEl) totProtEl.textContent = `🥩 ${totProt}g`;
+}
+window.recalcRestDishTotals = recalcRestDishTotals;
+
+function saveRestaurantRecord(){
+  const editId = el('rest-edit-id') ? el('rest-edit-id').value : '';
+  const name = el('rest-name-inp') ? el('rest-name-inp').value.trim() : '';
+  if(!name){
+    toast('⚠️ Please enter restaurant name');
+    return;
+  }
+
+  const status = el('rest-status-inp') ? el('rest-status-inp').value : 'visited';
+  let country = el('rest-country-sel') ? el('rest-country-sel').value : 'Malaysia';
+  let countryCode = 'MY';
+  let flag = '🇲🇾';
+
+  if(country === 'Other'){
+    const customName = el('rest-custom-country-inp') ? el('rest-custom-country-inp').value.trim() : '';
+    country = customName || 'World';
+    flag = el('rest-custom-flag-inp') ? el('rest-custom-flag-inp').value.trim() || '🌐' : '🌐';
+    countryCode = 'XX';
+  } else {
+    const info = getCountryInfo(country);
+    countryCode = info.code;
+    flag = info.flag;
+  }
+
+  const city = el('rest-city-inp') ? el('rest-city-inp').value.trim() : '';
+  const date = el('rest-date-inp') ? el('rest-date-inp').value : today();
+  const rating = el('rest-rating-sel') ? parseInt(el('rest-rating-sel').value) || 5 : 5;
+  const currency = el('rest-curr-sel') ? el('rest-curr-sel').value : 'MYR';
+  const amountOriginal = el('rest-amount-inp') ? parseFloat(el('rest-amount-inp').value) || 0 : 0;
+  const amountMYR = convertAmountToMYR(amountOriginal, currency);
+  const notes = el('rest-notes-inp') ? el('rest-notes-inp').value.trim() : '';
+  const syncTx = el('rest-sync-tx-chk') ? el('rest-sync-tx-chk').checked : false;
+
+  // Extract dishes
+  const container = el('rest-dishes-container');
+  const items = [];
+  let totalCalories = 0;
+  let totalProtein = 0;
+
+  if(container){
+    const rows = container.querySelectorAll('.rest-dish-row');
+    rows.forEach(r => {
+      const dName = r.querySelector('.rest-dish-name').value.trim();
+      const dCal = parseInt(r.querySelector('.rest-dish-cal').value) || 0;
+      const dProt = parseInt(r.querySelector('.rest-dish-prot').value) || 0;
+      if(dName){
+        items.push({
+          name: dName,
+          qty: 1,
+          price: 0,
+          calories: dCal,
+          protein: dProt
+        });
+        totalCalories += dCal;
+        totalProtein += dProt;
+      }
+    });
+  }
+
+  if(!S.restaurantRecords) S.restaurantRecords = [];
+
+  let recordId = editId;
+  if(editId){
+    const idx = S.restaurantRecords.findIndex(r => r.id === editId);
+    if(idx >= 0){
+      S.restaurantRecords[idx] = {
+        ...S.restaurantRecords[idx],
+        name,
+        country,
+        countryCode,
+        flag,
+        city,
+        status,
+        date,
+        rating,
+        currency,
+        amountOriginal,
+        amountMYR,
+        notes,
+        items,
+        totalCalories,
+        totalProtein
+      };
+    }
+  } else {
+    recordId = 'rest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    const newRecord = {
+      id: recordId,
+      name,
+      country,
+      countryCode,
+      flag,
+      city,
+      status,
+      date,
+      rating,
+      currency,
+      amountOriginal,
+      amountMYR,
+      notes,
+      items,
+      totalCalories,
+      totalProtein,
+      createdAt: new Date().toISOString()
+    };
+    S.restaurantRecords.push(newRecord);
+  }
+
+  // Optionally sync as an expense transaction in Pocket Winnie
+  if(syncTx && status === 'visited' && amountMYR > 0){
+    const defaultAcc = (S.accounts && S.accounts.length) ? S.accounts[0].id : '';
+    const noteItems = items.map(it => `${it.name}${it.calories > 0 ? ` [${it.calories}kcal]` : ''}${it.protein > 0 ? ` [${it.protein}g protein]` : ''}`).join(', ');
+    const fullNote = `${notes ? notes + ' · ' : ''}${flag} ${country}${city ? ' (' + city + ')' : ''}${noteItems ? ' · [Items: ' + noteItems + ']' : ''}`;
+    
+    const newTx = {
+      id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      type: 'expense',
+      amount: amountMYR,
+      category: 'food',
+      subCategory: 'dining_out',
+      accId: defaultAcc,
+      date: date || today(),
+      desc: name,
+      note: fullNote,
+      items: items.map(it => ({ name: it.name, qty: 1, price: 0, calories: it.calories, protein: it.protein }))
+    };
+    if(!S.transactions) S.transactions = [];
+    S.transactions.push(newTx);
+  }
+
+  save();
+  closeModal('add-restaurant-modal');
+  renderRestaurantPassport();
+  renderRestaurantPassportWidget();
+  renderPassportPage();
+  renderAll();
+
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  toast(isZh ? `🎉 成功记录 ${flag} ${name}！` : `🎉 Saved ${flag} ${name}!`);
+}
+window.saveRestaurantRecord = saveRestaurantRecord;
+
+function markRestaurantVisited(id){
+  const record = (S.restaurantRecords || []).find(r => r.id === id);
+  if(!record) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+
+  const promptAmt = prompt(
+    isZh 
+      ? `✅ 打卡探店：【${record.name}】\n请输入本次消费金额 (${record.currency || 'MYR'})：` 
+      : `✅ Check-in & Log: [${record.name}]\nEnter total bill amount (${record.currency || 'MYR'}):`, 
+    record.amountOriginal > 0 ? record.amountOriginal : ''
+  );
+  if(promptAmt === null) return;
+
+  const amt = parseFloat(promptAmt) || 0;
+  record.status = 'visited';
+  record.date = today();
+  record.amountOriginal = amt;
+  record.amountMYR = convertAmountToMYR(amt, record.currency || 'MYR');
+
+  // Also log into transactions if amount > 0
+  if(record.amountMYR > 0){
+    const defaultAcc = (S.accounts && S.accounts.length) ? S.accounts[0].id : '';
+    const items = record.items || [];
+    const noteItems = items.map(it => `${it.name}${it.calories > 0 ? ` [${it.calories}kcal]` : ''}${it.protein > 0 ? ` [${it.protein}g protein]` : ''}`).join(', ');
+    const newTx = {
+      id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      type: 'expense',
+      amount: record.amountMYR,
+      category: 'food',
+      subCategory: 'dining_out',
+      accId: defaultAcc,
+      date: today(),
+      desc: record.name,
+      note: `${record.flag} ${record.country}${record.city ? ' (' + record.city + ')' : ''} · [Items: ${noteItems || record.name}]`,
+      items: items
+    };
+    if(!S.transactions) S.transactions = [];
+    S.transactions.push(newTx);
+  }
+
+  save();
+  renderRestaurantPassport();
+  renderRestaurantPassportWidget();
+  renderPassportPage();
+  renderAll();
+  toast(isZh ? `🎉 恭喜打卡探店成功：${record.name}！` : `🎉 Checked in: ${record.name}!`);
+}
+window.markRestaurantVisited = markRestaurantVisited;
+
+function deleteRestaurantRecord(id){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  if(!confirm(isZh ? '确定要删除这条餐厅记录吗？' : 'Delete this restaurant record?')) return;
+  S.restaurantRecords = (S.restaurantRecords || []).filter(r => r.id !== id);
+  save();
+  renderRestaurantPassport();
+  renderRestaurantPassportWidget();
+  renderPassportPage();
+  toast(isZh ? '🗑️ 记录已删除' : '🗑️ Record deleted');
+}
+window.deleteRestaurantRecord = deleteRestaurantRecord;
+
+function syncExistingFoodTxsToPassport(silent = false){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const foodTxs = (S.transactions || []).filter(t => t.type === 'expense' && (t.category === 'food' || t.category === 'drinks' || getTxCalories(t) > 0));
+  
+  if(foodTxs.length === 0){
+    if(!silent) toast(isZh ? '没有找到餐饮支出账单' : 'No food transactions found to sync');
+    return;
+  }
+
+  let imported = 0;
+  if(!S.restaurantRecords) S.restaurantRecords = [];
+
+  foodTxs.forEach(t => {
+    // Check if already synced
+    const exists = S.restaurantRecords.some(r => r.txId === t.id || (r.name.toLowerCase() === (t.desc || '').toLowerCase() && r.date === t.date));
+    if(!exists && t.desc){
+      const detected = detectCountryFromText(t.desc) || RESTAURANT_COUNTRIES[0]; // default Malaysia
+      const items = extractTxReceiptItems(t);
+      const totalCal = getTxCalories(t);
+      const totalProt = getTxProtein(t);
+
+      S.restaurantRecords.push({
+        id: 'rest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        name: t.desc,
+        country: detected.name,
+        countryCode: detected.code,
+        flag: detected.flag,
+        city: detected.name === 'Malaysia' ? 'Kuala Lumpur' : '',
+        status: 'visited',
+        date: t.date,
+        currency: 'MYR',
+        amountOriginal: parseFloat(t.amount) || 0,
+        amountMYR: parseFloat(t.amount) || 0,
+        rating: 5,
+        notes: t.note ? t.note.replace(/\[.*?\]/g, '').trim() : '',
+        items: items.map(it => ({
+          name: it.name,
+          qty: it.qty || 1,
+          price: 0,
+          calories: it.calories || 0,
+          protein: it.protein || 0
+        })),
+        totalCalories: totalCal,
+        totalProtein: totalProt,
+        txId: t.id,
+        createdAt: new Date().toISOString()
+      });
+      imported++;
+    }
+  });
+
+  if(imported > 0){
+    save();
+    renderRestaurantPassport();
+    renderRestaurantPassportWidget();
+    renderPassportPage();
+    if(!silent) toast(isZh ? `🎉 成功同步 ${imported} 条餐饮探店记录！` : `🎉 Synced ${imported} food records to passport!`);
+  } else if(!silent) {
+    toast(isZh ? '所有餐饮账单已在护照中' : 'All food transactions are already in passport');
+  }
+}
+window.syncExistingFoodTxsToPassport = syncExistingFoodTxsToPassport;
+
+// ═══════════════════════════════════════════════════════════════════
+// FEATURE 3: TRANSACTION TAGS & LABELS SYSTEM (#tags)
+// ═══════════════════════════════════════════════════════════════════
+let currentTxTags = [];
+let activeTxTagFilter = 'all';
+
+function renderTxTagChips(){
+  const container = el('tx-selected-tags');
+  if(!container) return;
+  container.innerHTML = '';
+  if(!currentTxTags || !currentTxTags.length){
+    container.innerHTML = '<span style="font-size:11px;color:var(--muted);font-style:italic">No tags added yet</span>';
+    return;
+  }
+  currentTxTags.forEach(tag => {
+    const chip = document.createElement('span');
+    chip.className = 'tx-tag-chip';
+    chip.innerHTML = `#${esc(tag)} <span class="tag-del" onclick="removeTxTag('${esc(tag)}')" title="Remove tag">✕</span>`;
+    container.appendChild(chip);
+  });
+  // Update quick tag pills active state
+  document.querySelectorAll('.quick-tag-pill').forEach(pill => {
+    const t = pill.textContent.replace(/^[^\w#]+/, '').replace('#', '').trim();
+    if(currentTxTags.includes(t)) pill.classList.add('on');
+    else pill.classList.remove('on');
+  });
+}
+
+function addCustomTxTag(tagStr){
+  const inp = el('tx-tag-inp');
+  const raw = tagStr || (inp ? inp.value : '');
+  const clean = String(raw).replace(/[#,\s]/g, '').trim().toLowerCase();
+  if(!clean) return;
+  if(!currentTxTags.includes(clean)){
+    currentTxTags.push(clean);
+    renderTxTagChips();
+  }
+  if(inp) inp.value = '';
+}
+
+function removeTxTag(tagStr){
+  currentTxTags = currentTxTags.filter(t => t !== tagStr);
+  renderTxTagChips();
+}
+
+function toggleQuickTag(tagStr){
+  const clean = String(tagStr).replace(/[#,\s]/g, '').trim().toLowerCase();
+  if(currentTxTags.includes(clean)){
+    removeTxTag(clean);
+  } else {
+    addCustomTxTag(clean);
+  }
+}
+
+function handleTxTagKeyDown(e){
+  if(e.key === 'Enter' || e.key === ','){
+    e.preventDefault();
+    addCustomTxTag();
+  }
+}
+
+function renderTxTagFilterBar(){
+  const bar = el('tx-tag-filter-bar');
+  if(!bar) return;
+  // Collect all unique tags in S.transactions
+  const tagSet = new Set();
+  (S.transactions || []).forEach(t => {
+    if(Array.isArray(t.tags)){
+      t.tags.forEach(tg => { if(tg) tagSet.add(tg.toLowerCase().trim()); });
+    }
+  });
+
+  if(!tagSet.size){
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+    return;
+  }
+
+  bar.style.display = 'flex';
+  bar.innerHTML = '';
+
+  // "All Tags" pill
+  const allBtn = document.createElement('button');
+  allBtn.type = 'button';
+  allBtn.className = `chip ${activeTxTagFilter === 'all' ? 'on' : ''}`;
+  allBtn.style.cssText = 'font-size:11px;padding:4px 10px;cursor:pointer';
+  allBtn.textContent = '🏷️ All Tags';
+  allBtn.onclick = () => setTxTagFilter('all');
+  bar.appendChild(allBtn);
+
+  // Each unique tag
+  Array.from(tagSet).sort().forEach(tag => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `chip ${activeTxTagFilter === tag ? 'on' : ''}`;
+    btn.style.cssText = 'font-size:11px;padding:4px 10px;cursor:pointer';
+    btn.textContent = `#${tag}`;
+    btn.onclick = () => setTxTagFilter(tag);
+    bar.appendChild(btn);
+  });
+}
+
+function setTxTagFilter(tag){
+  activeTxTagFilter = tag;
+  renderFullTx();
+}
+
+window.toggleQuickTag = toggleQuickTag;
+window.addCustomTxTag = addCustomTxTag;
+window.removeTxTag = removeTxTag;
+window.handleTxTagKeyDown = handleTxTagKeyDown;
+window.setTxTagFilter = setTxTagFilter;
+window.renderTxTagChips = renderTxTagChips;
+window.renderTxTagFilterBar = renderTxTagFilterBar;
+
+// ═══════════════════════════════════════════════════════════════════
+// FEATURE 1: 30-DAY CASH FLOW FORECAST & PAYDAY SURVIVAL
+// ═══════════════════════════════════════════════════════════════════
+function calculateCashFlow30Days(){
+  const todayDate = new Date();
+  const paydayDay = parseInt(S.paydayDate || 25, 10);
+  
+  // Starting liquid balance
+  let startingBalance = 0;
+  if(S.accounts && S.accounts.length){
+    startingBalance = S.accounts.reduce((sum, a) => sum + (Number(a.openingBalance) || 0), 0);
+  }
+  const curMonthTxs = (S.transactions || []).filter(t => inMonth(t, todayDate.getMonth(), todayDate.getFullYear()));
+  const curInc = curMonthTxs.filter(t => t.type === 'income').reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const curExp = curMonthTxs.filter(t => t.type === 'expense').reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  let currentLiquid = Math.max(0, startingBalance + curInc - curExp);
+
+  const expectedSalary = Number(S.paydayAmount) || 0;
+  if(currentLiquid === 0 && expectedSalary > 0){
+    const dayOfMonth = todayDate.getDate();
+    const daysInCurMonth = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0).getDate();
+    currentLiquid = Math.max(200, expectedSalary * (1 - (dayOfMonth / daysInCurMonth)));
+  } else if(currentLiquid === 0) {
+    currentLiquid = 1500;
+  }
+
+  // Rolling daily burn rate over past 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(todayDate.getDate() - 30);
+  const past30Exp = (S.transactions || [])
+    .filter(t => t.type === 'expense' && new Date(t.date) >= thirtyDaysAgo)
+    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const dailyBurn = Math.max(15, past30Exp / 30);
+
+  const days = [];
+  let runningBal = currentLiquid;
+  let minBal = currentLiquid;
+  let minBalDate = '';
+  let paydayEveBal = currentLiquid;
+  let foundPayday = false;
+  let daysToNextPayday = 0;
+  const upcomingEvents = [];
+
+  for(let i = 0; i <= 30; i++){
+    const d = new Date(todayDate);
+    d.setDate(todayDate.getDate() + i);
+    const dStr = d.toISOString().slice(0, 10);
+    const dayNum = d.getDate();
+    const dayName = d.toLocaleDateString('en-MY', { weekday: 'short' });
+    
+    let dayInflow = 0;
+    let dayOutflow = dailyBurn;
+    const dayEvents = [];
+
+    // Payday
+    if(dayNum === paydayDay && expectedSalary > 0){
+      dayInflow += expectedSalary;
+      dayEvents.push({ type: 'salary', name: 'Expected Salary 💼', amount: expectedSalary });
+      if(!foundPayday){
+        foundPayday = true;
+        daysToNextPayday = i;
+        paydayEveBal = runningBal;
+      }
+    }
+
+    // Reminders
+    (S.reminders || []).forEach(r => {
+      if(!r.paid && r.date){
+        const rDay = parseInt(r.date.slice(-2), 10);
+        if(rDay === dayNum){
+          const amt = Number(r.amount) || 0;
+          dayOutflow += amt;
+          dayEvents.push({ type: 'bill', name: r.name || 'Bill Reminder', amount: amt });
+        }
+      }
+    });
+
+    // Subscriptions
+    (S.recurring || []).forEach(rc => {
+      if(rc.nextDue){
+        const rcDay = parseInt(rc.nextDue.slice(-2), 10);
+        if(rcDay === dayNum){
+          const amt = Number(rc.amount) || 0;
+          dayOutflow += amt;
+          dayEvents.push({ type: 'sub', name: rc.desc || 'Subscription', amount: amt });
+        }
+      }
+    });
+
+    if(i > 0){
+      runningBal = runningBal + dayInflow - dayOutflow;
+    }
+
+    if(runningBal < minBal){
+      minBal = runningBal;
+      minBalDate = dStr;
+    }
+
+    if(dayEvents.length > 0){
+      dayEvents.forEach(ev => upcomingEvents.push({ ...ev, date: dStr }));
+    }
+
+    days.push({
+      date: dStr,
+      dayNum,
+      dayName,
+      balance: Math.round(runningBal),
+      inflow: dayInflow,
+      outflow: Math.round(dayOutflow),
+      events: dayEvents
+    });
+  }
+
+  const safeDailyBurn = (daysToNextPayday > 0)
+    ? Math.max(0, currentLiquid / daysToNextPayday)
+    : dailyBurn;
+
+  let status = 'healthy';
+  let statusText = '🟢 Healthy';
+  if(minBal < 0){
+    status = 'danger';
+    statusText = '🔴 Danger (Deficit)';
+  } else if(minBal < 300){
+    status = 'tight';
+    statusText = '🟡 Tight Runway';
+  }
+
+  return {
+    days,
+    currentLiquid,
+    minBalance: Math.round(minBal),
+    minBalanceDate: minBalDate || days[0].date,
+    paydayEveBalance: Math.round(paydayEveBal),
+    daysToNextPayday: daysToNextPayday || (paydayDay - todayDate.getDate() + 30) % 30,
+    dailyBurn: Math.round(dailyBurn),
+    safeDailyBurn: Math.round(safeDailyBurn),
+    status,
+    statusText,
+    expectedSalary,
+    upcomingEvents: upcomingEvents.slice(0, 10)
+  };
+}
+
+function renderCashFlowForecast(){
+  const cf = calculateCashFlow30Days();
+
+  // Overview Card on Analytics Page
+  const cardStatus = el('ana-cf-status');
+  if(cardStatus){
+    cardStatus.className = `cf-status-pill cf-status-${cf.status}`;
+    cardStatus.textContent = cf.statusText;
+  }
+  if(el('ana-cf-min')) el('ana-cf-min').textContent = fmt(cf.minBalance);
+  if(el('ana-cf-safe-daily')) el('ana-cf-safe-daily').textContent = `${fmt(cf.safeDailyBurn)}/day`;
+  if(el('ana-cf-payday-eve')) el('ana-cf-payday-eve').textContent = fmt(cf.paydayEveBalance);
+
+  const miniWrap = el('ana-cf-chart-wrap');
+  if(miniWrap){
+    miniWrap.innerHTML = generateCashFlowSvg(cf.days, 320, 75, true);
+  }
+
+  // Full Modal Elements
+  if(el('cf-payday-date-inp') && !el('cf-payday-date-inp').value){
+    el('cf-payday-date-inp').value = S.paydayDate || 25;
+  }
+  if(el('cf-payday-amt-inp') && !el('cf-payday-amt-inp').value){
+    el('cf-payday-amt-inp').value = S.paydayAmount || '';
+  }
+  const modalStatus = el('cf-modal-status');
+  if(modalStatus){
+    modalStatus.className = `cf-status-pill cf-status-${cf.status}`;
+    modalStatus.textContent = cf.statusText;
+  }
+  if(el('cf-modal-min')) el('cf-modal-min').textContent = fmt(cf.minBalance);
+  if(el('cf-modal-min-date')) el('cf-modal-min-date').textContent = `on ${cf.minBalanceDate}`;
+  if(el('cf-modal-safe-daily')) el('cf-modal-safe-daily').textContent = `${fmt(cf.safeDailyBurn)}/day`;
+  if(el('cf-modal-payday-eve')) el('cf-modal-payday-eve').textContent = fmt(cf.paydayEveBalance);
+  if(el('cf-modal-days-to-pay')) el('cf-modal-days-to-pay').textContent = `${cf.daysToNextPayday} days until payday`;
+
+  const modalSvgWrap = el('cf-modal-chart-svg-wrap');
+  if(modalSvgWrap){
+    modalSvgWrap.innerHTML = generateCashFlowSvg(cf.days, 340, 135, false);
+  }
+
+  const evList = el('cf-events-list');
+  if(evList){
+    if(!cf.upcomingEvents.length){
+      evList.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;padding:12px">No scheduled bills or salary in next 30 days</div>';
+    } else {
+      evList.innerHTML = cf.upcomingEvents.map(ev => `
+        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:11.5px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span>${ev.type === 'salary' ? '💼' : (ev.type === 'sub' ? '📺' : '🧾')}</span>
+            <div>
+              <div style="font-weight:700;color:var(--text)">${esc(ev.name)}</div>
+              <div style="font-size:9.5px;color:var(--muted)">${ev.date}</div>
+            </div>
+          </div>
+          <div style="font-weight:800;color:${ev.type === 'salary' ? 'var(--green)' : 'var(--red)'}">
+            ${ev.type === 'salary' ? '+' : '-'}${fmt(ev.amount)}
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+function generateCashFlowSvg(days, width, height, isMini){
+  if(!days || !days.length) return '';
+  const padding = isMini ? 6 : 14;
+  const w = width - (padding * 2);
+  const h = height - (padding * 2);
+
+  const balances = days.map(d => d.balance);
+  const min = Math.min(...balances, 0);
+  const max = Math.max(...balances, 100);
+  const range = (max - min) || 1;
+
+  const points = days.map((d, i) => {
+    const x = padding + (i / (days.length - 1)) * w;
+    const y = padding + h - ((d.balance - min) / range) * h;
+    return { x: Math.round(x), y: Math.round(y), val: d.balance, date: d.date };
+  });
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const areaD = `${pathD} L ${points[points.length-1].x} ${padding + h} L ${points[0].x} ${padding + h} Z`;
+
+  let zeroLine = '';
+  if(min < 0 && max > 0){
+    const zeroY = Math.round(padding + h - ((0 - min) / range) * h);
+    zeroLine = `<line x1="${padding}" y1="${zeroY}" x2="${width - padding}" y2="${zeroY}" stroke="rgba(239,68,68,0.5)" stroke-dasharray="3,3" stroke-width="1.5"/>`;
+  }
+
+  const gradientId = `cfGrad_${isMini ? 'mini' : 'modal'}`;
+  return `
+    <svg viewBox="0 0 ${width} ${height}" style="width:100%;height:100%;display:block" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.0"/>
+        </linearGradient>
+      </defs>
+      ${zeroLine}
+      <path d="${areaD}" fill="url(#${gradientId})"/>
+      <path d="${pathD}" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${!isMini ? points.filter((_, i) => i % 5 === 0 || i === points.length - 1).map(p => `
+        <circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#06b6d4" stroke="var(--bg)" stroke-width="1.5"/>
+      `).join('') : ''}
+    </svg>
+  `;
+}
+
+function openCashFlowModal(){
+  renderCashFlowForecast();
+  openModal('cashflow-modal');
+}
+
+function saveCashFlowPaydaySettings(){
+  const dateVal = parseInt(el('cf-payday-date-inp')?.value, 10);
+  const amtVal = parseFloat(el('cf-payday-amt-inp')?.value);
+  if(dateVal && dateVal >= 1 && dateVal <= 31) S.paydayDate = dateVal;
+  if(!isNaN(amtVal) && amtVal >= 0) S.paydayAmount = amtVal;
+  save();
+  renderCashFlowForecast();
+  toast('Payday settings updated ✓');
+}
+
+window.openCashFlowModal = openCashFlowModal;
+window.saveCashFlowPaydaySettings = saveCashFlowPaydaySettings;
+window.renderCashFlowForecast = renderCashFlowForecast;
+
+// ═══════════════════════════════════════════════════════════════════
+// FEATURE 4: VISUAL SPENDING HEATMAP
+// ═══════════════════════════════════════════════════════════════════
+let heatmapInspectedYear = new Date().getFullYear();
+
+function getHeatmapLevel(spent){
+  if(!spent || spent <= 0) return 0;
+  if(spent <= 30) return 1;
+  if(spent <= 80) return 2;
+  if(spent <= 200) return 3;
+  return 4;
+}
+
+function calculateHeatmapDailyMap(year){
+  const dailyMap = {};
+  (S.transactions || []).forEach(t => {
+    if(t.type === 'expense' && t.date && t.date.startsWith(String(year))){
+      const amt = Number(t.amount) || 0;
+      dailyMap[t.date] = (dailyMap[t.date] || 0) + amt;
+    }
+  });
+  return dailyMap;
+}
+
+function renderSpendingHeatmap(){
+  const year = heatmapInspectedYear;
+  const dailyMap = calculateHeatmapDailyMap(year);
+  
+  let totalSpent = 0;
+  let trackedDays = 0;
+  let noSpendDays = 0;
+
+  const overviewWrap = el('ana-heatmap-grid-wrap');
+  if(overviewWrap){
+    overviewWrap.innerHTML = generateHeatmapHtml(16, dailyMap);
+  }
+
+  const fullWrap = el('hm-full-grid-wrap');
+  if(fullWrap){
+    fullWrap.innerHTML = generateHeatmapHtml(52, dailyMap, year);
+  }
+
+  const today = new Date();
+  const startOfYear = new Date(year, 0, 1);
+  const endLimit = (year === today.getFullYear()) ? today : new Date(year, 11, 31);
+  
+  for(let d = new Date(startOfYear); d <= endLimit; d.setDate(d.getDate() + 1)){
+    const dStr = d.toISOString().slice(0, 10);
+    const spent = dailyMap[dStr] || 0;
+    totalSpent += spent;
+    trackedDays++;
+    if(spent === 0) noSpendDays++;
+  }
+
+  if(el('ana-hm-nospend-stat')) el('ana-hm-nospend-stat').textContent = `🔥 ${noSpendDays} No-Spend Days in ${year}`;
+  if(el('hm-stat-nospend')) el('hm-stat-nospend').textContent = noSpendDays;
+  if(el('hm-stat-total-spent')) el('hm-stat-total-spent').textContent = `Total: ${fmt(totalSpent)}`;
+}
+
+function generateHeatmapHtml(numWeeks, dailyMap, specificYear){
+  const today = new Date();
+  let endDate = today;
+  if(specificYear && specificYear !== today.getFullYear()){
+    endDate = new Date(specificYear, 11, 31);
+  }
+
+  const totalDays = numWeeks * 7;
+  const startDate = new Date(endDate);
+  startDate.setDate(endDate.getDate() - totalDays + 1);
+
+  let cellsHtml = '';
+  for(let i = 0; i < totalDays; i++){
+    const cur = new Date(startDate);
+    cur.setDate(startDate.getDate() + i);
+    const dStr = cur.toISOString().slice(0, 10);
+    const spent = dailyMap[dStr] || 0;
+    const lvl = getHeatmapLevel(spent);
+    cellsHtml += `
+      <div class="heatmap-cell hm-level-${lvl}" 
+           data-date="${dStr}" 
+           data-spent="${spent}" 
+           title="${dStr}: ${spent > 0 ? fmt(spent) : 'No Spend 🌿'}"
+           onclick="inspectHeatmapDay('${dStr}', ${spent})"></div>
+    `;
+  }
+
+  return `<div class="heatmap-grid" style="grid-template-columns: repeat(${numWeeks}, 13px);">${cellsHtml}</div>`;
+}
+
+function inspectHeatmapDay(dateStr, spent){
+  if(el('hm-inspect-date')) el('hm-inspect-date').textContent = fmtDate(dateStr);
+  if(el('hm-inspect-amt')) el('hm-inspect-amt').textContent = spent > 0 ? fmt(spent) : 'RM 0.00 (No Spend! 🍯)';
+  
+  const txs = (S.transactions || []).filter(t => t.date === dateStr);
+  const txContainer = el('hm-inspect-txs');
+  if(txContainer){
+    if(!txs.length){
+      txContainer.innerHTML = '<div style="font-size:11px;color:#10b981;padding:4px 0">🌿 Zero expenses recorded on this day. Great job saving honey!</div>';
+    } else {
+      txContainer.innerHTML = txs.map(t => {
+        const cat = getCatInfo(t.category);
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:11px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span>${cat.icon || '🧾'}</span>
+              <span style="font-weight:700">${esc(t.desc)}</span>
+            </div>
+            <span style="font-weight:800;color:${t.type==='income'?'var(--green)':'var(--red)'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</span>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+}
+
+function openHeatmapModal(){
+  renderSpendingHeatmap();
+  openModal('heatmap-modal');
+}
+
+function selectHeatmapYear(year){
+  heatmapInspectedYear = Number(year);
+  if(el('hm-year-cur')) el('hm-year-cur').classList.toggle('on', year === 2026);
+  if(el('hm-year-prev')) el('hm-year-prev').classList.toggle('on', year === 2025);
+  renderSpendingHeatmap();
+}
+
+window.openHeatmapModal = openHeatmapModal;
+window.selectHeatmapYear = selectHeatmapYear;
+window.inspectHeatmapDay = inspectHeatmapDay;
+window.renderSpendingHeatmap = renderSpendingHeatmap;
+
+// ═══════════════════════════════════════════════════════════════════
+// FEATURE 2: YEAR-IN-REVIEW / POCKET WINNIE WRAPPED
+// ═══════════════════════════════════════════════════════════════════
+let wrappedActiveSlide = 0;
+const WRAPPED_TOTAL_SLIDES = 5;
+
+function buildYearlyWrappedData(year = 2026){
+  const yStr = String(year);
+  const yearTxs = (S.transactions || []).filter(t => t.date && t.date.startsWith(yStr));
+  const expTxs = yearTxs.filter(t => t.type === 'expense');
+  const incTxs = yearTxs.filter(t => t.type === 'income');
+
+  const totalExp = expTxs.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const totalInc = incTxs.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const savingsRate = totalInc > 0 ? Math.max(0, Math.round(((totalInc - totalExp) / totalInc) * 100)) : 0;
+  
+  const today = new Date();
+  const dayOfYear = (year === today.getFullYear()) 
+    ? Math.max(1, Math.floor((today - new Date(year, 0, 1)) / (1000 * 60 * 60 * 24)))
+    : 365;
+  const dailyAvg = totalExp / dayOfYear;
+
+  const catMap = {};
+  expTxs.forEach(t => {
+    catMap[t.category] = (catMap[t.category] || 0) + (Number(t.amount) || 0);
+  });
+  const topCats = Object.entries(catMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([catId, amt]) => {
+      const cat = getCatInfo(catId);
+      const pct = totalExp > 0 ? Math.round((amt / totalExp) * 100) : 0;
+      return { id: catId, name: cat.name, icon: cat.icon, amount: amt, pct };
+    });
+
+  let biggest = null;
+  expTxs.forEach(t => {
+    const amt = Number(t.amount) || 0;
+    if(!biggest || amt > biggest.amount){
+      biggest = { amount: amt, desc: t.desc, date: t.date };
+    }
+  });
+
+  const foodSpend = expTxs
+    .filter(t => ['food', 'drinks', 'groceries'].includes(t.category))
+    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  
+  const restRecords = S.restaurantRecords || [];
+  const visitedRests = restRecords.filter(r => r.status === 'visited');
+  const countryFlags = [...new Set(visitedRests.map(r => r.flag || '🇲🇾'))].join(' ');
+
+  const merchantCount = {};
+  expTxs.forEach(t => {
+    if(t.desc){
+      const name = t.desc.trim();
+      merchantCount[name] = (merchantCount[name] || 0) + 1;
+    }
+  });
+  const topMerchant = Object.entries(merchantCount).sort((a,b)=>b[1]-a[1])[0] || ['Various Stores', 0];
+
+  const dailyExp = {};
+  expTxs.forEach(t => { dailyExp[t.date] = (dailyExp[t.date] || 0) + (Number(t.amount) || 0); });
+  let zeroSpendDays = 0;
+  for(let i = 0; i < dayOfYear; i++){
+    const d = new Date(year, 0, 1 + i);
+    const dStr = d.toISOString().slice(0, 10);
+    if(!dailyExp[dStr]) zeroSpendDays++;
+  }
+
+  let personaTitle = '🍯 Sovereign of the Honey Vault';
+  let personaIcon = '🍯';
+  let personaDesc = 'You take immense care in gathering and protecting your honey. Your savings rate is admirable and your honey pot is secure!';
+
+  if(foodSpend > totalExp * 0.45){
+    personaTitle = '🍜 Master Gourmet Explorer';
+    personaIcon = '🍜';
+    personaDesc = 'Your heart and wallet belong to delicious food adventures! You believe life is best savored one exquisite bite at a time.';
+  } else if(zeroSpendDays > dayOfYear * 0.4){
+    personaTitle = '🌿 Serene Honey Monk';
+    personaIcon = '🧘‍♂️';
+    personaDesc = 'Master of self-discipline! With so many zero-spend days, you have mastered the art of mindful living without unnecessary honey leaks.';
+  } else if(topCats[0] && ['shopping', 'beauty'].includes(topCats[0].id)){
+    personaTitle = '✨ Hundred Acre Trendsetter';
+    personaIcon = '🛍️';
+    personaDesc = 'You know what you like and you treat yourself well. You keep the forest stylish and vibrant!';
+  }
+
+  return {
+    year,
+    totalExp,
+    totalInc,
+    totalTxs: yearTxs.length,
+    savingsRate,
+    dailyAvg,
+    topCats,
+    biggest,
+    foodSpend,
+    restaurantCount: visitedRests.length,
+    countryFlags: countryFlags || '🇲🇾',
+    bestStreak: S.streaks?.noSpendBest || 0,
+    zeroSpendDays,
+    topMerchant: topMerchant[0],
+    topMerchantVisits: topMerchant[1],
+    personaTitle,
+    personaIcon,
+    personaDesc
+  };
+}
+
+function openWrappedModal(year = 2026){
+  const data = buildYearlyWrappedData(year);
+  
+  if(el('wrap-year-title')) el('wrap-year-title').textContent = `Your ${year} Financial Journey`;
+  if(el('wrap-tot-exp')) el('wrap-tot-exp').textContent = fmt(data.totalExp);
+  if(el('wrap-tot-txs')) el('wrap-tot-txs').textContent = `Across ${data.totalTxs} transactions logged`;
+  if(el('wrap-save-rate')) el('wrap-save-rate').textContent = `${data.savingsRate}%`;
+  if(el('wrap-daily-avg')) el('wrap-daily-avg').textContent = `${fmt(data.dailyAvg)}/day`;
+
+  const catList = el('wrap-top-cats-list');
+  if(catList){
+    catList.innerHTML = data.topCats.map(c => `
+      <div style="background:var(--bg);border-radius:12px;padding:8px 12px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700">
+          <span>${c.icon} ${esc(c.name)}</span>
+          <span style="color:var(--amber)">${fmt(c.amount)} (${c.pct}%)</span>
+        </div>
+        <div style="width:100%;height:4px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:5px;overflow:hidden">
+          <div style="width:${c.pct}%;height:100%;background:var(--amber);border-radius:2px"></div>
+        </div>
+      </div>
+    `).join('') || '<div style="font-size:11px;color:var(--muted)">No categories tracked yet</div>';
+  }
+  if(el('wrap-biggest-purchase')){
+    el('wrap-biggest-purchase').textContent = data.biggest ? `${esc(data.biggest.desc)} · ${fmt(data.biggest.amount)} (${data.biggest.date})` : 'No purchases yet';
+  }
+
+  if(el('wrap-food-rest-count')) el('wrap-food-rest-count').textContent = data.restaurantCount;
+  if(el('wrap-food-countries')) el('wrap-food-countries').textContent = data.countryFlags;
+  if(el('wrap-food-total-spent')) el('wrap-food-total-spent').textContent = fmt(data.foodSpend);
+
+  if(el('wrap-best-streak')) el('wrap-best-streak').textContent = `${data.bestStreak} days 🔥`;
+  if(el('wrap-zero-spend-days')) el('wrap-zero-spend-days').textContent = `${data.zeroSpendDays} days`;
+  if(el('wrap-top-merchant')) el('wrap-top-merchant').textContent = `${esc(data.topMerchant)} (${data.topMerchantVisits} visits)`;
+
+  if(el('wrap-persona-icon')) el('wrap-persona-icon').textContent = data.personaIcon;
+  if(el('wrap-persona-title')) el('wrap-persona-title').textContent = data.personaTitle;
+  if(el('wrap-persona-desc')) el('wrap-persona-desc').textContent = data.personaDesc;
+
+  wrappedActiveSlide = 0;
+  updateWrappedSlideUI();
+  openModal('wrapped-modal');
+}
+
+function stepWrappedSlide(delta){
+  wrappedActiveSlide += delta;
+  if(wrappedActiveSlide < 0) wrappedActiveSlide = 0;
+  if(wrappedActiveSlide >= WRAPPED_TOTAL_SLIDES) wrappedActiveSlide = WRAPPED_TOTAL_SLIDES - 1;
+  updateWrappedSlideUI();
+}
+
+function updateWrappedSlideUI(){
+  for(let i = 0; i < WRAPPED_TOTAL_SLIDES; i++){
+    const slide = el(`wrapped-slide-${i}`);
+    if(slide) slide.classList.toggle('active', i === wrappedActiveSlide);
+
+    const bar = el(`wsb-${i}`);
+    if(bar){
+      if(i < wrappedActiveSlide) bar.style.width = '100%';
+      else if(i === wrappedActiveSlide) bar.style.width = '100%';
+      else bar.style.width = '0%';
+    }
+  }
+
+  if(el('wrap-slide-indicator')) el('wrap-slide-indicator').textContent = `${wrappedActiveSlide + 1} / ${WRAPPED_TOTAL_SLIDES}`;
+  if(el('wrap-prev-btn')) el('wrap-prev-btn').style.visibility = wrappedActiveSlide === 0 ? 'hidden' : 'visible';
+  if(el('wrap-next-btn')) el('wrap-next-btn').textContent = wrappedActiveSlide === WRAPPED_TOTAL_SLIDES - 1 ? 'Finish 🍯' : 'Next ›';
+}
+
+function copyWrappedSummaryText(){
+  const data = buildYearlyWrappedData(2026);
+  const text = `🍯 My Pocket Winnie 2026 Wrapped 🍯\n` +
+    `💰 Total Spent: ${fmt(data.totalExp)}\n` +
+    `📈 Savings Rate: ${data.savingsRate}%\n` +
+    `🍜 Food & Dining: ${fmt(data.foodSpend)} across ${data.restaurantCount} restaurants (${data.countryFlags})\n` +
+    `🏆 Best Streak: ${data.bestStreak} No-Spend Days\n` +
+    `👑 Persona: ${data.personaIcon} ${data.personaTitle}\n` +
+    `Tracked with Pocket Winnie — Hundred Acre Wood Expense Companion 🐝`;
+  
+  navigator.clipboard.writeText(text).then(() => {
+    toast('📋 Summary copied to clipboard!');
+  }).catch(() => {
+    toast('Summary text ready');
+  });
+}
+
+function shareWrappedWhatsApp(){
+  const data = buildYearlyWrappedData(2026);
+  const text = encodeURIComponent(`🍯 My Pocket Winnie 2026 Wrapped 🍯\n` +
+    `💰 Total Spent: ${fmt(data.totalExp)}\n` +
+    `📈 Savings Rate: ${data.savingsRate}%\n` +
+    `👑 My Persona: ${data.personaIcon} ${data.personaTitle}\n` +
+    `Tracked with Pocket Winnie!`);
+  window.open(`https://wa.me/?text=${text}`, '_blank');
+}
+
+window.openWrappedModal = openWrappedModal;
+window.stepWrappedSlide = stepWrappedSlide;
+window.copyWrappedSummaryText = copyWrappedSummaryText;
+window.shareWrappedWhatsApp = shareWrappedWhatsApp;
+
+// ═══════════════════════════════════════════════════════════════════
+// FEATURE 5: AI SPENDING COACH (GEMINI WITH WINNIE PERSONA)
+// ═══════════════════════════════════════════════════════════════════
+let coachMessages = [];
+
+function openAiCoachModal(){
+  const keyWarning = el('coach-api-warning');
+  if(keyWarning){
+    keyWarning.classList.toggle('hidden', Boolean(S.geminiApiKey && S.geminiApiKey.trim()));
+  }
+
+  if(!coachMessages.length){
+    coachMessages.push({
+      role: 'pooh',
+      text: `Hello there! 🍯 I'm Winnie, your friendly spending companion.\n\nSometimes numbers can buzz like bees, but don't worry! Ask me how your honey pot is doing, or tap one of the quick questions below!`
+    });
+  }
+
+  renderCoachMessages();
+  openModal('ai-coach-modal');
+  setTimeout(() => el('coach-user-input')?.focus(), 250);
+}
+
+function renderCoachMessages(){
+  const container = el('coach-messages-container');
+  if(!container) return;
+  container.innerHTML = '';
+
+  coachMessages.forEach(msg => {
+    const bubble = document.createElement('div');
+    bubble.className = `coach-bubble ${msg.role === 'pooh' ? 'pooh' : 'user'}`;
+    bubble.innerHTML = msg.role === 'pooh'
+      ? `<div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--amber);margin-bottom:4px">
+           <span>🍯</span> <span>Winnie the Pooh</span>
+         </div>
+         <div>${esc(msg.text).replace(/\n/g, '<br/>')}</div>`
+      : `<div>${esc(msg.text).replace(/\n/g, '<br/>')}</div>`;
+    container.appendChild(bubble);
+  });
+
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendCoachUserMessage(){
+  const inp = el('coach-user-input');
+  if(!inp) return;
+  const text = inp.value.trim();
+  if(!text) return;
+
+  inp.value = '';
+  coachMessages.push({ role: 'user', text });
+  renderCoachMessages();
+
+  await askWinnieCoach(text);
+}
+
+function handleCoachInputKeyDown(e){
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    sendCoachUserMessage();
+  }
+}
+
+async function sendCoachQuickPrompt(type){
+  let promptText = '';
+  if(type === 'health') promptText = 'How is my honey pot doing this month? Give me a warm health check.';
+  else if(type === 'leaks') promptText = 'Where are my money leaks? What can I cut back on without losing happiness?';
+  else if(type === 'afford') promptText = 'I am thinking about buying something extra. How can I decide if I can afford it?';
+  else if(type === 'save300') promptText = 'Give me 3 realistic, gentle tips to save RM 300 by next month.';
+
+  coachMessages.push({ role: 'user', text: promptText });
+  renderCoachMessages();
+
+  await askWinnieCoach(promptText);
+}
+
+async function askWinnieCoach(userQuestion){
+  coachMessages.push({ role: 'pooh', text: '🍯 Thinking warmly... let me check your honey pot...' });
+  renderCoachMessages();
+
+  const today = new Date();
+  const monthTxs = (S.transactions || []).filter(t => inMonth(t, today.getMonth(), today.getFullYear()));
+  const totalExp = monthTxs.filter(t => t.type === 'expense').reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const totalInc = monthTxs.filter(t => t.type === 'income').reduce((s, t) => s + (Number(t.amount) || 0), 0);
+  const streak = S.streaks?.noSpendCurrent || 0;
+  const budget = S.monthlyBudget || 0;
+
+  const topCats = Object.entries(
+    monthTxs.filter(t => t.type === 'expense').reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + (Number(t.amount) || 0);
+      return acc;
+    }, {})
+  ).sort((a,b)=>b[1]-a[1]).slice(0, 3).map(([c, a]) => `${c}: RM ${a.toFixed(2)}`).join(', ');
+
+  const prompt = `
+You are Winnie the Pooh acting as a kind, gentle, reassuring, but financially prudent coach for the app "Pocket Winnie".
+Speak in Winnie the Pooh's warm persona (mention honey, bees, Hundred Acre Wood gently, keep it wholesome and helpful).
+
+User's Financial Context this month:
+- Total Spent: RM ${totalExp.toFixed(2)}
+- Total Income: RM ${totalInc.toFixed(2)}
+- Monthly Budget Limit: RM ${budget > 0 ? budget.toFixed(2) : 'Not set'}
+- Top Expense Categories: ${topCats || 'None yet'}
+- Current No-Spend Streak: ${streak} days
+- Currency: RM (Malaysian Ringgit)
+
+User asks: "${userQuestion}"
+
+Respond with:
+1. Warm Winnie greeting or thought
+2. Honest, gentle assessment based on their actual numbers
+3. 2-3 specific, encouraging action steps
+Keep response concise, charming, and easy to read (max 150 words).
+  `.trim();
+
+  let answer = '';
+  if(S.geminiApiKey && typeof generateGeminiContent === 'function'){
+    try {
+      const resp = await generateGeminiContent(prompt);
+      if(resp && resp.text) answer = resp.text;
+    } catch(err) {
+      console.warn('Gemini coach request failed:', err);
+    }
+  }
+
+  if(!answer){
+    if(userQuestion.includes('leaks') || userQuestion.includes('cut')){
+      answer = `Oh bother! Let's take a peek at where the honey trickles out. 🍯\n\nYour top spending is in ${topCats || 'food and drinks'}. If you brew your own tea or coffee just twice a week, you'll save around RM 40 a month — that's enough for two whole jars of honey!`;
+    } else if(userQuestion.includes('afford')){
+      answer = `Pooh always says: If you want something shiny, ask yourself: 'Will this bring as much joy as an afternoon nap in the sun?' ☀️\n\nCheck your remaining budget first (you've spent RM ${totalExp.toFixed(2)} so far). If it leaves enough honey for your rent and bills, then enjoy it! If not, wait 48 hours to be sure.`;
+    } else if(userQuestion.includes('save 300') || userQuestion.includes('save300')){
+      answer = `Saving RM 300 is like filling a honey pot spoonful by spoonful! 🍯\n\n1. Aim for 2 no-spend days each week (you already have a streak going!).\n2. Swap 3 restaurant meals for home cooking.\n3. Audit your app subscriptions in the More hub. You can do it!`;
+    } else {
+      answer = `A wonderful day in the Hundred Acre Wood! 🍯\n\nSo far this month you've spent RM ${totalExp.toFixed(2)}${budget > 0 ? ` of your RM ${budget.toFixed(2)} budget` : ''}. Keep logging your daily meals and remember: small savings today make a cozy future tomorrow!`;
+    }
+  }
+
+  coachMessages[coachMessages.length - 1] = { role: 'pooh', text: answer };
+  renderCoachMessages();
+}
+
+window.openAiCoachModal = openAiCoachModal;
+window.sendCoachQuickPrompt = sendCoachQuickPrompt;
+window.sendCoachUserMessage = sendCoachUserMessage;
+window.handleCoachInputKeyDown = handleCoachInputKeyDown;
 
 // Flush any pending debounced save before the page unloads
 window.addEventListener('beforeunload', () => {
