@@ -1,21 +1,14 @@
-function mergeDefaultCategories(saved, defaults){
-  if(!Array.isArray(saved) || !saved.length) return JSON.parse(JSON.stringify(defaults));
-  const res = [...saved];
-  const existingIds = new Set(res.map(c => c.id));
-  for(const d of defaults){
-    if(!existingIds.has(d.id)){
-      res.push({ ...d });
-    }
-  }
-  return res;
-}
 /* ═══════════════════════════════════════════════════════════════════
-   🍯 POCKET WINNIE — CORE APPLICATION JAVASCRIPT
+   🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
+   Compiled from modular source files in src/
+   Last build: 2026-10-02T10:48:38.323Z
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ═══════════════════════════════════════════════════════════════════
-   0. DOM HELPER & DOMAIN REFERENCE CONSTANTS
-   ═══════════════════════════════════════════════════════════════════ */
+/* ── Module: core/dom.js ── */
+/**
+ * Global DOM Helper & Resilient ID Resolver
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── GLOBAL DOM HELPER & RESILIENT ID RESOLVER ───────────
 function el(id){
@@ -85,77 +78,24 @@ function el(id){
   return null;
 }
 
-// ── PAYMENT METHODS ───────────────────────────────────
-const PAYMENT_METHODS = [
-  { id: 'mae_scan', name: 'Maybank (MAE / QR)', icon: '🐯', bank: 'Maybank' },
-  { id: 'tng_qr', name: 'Touch \'n Go eWallet', icon: '💙', bank: 'TNG' },
-  { id: 'shopeepay', name: 'ShopeePay', icon: '🛍️', bank: 'Shopee' },
-  { id: 'cimb', name: 'CIMB Bank (Octo)', icon: '🔴', bank: 'CIMB' },
-  { id: 'public_bank', name: 'Public Bank (PBe)', icon: '🏛️', bank: 'Public Bank' },
-  { id: 'rhb', name: 'RHB Bank', icon: '🔵', bank: 'RHB' },
-  { id: 'hlb', name: 'Hong Leong Bank', icon: '🏢', bank: 'Hong Leong' },
-  { id: 'ambank', name: 'AmBank', icon: '🟡', bank: 'AmBank' },
-  { id: 'bank_islam', name: 'Bank Islam', icon: '🕌', bank: 'Bank Islam' },
-  { id: 'bank_rakyat', name: 'Bank Rakyat', icon: '🔷', bank: 'Bank Rakyat' },
-  { id: 'bsn', name: 'BSN Bank', icon: '🟦', bank: 'BSN' },
-  { id: 'gxbank', name: 'GXBank (Digital)', icon: '🟣', bank: 'GXBank' },
-  { id: 'boost_bank', name: 'Boost Bank / eWallet', icon: '🚀', bank: 'Boost' },
-  { id: 'aeon_bank', name: 'AEON Bank', icon: '🛍️', bank: 'AEON' },
-  { id: 'affin', name: 'Affin Bank', icon: '🔴', bank: 'Affin' },
-  { id: 'alliance', name: 'Alliance Bank', icon: '🔵', bank: 'Alliance' },
-  { id: 'uob', name: 'UOB Malaysia', icon: '🌐', bank: 'UOB' },
-  { id: 'ocbc', name: 'OCBC Malaysia', icon: '⛵', bank: 'OCBC' },
-  { id: 'hsbc', name: 'HSBC Malaysia', icon: '🔺', bank: 'HSBC' },
-  { id: 'scb', name: 'Standard Chartered', icon: '🌿', bank: 'Standard Chartered' },
-  { id: 'bigpay', name: 'BigPay', icon: '💳', bank: 'BigPay' },
-  { id: 'setel', name: 'Setel (Petronas)', icon: '⛽', bank: 'Setel' },
-  { id: 'credit_card', name: 'Credit Card', icon: '💳', bank: 'Card' },
-  { id: 'debit_card', name: 'Debit Card', icon: '💳', bank: 'Card' },
-  { id: 'fpx', name: 'Online Banking (FPX / DuitNow)', icon: '🌐', bank: 'FPX' },
-  { id: 'cash', name: 'Cash (现金)', icon: '💵', bank: 'Cash' },
-  { id: 'bnpl', name: 'SPayLater / Atome / BNPL', icon: '⏱️', bank: 'BNPL' }
-];
 
-// ── MALAYSIAN PRESETS (COMMERCIAL BANKS & WALLETS) ────
-const MY_BANKS = [
-  { name: 'Maybank (MAE)', icon: '🐯', color: '#ffc800', type: 'bank' },
-  { name: 'CIMB Bank', icon: '🔴', color: '#dc2626', type: 'bank' },
-  { name: 'Public Bank', icon: '🏛️', color: '#b91c1c', type: 'bank' },
-  { name: 'RHB Bank', icon: '🔵', color: '#0284c7', type: 'bank' },
-  { name: 'Hong Leong Bank', icon: '🏢', color: '#be123c', type: 'bank' },
-  { name: 'AmBank', icon: '🟡', color: '#e11d48', type: 'bank' },
-  { name: 'Bank Rakyat', icon: '🔷', color: '#1d4ed8', type: 'bank' },
-  { name: 'BSN Bank', icon: '🟦', color: '#0d9488', type: 'bank' },
-  { name: 'GXBank (Digital)', icon: '🟣', color: '#7c3aed', type: 'bank' },
-  { name: 'Boost Bank', icon: '🚀', color: '#f43f5e', type: 'bank' },
-  { name: 'AEON Bank', icon: '🛍️', color: '#a21caf', type: 'bank' },
-  { name: 'Affin Bank', icon: '🔴', color: '#1e3a8a', type: 'bank' },
-  { name: 'Alliance Bank', icon: '🔵', color: '#2563eb', type: 'bank' },
-  { name: 'UOB Malaysia', icon: '🌐', color: '#1e40af', type: 'bank' },
-  { name: 'OCBC Malaysia', icon: '⛵', color: '#ef4444', type: 'bank' },
-  { name: 'HSBC Malaysia', icon: '🔺', color: '#e11d48', type: 'bank' },
-  { name: 'Standard Chartered', icon: '🌿', color: '#059669', type: 'bank' },
-  { name: 'Agrobank', icon: '🌾', color: '#16a34a', type: 'bank' }
-];
+/* ── Module: constants/categories.js ── */
+/**
+ * Expense & Income Categories Taxonomy
+ * Modularized from Pocket Winnie Core
+ */
 
-const MY_EWALLETS = [
-  { name: "Touch 'n Go eWallet", icon: '💙', color: '#0284c7', type: 'ewallet' },
-  { name: 'ShopeePay', icon: '🟠', color: '#ea580c', type: 'ewallet' },
-  { name: 'Boost eWallet', icon: '🔴', color: '#e11d48', type: 'ewallet' },
-  { name: 'MAE by Maybank', icon: '🟡', color: '#f59e0b', type: 'ewallet' },
-  { name: 'BigPay', icon: '💳', color: '#06b6d4', type: 'ewallet' },
-  { name: 'Setel (Petronas)', icon: '⛽', color: '#3b82f6', type: 'ewallet' },
-  { name: 'FavePay', icon: '💖', color: '#ec4899', type: 'ewallet' },
-  { name: 'Merchantrade Money', icon: '💱', color: '#8b5cf6', type: 'ewallet' },
-  { name: 'Lazada Wallet', icon: '💜', color: '#6366f1', type: 'ewallet' }
-];
-
-const MY_CUSTOM = [
-  { name: 'Cash Wallet', icon: '💵', color: '#10b981', type: 'cash' },
-  { name: 'Credit Card', icon: '💳', color: '#6366f1', type: 'credit' },
-  { name: 'Fixed Deposit / Savings', icon: '🏦', color: '#059669', type: 'savings' },
-  { name: 'Emergency Fund', icon: '🛡️', color: '#f59e0b', type: 'savings' }
-];
+function mergeDefaultCategories(saved, defaults){
+  if(!Array.isArray(saved) || !saved.length) return JSON.parse(JSON.stringify(defaults));
+  const res = [...saved];
+  const existingIds = new Set(res.map(c => c.id));
+  for(const d of defaults){
+    if(!existingIds.has(d.id)){
+      res.push({ ...d });
+    }
+  }
+  return res;
+}
 
 // ── DATA: CATEGORIES ───────────────────────────────────
 const DEFAULT_EXP_CATS = [
@@ -352,6 +292,92 @@ const ACC_ICON={bank:'🏦',cash:'💵',ewallet:'📱',credit:'💳',savings:'�
 const GOAL_ICONS=['🏠','✈️','🚗','📱','💻','🎓','💍','🏖️','🎮','🐷','🌟','🎯'];
 const CURRENCIES=['RM','$','€','£','¥','₹'];
 
+
+/* ── Module: constants/paymentMethods.js ── */
+/**
+ * Payment Methods & Bank Presets
+ * Modularized from Pocket Winnie Core
+ */
+
+// ── PAYMENT METHODS ───────────────────────────────────
+const PAYMENT_METHODS = [
+  { id: 'mae_scan', name: 'Maybank (MAE / QR)', icon: '🐯', bank: 'Maybank' },
+  { id: 'tng_qr', name: 'Touch \'n Go eWallet', icon: '💙', bank: 'TNG' },
+  { id: 'shopeepay', name: 'ShopeePay', icon: '🛍️', bank: 'Shopee' },
+  { id: 'cimb', name: 'CIMB Bank (Octo)', icon: '🔴', bank: 'CIMB' },
+  { id: 'public_bank', name: 'Public Bank (PBe)', icon: '🏛️', bank: 'Public Bank' },
+  { id: 'rhb', name: 'RHB Bank', icon: '🔵', bank: 'RHB' },
+  { id: 'hlb', name: 'Hong Leong Bank', icon: '🏢', bank: 'Hong Leong' },
+  { id: 'ambank', name: 'AmBank', icon: '🟡', bank: 'AmBank' },
+  { id: 'bank_islam', name: 'Bank Islam', icon: '🕌', bank: 'Bank Islam' },
+  { id: 'bank_rakyat', name: 'Bank Rakyat', icon: '🔷', bank: 'Bank Rakyat' },
+  { id: 'bsn', name: 'BSN Bank', icon: '🟦', bank: 'BSN' },
+  { id: 'gxbank', name: 'GXBank (Digital)', icon: '🟣', bank: 'GXBank' },
+  { id: 'boost_bank', name: 'Boost Bank / eWallet', icon: '🚀', bank: 'Boost' },
+  { id: 'aeon_bank', name: 'AEON Bank', icon: '🛍️', bank: 'AEON' },
+  { id: 'affin', name: 'Affin Bank', icon: '🔴', bank: 'Affin' },
+  { id: 'alliance', name: 'Alliance Bank', icon: '🔵', bank: 'Alliance' },
+  { id: 'uob', name: 'UOB Malaysia', icon: '🌐', bank: 'UOB' },
+  { id: 'ocbc', name: 'OCBC Malaysia', icon: '⛵', bank: 'OCBC' },
+  { id: 'hsbc', name: 'HSBC Malaysia', icon: '🔺', bank: 'HSBC' },
+  { id: 'scb', name: 'Standard Chartered', icon: '🌿', bank: 'Standard Chartered' },
+  { id: 'bigpay', name: 'BigPay', icon: '💳', bank: 'BigPay' },
+  { id: 'setel', name: 'Setel (Petronas)', icon: '⛽', bank: 'Setel' },
+  { id: 'credit_card', name: 'Credit Card', icon: '💳', bank: 'Card' },
+  { id: 'debit_card', name: 'Debit Card', icon: '💳', bank: 'Card' },
+  { id: 'fpx', name: 'Online Banking (FPX / DuitNow)', icon: '🌐', bank: 'FPX' },
+  { id: 'cash', name: 'Cash (现金)', icon: '💵', bank: 'Cash' },
+  { id: 'bnpl', name: 'SPayLater / Atome / BNPL', icon: '⏱️', bank: 'BNPL' }
+];
+
+// ── MALAYSIAN PRESETS (COMMERCIAL BANKS & WALLETS) ────
+const MY_BANKS = [
+  { name: 'Maybank (MAE)', icon: '🐯', color: '#ffc800', type: 'bank' },
+  { name: 'CIMB Bank', icon: '🔴', color: '#dc2626', type: 'bank' },
+  { name: 'Public Bank', icon: '🏛️', color: '#b91c1c', type: 'bank' },
+  { name: 'RHB Bank', icon: '🔵', color: '#0284c7', type: 'bank' },
+  { name: 'Hong Leong Bank', icon: '🏢', color: '#be123c', type: 'bank' },
+  { name: 'AmBank', icon: '🟡', color: '#e11d48', type: 'bank' },
+  { name: 'Bank Rakyat', icon: '🔷', color: '#1d4ed8', type: 'bank' },
+  { name: 'BSN Bank', icon: '🟦', color: '#0d9488', type: 'bank' },
+  { name: 'GXBank (Digital)', icon: '🟣', color: '#7c3aed', type: 'bank' },
+  { name: 'Boost Bank', icon: '🚀', color: '#f43f5e', type: 'bank' },
+  { name: 'AEON Bank', icon: '🛍️', color: '#a21caf', type: 'bank' },
+  { name: 'Affin Bank', icon: '🔴', color: '#1e3a8a', type: 'bank' },
+  { name: 'Alliance Bank', icon: '🔵', color: '#2563eb', type: 'bank' },
+  { name: 'UOB Malaysia', icon: '🌐', color: '#1e40af', type: 'bank' },
+  { name: 'OCBC Malaysia', icon: '⛵', color: '#ef4444', type: 'bank' },
+  { name: 'HSBC Malaysia', icon: '🔺', color: '#e11d48', type: 'bank' },
+  { name: 'Standard Chartered', icon: '🌿', color: '#059669', type: 'bank' },
+  { name: 'Agrobank', icon: '🌾', color: '#16a34a', type: 'bank' }
+];
+
+const MY_EWALLETS = [
+  { name: "Touch 'n Go eWallet", icon: '💙', color: '#0284c7', type: 'ewallet' },
+  { name: 'ShopeePay', icon: '🟠', color: '#ea580c', type: 'ewallet' },
+  { name: 'Boost eWallet', icon: '🔴', color: '#e11d48', type: 'ewallet' },
+  { name: 'MAE by Maybank', icon: '🟡', color: '#f59e0b', type: 'ewallet' },
+  { name: 'BigPay', icon: '💳', color: '#06b6d4', type: 'ewallet' },
+  { name: 'Setel (Petronas)', icon: '⛽', color: '#3b82f6', type: 'ewallet' },
+  { name: 'FavePay', icon: '💖', color: '#ec4899', type: 'ewallet' },
+  { name: 'Merchantrade Money', icon: '💱', color: '#8b5cf6', type: 'ewallet' },
+  { name: 'Lazada Wallet', icon: '💜', color: '#6366f1', type: 'ewallet' }
+];
+
+const MY_CUSTOM = [
+  { name: 'Cash Wallet', icon: '💵', color: '#10b981', type: 'cash' },
+  { name: 'Credit Card', icon: '💳', color: '#6366f1', type: 'credit' },
+  { name: 'Fixed Deposit / Savings', icon: '🏦', color: '#059669', type: 'savings' },
+  { name: 'Emergency Fund', icon: '🛡️', color: '#f59e0b', type: 'savings' }
+];
+
+
+/* ── Module: constants/presets.js ── */
+/**
+ * Default Accounts & Quick Presets
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── DEFAULT MALAYSIAN ACCOUNTS ─────────────────────────
 const DEFAULT_MY_ACCOUNTS = [
   {id:'default',name:'Wallet',type:'cash',icon:'🍯',color:'#f59e0b',openingBalance:0}
@@ -365,6 +391,13 @@ const DEFAULT_QUICK_PRESETS = [
   {icon:'🛒', name:'Groceries', amount:30, category:'groceries'},
   {icon:'🅿️', name:'Parking', amount:5, category:'toll_parking'}
 ];
+
+
+/* ── Module: constants/i18n.js ── */
+/**
+ * i18n Multi-Language Translation Dictionary
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 🌐 MULTI-LANGUAGE (i18n) TRANSLATION DICTIONARY ──
 const MONTH_NAMES_ZH = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
@@ -1151,6 +1184,13 @@ function applyLanguage(){
   updateGeminiStatusUI();
 }
 
+
+/* ── Module: core/state.js ── */
+/**
+ * Reactive State Store (STATE & S)
+ * Modularized from Pocket Winnie Core
+ */
+
 /* ═══════════════════════════════════════════════════════════════════
    MAIN STATE STORE (STATE & BACKWARD-COMPATIBLE S ALIAS)
    ═══════════════════════════════════════════════════════════════════ */
@@ -1204,6 +1244,13 @@ let showAllTxSubCats = false;
 let selRecType='expense', selDebtDir='owe', selGoalIcon=GOAL_ICONS[0];
 let txFilter='all', photoData=null, currentOcrItems=[], currentPresetTab='banks', anaBreakdownMode='category';
 let editingTxId = null;
+
+
+/* ── Module: utils/formatters.js ── */
+/**
+ * Formatting & Calculation Utilities
+ * Modularized from Pocket Winnie Core
+ */
 
 /* ═══════════════════════════════════════════════════════════════════
    5. UTILITIES (FORMATTERS, CALCULATORS, AI PARSING, I18N)
@@ -1311,7 +1358,7 @@ const normalizeDateStr = (rawDate, enforceCurrentYearIfPast = false) => {
     const parsedM = parseInt(m, 10);
     const parsedD = parseInt(d, 10);
     if(parsedM >= 1 && parsedM <= 12 && parsedD >= 1 && parsedD <= 31){
-      if(enforceCurrentYearIfPast && parsedY < 2000){
+      if(enforceCurrentYearIfPast && parsedY < curYear){
         y = String(curYear);
       }
       return `${y}-${String(parsedM).padStart(2, '0')}-${String(parsedD).padStart(2, '0')}`;
@@ -1464,6 +1511,24 @@ function normalizeGeminiReceiptOutput(data){
   const taxReliefAmount = parseNumericAmount(data.taxReliefAmount || amount);
   const taxReliefReason = String(data.taxReliefReason || data.taxReason || '').trim();
 
+  // ── SST Reconciliation: prevent double-counting ──
+  // If amount already includes taxes (common on Malaysian receipts where grand total = subtotal + SST + svc + rounding),
+  // mark taxes as "included in amount" so analytics won't add them again.
+  const itemsTotal = items.reduce((s, it) => s + ((Number(it.price) || 0) * (it.qty || 1)), 0);
+  const taxesSum = sstAmount + serviceChargeAmount + roundingAmount;
+  let taxIncludedInAmount = false;
+  if(amount > 0 && taxesSum > 0){
+    const withTaxes = itemsTotal + taxesSum;
+    const diffWithTax = Math.abs(withTaxes - amount);
+    const diffWithoutTax = Math.abs(itemsTotal - amount);
+    // If amount ≈ items sum (not items+taxes), then amount is the subtotal and taxes are extra → no issue
+    // If amount ≈ items+taxes (or amount < items+taxes), then amount already includes tax → flag it
+    if(diffWithoutTax > 0.10 && diffWithTax > diffWithoutTax){
+      // amount already includes taxes — mark so analytics won't double-count
+      taxIncludedInAmount = true;
+    }
+  }
+
   return {
     ...data,
     detectedType: data.detectedType || 'receipt',
@@ -1481,6 +1546,7 @@ function normalizeGeminiReceiptOutput(data){
     serviceChargePct: serviceChargePct,
     serviceChargeAmount: serviceChargeAmount,
     roundingAmount: roundingAmount,
+    taxIncludedInAmount: taxIncludedInAmount,
     taxesCollectedSummary: taxesCollectedSummary,
     taxReliefCat: taxReliefCat,
     taxReliefAmount: taxReliefAmount,
@@ -1629,6 +1695,13 @@ const catInfo = (type, id) => {
   }
   return { id: id || 'other', name: id === 'other' ? t('cat_other', 'Other') : (id || 'Other'), icon: '📦' };
 };
+
+
+/* ── Module: core/persistence.js ── */
+/**
+ * Local & Server Persistence Engine
+ * Modularized from Pocket Winnie Core
+ */
 
 // The companion Node server provides /api/state only when the app is run on
 // this computer. Netlify deploys this project as a static site, so calling the
@@ -1811,6 +1884,13 @@ function toast(msg,ms=2400){
   t._t=setTimeout(()=>t.classList.add('hidden'),ms);
 }
 
+
+/* ── Module: ui/theme.js ── */
+/**
+ * Theme Management (Light / Dark / Sakura)
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── THEME (WINNIE THE POOH & HUNDRED ACRE WOOD) ────────
 function applyTheme(){
   const theme = S.theme || 'light';
@@ -1847,6 +1927,13 @@ function toggleTheme(){
   applyTheme();
   save();
 }
+
+
+/* ── Module: ui/wallpaper.js ── */
+/**
+ * Cute Wallpaper Studio & Presets
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 🎨 CUTE ONLINE WALLPAPER & BACKGROUND STUDIO ──────
 const CUTE_WALLPAPERS = [
@@ -2041,6 +2128,13 @@ function toggleCustomWpDropdown(){
   }
 }
 
+
+/* ── Module: core/router.js ── */
+/**
+ * Router (go) & FAB Speed Dial
+ * Modularized from Pocket Winnie Core
+ */
+
 /* ═══════════════════════════════════════════════════════════════════
    4. EVENT HANDLERS (USER ACTIONS, MODALS, GESTURES)
    ═══════════════════════════════════════════════════════════════════ */
@@ -2088,6 +2182,13 @@ function go(page){
 let fabOpen=false;
 function toggleFab(){ fabOpen=!fabOpen; el('overlay').classList.toggle('on',fabOpen); el('fab-menu').classList.toggle('on',fabOpen); }
 function closeFab(){ fabOpen=false; el('overlay').classList.remove('on'); el('fab-menu').classList.remove('on'); }
+
+
+/* ── Module: core/modal.js ── */
+/**
+ * Modal Dialog Manager
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── MODALS ─────────────────────────────────────────────
 function openModal(id){ const m = el(id); if(m) m.classList.remove('hidden'); applyLanguage(); }
@@ -2138,6 +2239,13 @@ function inMonth(tx, m, y){
   const txMonth = parseInt(parts[1], 10) - 1;
   return txMonth === m && txYear === y;
 }
+
+
+/* ── Module: features/transactions/accounts.js ── */
+/**
+ * Account Balances & Calculations
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── ACCOUNTS & BALANCES ────────────────────────────────
 // Transfers are movements between the user's own accounts. They affect the
@@ -2223,6 +2331,13 @@ function resolveAccountIdFromPayment(paymentStr, fallbackAccId){
   return 'default';
 }
 
+
+/* ── Module: features/recurring/recurring.js ── */
+/**
+ * Recurring Engine
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── RECURRING ──────────────────────────────────────────
 function nextDue(from,freq){
   const d=new Date(from+'T00:00:00');
@@ -2235,6 +2350,13 @@ function nextDue(from,freq){
 function applyRecurring() {}
 
 function confirmRecurring(id) {}
+
+
+/* ── Module: features/analytics/healthScore.js ── */
+/**
+ * Financial Health Score & Habit Alerts
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── HEALTH SCORE ───────────────────────────────────────
 function calcHealth(){
@@ -2499,6 +2621,13 @@ function buildInsights(){
 
   return ins;
 }
+
+
+/* ── Module: features/transactions/categories.js ── */
+/**
+ * Category Picker & Manager Logic
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── CATEGORY PICKER & MANAGER LOGIC ───────────────────
 let curCatMgrType = 'expense';
@@ -2956,6 +3085,13 @@ function refreshAllCategoryPickers(){
   renderRecurring();
 }
 
+
+/* ── Module: features/transactions/homeBalance.js ── */
+/**
+ * Home Balance & Month Navigation
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── RENDER: BALANCE & MONTHLY NAVIGATION ───────────────
 let homeActiveYear = new Date().getFullYear();
 let homeActiveMonth = new Date().getMonth(); // 0 = Jan, 8 = Sep
@@ -3037,6 +3173,13 @@ function renderBalance(){
   if(incEl) incEl.textContent = fmt(totalIncome);
 }
 // ── ACCOUNTS (REMOVED — stubs cleaned up) ──
+
+
+/* ── Module: features/transactions/quickPresets.js ── */
+/**
+ * Quick Presets Management
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── RENDER & MANAGE: QUICK PRESETS (HOME) ─────────────
 const PRESET_ICONS = ['🍜','☕','⛽','🚗','🛒','🅿️','🍔','🎬','💊','🥪','🧋','🏸','🎮','📚','🧺','👕','✈️','⚡','🎁','🍿','🍕','🍣','🥤','🐱','🐾'];
@@ -3221,6 +3364,13 @@ function quickLogExpense(index){
   }
 }
 
+
+/* ── Module: features/analytics/renderHealth.js ── */
+/**
+ * Health Score UI & Habit Alerts
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── RENDER: HEALTH ─────────────────────────────────────
 function renderHealth(){
   const hNum = el('h-score-num');
@@ -3319,6 +3469,13 @@ function getTxInstantAiAlert(tx){
   return null;
 }
 
+
+/* ── Module: ui/alerts.js ── */
+/**
+ * Floating AI Warning Banners
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── FLOATING AI WARNING BANNER QUEUE (WITH TOUCH SWIPE) ─────────────────
 let activeAiAlerts = [];
 let currentAiAlertIdx = 0;
@@ -3402,6 +3559,13 @@ function renderFloatingAiAlert(){
   });
 }
 
+
+/* ── Module: features/reminders/dueSoon.js ── */
+/**
+ * Due Soon Reminders
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── RENDER: DUE SOON ───────────────────────────────────
 function renderDueSoon(){
   const now=new Date(), t=today();
@@ -3454,6 +3618,13 @@ function renderDueSoon(){
     list.appendChild(div);
   });
 }
+
+
+/* ── Module: features/transactions/recentTx.js ── */
+/**
+ * Recent Transactions List & Swipe Gestures
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── RENDER: RECENT TX (WITH SWIPE TO DELETE) ───────────
 function renderRecentTx(){
@@ -4186,6 +4357,13 @@ function deleteTx(id, skipConfirm = false){
   return false;
 }
 
+
+/* ── Module: features/calendar/calendarState.js ── */
+/**
+ * Calendar & Activity State
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── CALENDAR & ACTIVITY STATE ─────────────────────────
 let calCurrentYear = new Date().getFullYear();
 let calCurrentMonth = new Date().getMonth();
@@ -4445,6 +4623,13 @@ function renderCalDayTransactions(){
     });
   }
 }
+
+
+/* ── Module: features/calendar/calendarActions.js ── */
+/**
+ * Calendar Day Management
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 📅 CALENDAR DAY MANAGEMENT & AUTOMATION ────────────
 let calModalDateStr = today();
@@ -4734,6 +4919,13 @@ function saveCalDayAutomation(){
   closeModal('cal-day-modal');
 }
 
+
+/* ── Module: features/transactions/fullTx.js ── */
+/**
+ * Full Transactions List & Search
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── RENDER: FULL TX ────────────────────────────────────
 function setFilter(btn, f){
   document.querySelectorAll('#tx-list-container .chips .chip').forEach(c => c.classList.remove('on'));
@@ -4850,6 +5042,13 @@ function renderFullTx(){
     groups[date].forEach(tx=>list.appendChild(makeTxEl(tx)));
   });
 }
+
+
+/* ── Module: features/annual/annualSpending.js ── */
+/**
+ * Annual & By-Year Spending Breakdown
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 📊 ANNUAL & BY-YEAR SPENDING SYSTEM ───────────────
 let annualInspectedYear = new Date().getFullYear();
@@ -5070,23 +5269,13 @@ function fmtDate(str){
   return d.toLocaleDateString(localeStr, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-// ── RENDER: BUDGET PREVIEW ─────────────────────────────
-function renderBudPreview(){
-  const wrap=el('bud-preview'); if(!wrap) return;
-  wrap.innerHTML='';
-  if(!S.budgets.length){wrap.innerHTML='<p style="font-size:12px;color:var(--dim);text-align:center;padding:8px">No budgets set</p>';return;}
-  const now=new Date();
-  S.budgets.slice(0,3).forEach(b=>{
-    const cat=catInfo('expense',b.category);
-    const sp=S.transactions.filter(t=>t.type==='expense'&&t.category===b.category&&inMonth(t,now.getMonth(),now.getFullYear())).reduce((s,t)=>s+Number(t.amount)||0,0);
-    const limit=Number(b.limit)||1;
-    const pct=Math.min((sp/limit)*100,100);
-    const col=pct>=100?'#ef4444':pct>=80?'#f59e0b':'#10b981';
-    const d=document.createElement('div'); d.className='bud-item';
-    d.innerHTML='<div class="bud-hdr"><div class="bud-name"><span>'+cat.icon+'</span>'+cat.name+'</div><div class="bud-amts">'+fmt(sp)+' / <strong>'+fmt(b.limit)+'</strong></div></div><div class="track"><div class="fill" style="width:'+pct+'%;background:'+col+'"></div></div>';
-    wrap.appendChild(d);
-  });
-}
+
+/* ── Module: features/budgets/budgets.js ── */
+/**
+ * Budgets Page & Available Spending Pool
+ * Modularized from Pocket Winnie Core
+ */
+
 
 function getMonthlyBudgetTotal(){
   if(typeof S !== 'undefined' && S && S.monthlyBudget !== undefined && Number(S.monthlyBudget) > 0){
@@ -5298,6 +5487,13 @@ function delBudget(cat){
   }
 }
 
+
+/* ── Module: features/goals/goals.js ── */
+/**
+ * Savings Goals UI
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── RENDER: GOALS ──────────────────────────────────────
 function renderGoals(){
   const list=el('goals-list'), empty=el('empty-goals');
@@ -5330,6 +5526,13 @@ function renderGoals(){
 function delGoal(id){
   if(confirm('Delete goal?')){S.goals=S.goals.filter(g=>g.id!==id);save();renderGoals();toast('Goal deleted');}
 }
+
+
+/* ── Module: features/reminders/reminders.js ── */
+/**
+ * Reminders & Recurring UI
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── RENDER: REMINDERS ──────────────────────────────────
 function renderReminders(){
@@ -5397,6 +5600,13 @@ function delReminder(id){S.reminders=S.reminders.filter(r=>r.id!==id);save();ren
 function renderRecurring() {}
 function delRec(id){S.recurring=S.recurring.filter(r=>r.id!==id);save();renderRecurring();toast('Recurring removed');}
 
+
+/* ── Module: features/debts/debts.js ── */
+/**
+ * Debts & IOUs UI
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── RENDER: DEBTS ──────────────────────────────────────
 function renderDebts(){
   const list=el('debts-list'), empty=el('empty-debts');
@@ -5449,6 +5659,13 @@ function makeDebtEl(d){
 }
 function settleDebt(id){const d=S.debts.find(x=>x.id===id);if(d){d.settled=true;d.remaining=0;save();renderDebts();toast('Debt settled! 🎉');}}
 function delDebt(id){if(confirm('Remove debt?')){S.debts=S.debts.filter(x=>x.id!==id);save();renderDebts();toast('Debt removed');}}
+
+
+/* ── Module: features/transactions/accountsPage.js ── */
+/**
+ * Accounts Page (Banks & Wallets)
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── RENDER: ACCOUNTS PAGE (MALAYSIAN BANKS & WALLETS) ──
 function renderAccounts(){}
@@ -5538,6 +5755,13 @@ function selectPaymentMethod(name){
   if(el('tx-paymethod-val')) el('tx-paymethod-val').value = canonical;
   renderPaymentMethods();
 }
+
+
+/* ── Module: features/transactions/addTx.js ── */
+/**
+ * Add & Edit Transaction Forms
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── ADD TRANSACTION (INCOME / EXPENSE) ─────────────────
 const currentTimeStr = () => {
@@ -5638,6 +5862,30 @@ function saveTx(){
   const advancePerson = el('tx-advance-person') ? el('tx-advance-person').value.trim() : '';
   const advanceStatus = el('tx-advance-status') ? el('tx-advance-status').value : 'pending';
 
+    // ── Duplicate Detection: warn if similar tx exists within ±2 days ──
+  if(!editingTxId){
+    const dupWindow = 2 * 86400000;
+    const txDate = new Date(date || today()).getTime();
+    const similar = S.transactions.find(t => {
+      if(t.type !== txType) return false;
+      const tAmt = Number(t.amount) || 0;
+      if(Math.abs(tAmt - amount) > 0.05) return false;
+      const tDate = new Date(t.date).getTime();
+      if(Math.abs(tDate - txDate) > dupWindow) return false;
+      const tDesc = (t.desc || '').toLowerCase();
+      const newDesc = desc.toLowerCase();
+      if(tDesc === newDesc || tDesc.includes(newDesc) || newDesc.includes(tDesc)) return true;
+      return false;
+    });
+    if(similar){
+      const isZhDup = (typeof S !== 'undefined' && S && S.lang === 'zh');
+      const dupMsg = isZhDup
+        ? '⚠️ 发现相似记录:\n' + similar.desc + ' (' + fmt(similar.amount) + ') - ' + similar.date + '\n确定要重复保存吗？'
+        : '⚠️ Similar transaction found:\n' + similar.desc + ' (' + fmt(similar.amount) + ') on ' + similar.date + '\nSave duplicate anyway?';
+      if(!confirm(dupMsg)) return;
+    }
+  }
+
   if(!amount || amount <= 0){ toast('⚠️ Enter a valid amount'); return; }
   if(!desc){ toast('⚠️ Add a description'); return; }
   if(!selCat){ toast('⚠️ Pick a category'); return; }
@@ -5696,8 +5944,18 @@ function saveTx(){
     isEditingFromUpload = false;
     if(el('tx-from-upload-bar')) el('tx-from-upload-bar').classList.add('hidden');
   }
-  // Do not jump to the transaction's month automatically, 
-  // as it confuses users into thinking their current month's transactions are lost.
+  // Automatically jump to the transaction's month so the user can immediately see their new entry
+  if(date){
+    const parts = date.split('-');
+    if(parts.length >= 2){
+      const savedY = parseInt(parts[0], 10);
+      const savedM = parseInt(parts[1], 10) - 1;
+      if(!isNaN(savedY) && !isNaN(savedM) && (savedY !== homeActiveYear || savedM !== homeActiveMonth)){
+        homeActiveYear = savedY;
+        homeActiveMonth = savedM;
+      }
+    }
+  }
 
   save();
   renderAll();
@@ -5832,6 +6090,13 @@ async function handlePhoto(inp){
     if(scanBtn) scanBtn.style.display = 'flex';
   }
 }
+
+
+/* ── Module: services/gemini.js ── */
+/**
+ * Google Gemini Vision AI Receipt Analyzer
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 🤖 GOOGLE GEMINI VISION AI RECEIPT ANALYZER ───────
 // Google retires and renames Gemini models regularly.  Do not rely on one
@@ -6135,6 +6400,13 @@ async function reScanReceiptWithGemini(){
   }
 }
 
+
+/* ── Module: features/transactions/universalUpload.js ── */
+/**
+ * Universal AI Upload & Expenses Hub
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 📸 UNIVERSAL UNIFIED AI UPLOAD & EXPENSES HUB ───────
 let uniCurrentMode = 'expense'; // 'expense' | 'splitter' | 'transfer' | 'tax' | 'recurring'
 let uniCustomDate = '';
@@ -6242,6 +6514,13 @@ function setUniversalMode(mode, reRender = true){
   if(reRender) renderUniversalPreview();
 }
 
+
+
+/* ── Module: features/transactions/autoDetect.js ── */
+/**
+ * Smart AI Auto-Detection Engine
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 🧠 SMART AI AUTO-DETECTION ENGINE (CATEGORIES & MALAYSIAN BANKS) ──
 function smartAutoDetectCategoryAndPayment(text){
@@ -7496,6 +7775,13 @@ function handleSplitterModalClose(){
   }
 }
 
+
+/* ── Module: features/budgets/aiBudget.js ── */
+/**
+ * AI Auto-Budget Generator (50/30/20 Optimizer)
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 💬 ASK AI FINANCIAL ADVISOR (REMOVED) ────────────────
 function openAiAdvisorModal(){}
 function sendAiAdvisorPrompt(){}
@@ -7754,6 +8040,13 @@ function applyReceiptStructuredData(rawInput, source = 'AI'){
   return true;
 }
 
+
+/* ── Module: features/transactions/smartReceipt.js ── */
+/**
+ * Smart Receipt Uploader & Duplicate Last Tx
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 📁 SMART RECEIPT UPLOADER ──────────────────────────
 async function startOCR(){
   openUniversalUpload('expense');
@@ -7841,6 +8134,13 @@ function duplicateLastTx(){
   toast(`📋 Duplicated: "${duplicated.desc}" (${fmt(duplicated.amount)})`);
 }
 
+
+/* ── Module: services/gsheet.js ── */
+/**
+ * Google Sheets Cloud Backup
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 📊 GOOGLE SHEETS CLOUD BACKUP (APPS SCRIPT) ───────
 function openGSheetModal(){
   el('gsheet-url-inp').value = S.gsheetUrl || '';
@@ -7908,6 +8208,13 @@ async function syncGSheet(){
   }
 }
 
+
+/* ── Module: features/budgets/budgetCrud.js ── */
+/**
+ * Budget CRUD Operations
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── BUDGET (OVERALL MONTHLY SPENDING POOL) ─────────────
 function setBudgetQuickAmt(amt){
   const inp = el('bud-limit') || el('bud-amount');
@@ -7941,6 +8248,13 @@ function saveBudget(){
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   toast(isZh ? `✅ 已设置月度总预算: ${fmt(amount)}` : `✅ Monthly spending budget set: ${fmt(amount)}!`);
 }
+
+
+/* ── Module: features/goals/goalCrud.js ── */
+/**
+ * Goal CRUD Operations
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── GOALS ──────────────────────────────────────────────
 function openGoalModal(){
@@ -7991,6 +8305,13 @@ function saveDeposit(){
   if(g.saved >= g.target) setTimeout(() => toast('🎉 Goal "' + g.name + '" reached!'), 600);
 }
 
+
+/* ── Module: features/reminders/reminderCrud.js ── */
+/**
+ * Reminder CRUD Operations
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── REMINDERS ──────────────────────────────────────────
 function openReminderModal(){
   selRemCat = null;
@@ -8010,6 +8331,13 @@ function saveReminder(){
   S.reminders.push({ id: uid('item'), name, amount, date, category: selRemCat || 'bills', paid: false, createdAt: new Date().toISOString() });
   save(); renderReminders(); renderDueSoon(); closeModal('reminder-modal'); toast('🔔 Reminder set!');
 }
+
+
+/* ── Module: features/recurring/recurringCrud.js ── */
+/**
+ * Recurring CRUD Operations
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── RECURRING ──────────────────────────────────────────
 function openRecModal(){
@@ -8038,6 +8366,13 @@ function saveRecurring(){
   S.recurring.push({ id: uid('item'), type: selRecType, desc, amount, category: selRecCat, freq, nextDue: start, paymentMethod: 'Auto-Debit', createdAt: new Date().toISOString() });
   applyRecurring(); renderAll(); closeModal('rec-modal'); toast('🔁 Recurring saved!');
 }
+
+
+/* ── Module: features/debts/debtCrud.js ── */
+/**
+ * Debt CRUD Operations
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── DEBTS ──────────────────────────────────────────────
 function openDebtModal(){
@@ -8068,6 +8403,13 @@ function saveDebt(){
 }
 
 // ── TRANSFERS & BALANCING (REMOVED) ───
+
+
+/* ── Module: features/periodTracker/periodCore.js ── */
+/**
+ * Period Tracker Core & Symptoms
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 🌸 GIRL PERIOD & HEALTH CARE TRACKER ENGINE ───────────
 // Items bought related to period (sanitary, pain relief, warming supplies).
@@ -8822,6 +9164,13 @@ async function executeAiAutonomousTrack(){
   toast(isZh ? `🎉 AI 自主追踪完成！已更新周期状态${expenseAmt > 0 ? '并记一笔 RM '+expenseAmt.toFixed(2)+' 开销' : ''}` : `🎉 AI Auto-tracked! Cycle updated${expenseAmt > 0 ? ' & logged RM '+expenseAmt.toFixed(2) : ''}`);
 }
 
+
+/* ── Module: features/periodTracker/periodCalendar.js ── */
+/**
+ * Period Calendar Grid & Menstrual Cycle
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 📅 PERIOD CALENDAR METHOD GRID ENGINE ───────────────
 let periodCalInspectedDate = new Date();
 let selectedPeriodInspectorDateStr = today();
@@ -9473,6 +9822,13 @@ function savePeriodExpenseForSelectedDate(){
     console.warn('Period expense saved but UI refresh failed:', e);
   }
 }
+
+
+/* ── Module: features/analytics/analyticsCore.js ── */
+/**
+ * Analytics Engine & Visual Charts
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── ANALYTICS ENGINE (COMPREHENSIVE & MULTI-DIMENSIONAL) ──
 let anaInspectedDate = new Date();
@@ -11061,6 +11417,13 @@ Keep the tone encouraging, professional, and ultra-practical. Max 250 words.`;
   }
 }
 
+
+/* ── Module: features/profile/profile.js ── */
+/**
+ * Profile Settings & Backup Engine
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── RENDER: PROFILE ────────────────────────────────────
 function renderProfile(){
   const initials=S.userName.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)||'PW';
@@ -11266,6 +11629,13 @@ function purgePhotoCache(){
   toast(S.lang === 'zh' ? '✨ 小票照片已清空，系统不保留收据图片' : '✨ Receipt photos cleared; photos are never stored');
 }
 
+
+/* ── Module: services/pdfGenerator.js ── */
+/**
+ * PDF Statement Generator
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 📄 PDF MONTHLY STATEMENT GENERATOR (JSPDF + AUTOTABLE) ──
 function exportMonthlyPDF(){
   if(!window.jspdf || !window.jspdf.jsPDF){
@@ -11339,6 +11709,13 @@ function exportMonthlyPDF(){
   toast('📄 PDF Statement downloaded!');
 }
 
+
+/* ── Module: features/analytics/healthMatrix.js ── */
+/**
+ * 50/30/20 Financial Health Matrix
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── ⚖️ 50 / 30 / 20 FINANCIAL HEALTH MATRIX ─────────────
 const NEEDS_CAT_IDS = ['rent_housing', 'bills', 'groceries', 'fuel', 'toll_parking', 'health', 'education'];
 const WANTS_CAT_IDS = ['food', 'shopping', 'entertainment', 'donation', 'other'];
@@ -11401,6 +11778,13 @@ function render50_30_20Matrix(txs, totalInc, totalExp){
   if(gradeEl) gradeEl.textContent = grade;
   if(verdictText) verdictText.textContent = advice;
 }
+
+
+/* ── Module: features/benchmarks/benchmarks.js ── */
+/**
+ * Malaysian Market Benchmark & CPI Price Reference
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 🇲🇾 OFFICIAL MALAYSIAN MARKET BENCHMARK & CPI PRICE REFERENCE ──────────
 const MY_MARKET_BENCHMARKS = [
@@ -11930,6 +12314,13 @@ Provide a concise, razor-sharp Personal Inflation Diagnosis in ${isZh ? 'Simplif
   }
 }
 
+
+/* ── Module: features/benchmarks/priceComparator.js ── */
+/**
+ * AI Restaurant & Brand Price Comparator
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 🏷️ AI RESTAURANT & BRAND PRICE COMPARATOR ───────────────
 function openAiPriceCompareModal(){
   openModal('ai-price-compare-modal');
@@ -12150,6 +12541,13 @@ Keep concise (under 200 words), practical, and easy to read.`;
   }
 }
 
+
+/* ── Module: features/petrol/petrolTracker.js ── */
+/**
+ * Malaysia Live Petrol Tracker & Tank Calculator
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── ⛽ MALAYSIA LIVE PETROL TRACKER & TANK CALCULATOR ───
 let currentFuelType = 'ron95';
 let petrolPrices = {
@@ -12189,12 +12587,104 @@ async function fetchLivePetrolPrices(){
 }
 
 function openPetrolModal(){
+  const content = el('petrol-rates-content');
+  if(content){
+    renderPetrolModalUI(content);
+  }
   fetchLivePetrolPrices();
-  renderCarPresets();
-  const inp = el('petrol-liters-inp');
-  if(inp && !inp.value) inp.value = 36;
-  calcPetrolCost();
+  renderPetrolHistory();
   openModal('petrol-modal');
+}
+
+function renderPetrolModalUI(container){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const p95 = petrolPrices.ron95 || 2.05;
+  const p97 = petrolPrices.ron97 || 3.19;
+  const pD = petrolPrices.diesel || 2.95;
+
+  container.innerHTML = `
+    <!-- Fuel Type Selection Grid -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+      <div id="pt-card-ron95" onclick="selectFuelType('ron95')" style="background:var(--bg2);border:2px solid ${currentFuelType==='ron95'?'var(--amber)':'var(--border)'};border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s">
+        <div style="font-size:11px;color:var(--muted);font-weight:700">RON95</div>
+        <div id="pt-price-ron95" style="font-size:16px;font-weight:900;color:var(--amber);margin:3px 0">RM ${p95.toFixed(2)}</div>
+        <div style="font-size:9.5px;color:var(--muted)">per liter</div>
+      </div>
+      <div id="pt-card-ron97" onclick="selectFuelType('ron97')" style="background:var(--bg2);border:2px solid ${currentFuelType==='ron97'?'var(--green)':'var(--border)'};border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s">
+        <div style="font-size:11px;color:var(--muted);font-weight:700">RON97</div>
+        <div id="pt-price-ron97" style="font-size:16px;font-weight:900;color:var(--green);margin:3px 0">RM ${p97.toFixed(2)}</div>
+        <div style="font-size:9.5px;color:var(--muted)">per liter</div>
+      </div>
+      <div id="pt-card-diesel" onclick="selectFuelType('diesel')" style="background:var(--bg2);border:2px solid ${currentFuelType==='diesel'?'#3b82f6':'var(--border)'};border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s">
+        <div style="font-size:11px;color:var(--muted);font-weight:700">Diesel</div>
+        <div id="pt-price-diesel" style="font-size:16px;font-weight:900;color:#3b82f6;margin:3px 0">RM ${pD.toFixed(2)}</div>
+        <div style="font-size:9.5px;color:var(--muted)">per liter</div>
+      </div>
+    </div>
+
+    <!-- Tank Calculator Box -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <span>🚗 ${isZh ? '车型油箱预设' : 'Car Tank Presets'}</span>
+        <span style="font-size:10.5px;color:var(--muted)">${isZh ? '轻点直接填入' : 'Tap to fill'}</span>
+      </div>
+      <div id="car-preset-chips" class="chips" style="gap:6px;margin-bottom:12px;flex-wrap:wrap"></div>
+
+      <!-- Liters Input & Quick Increment -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="flex:1">
+          <label style="font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:3px">${isZh ? '加油升数 (Liters)' : 'Fuel Liters'}</label>
+          <input type="number" id="petrol-liters-inp" class="form-input" value="36" step="0.5" min="1" max="150" oninput="calcPetrolCost()" style="font-size:14px;font-weight:800;padding:8px 12px;border-radius:12px;min-height:38px;background:var(--bg2)"/>
+        </div>
+        <div style="display:flex;gap:4px;align-self:flex-end">
+          <button type="button" class="chip" onclick="adjustPetrolLiters(-5)" style="padding:8px 10px;font-weight:800">-5L</button>
+          <button type="button" class="chip" onclick="adjustPetrolLiters(5)" style="padding:8px 10px;font-weight:800">+5L</button>
+        </div>
+      </div>
+
+      <!-- Cost Display -->
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg2);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+        <div>
+          <div style="font-size:11px;color:var(--muted);font-weight:700">${isZh ? '预计加油金额' : 'Estimated Cost'}</div>
+          <div id="petrol-calc-sub" style="font-size:10.5px;color:var(--muted);margin-top:2px">36.0 Litres of RON 95 @ RM 2.05/L</div>
+        </div>
+        <strong id="petrol-total-cost" style="font-size:22px;font-weight:900;color:var(--amber)">RM 73.80</strong>
+      </div>
+
+      <!-- Action Button: Pre-fill into Transaction -->
+      <button type="button" class="primary-btn" onclick="logPetrolExpense()" style="margin-bottom:0;padding:10px 14px;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000">
+        <span>⛽</span> <span>${isZh ? '记录这笔加油支出 (Log Expense)' : 'Log Petrol Expense'}</span>
+      </button>
+    </div>
+
+    <!-- Recent Petrol History Section -->
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:12.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px">
+          <span>⛽</span> <span>${isZh ? '过往加油账单明细' : 'Recent Petrol Refills'}</span>
+        </span>
+        <span id="petrol-month-total-badge" style="font-size:11px;font-weight:800;color:var(--amber);background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);padding:2px 8px;border-radius:10px">RM 0.00</span>
+      </div>
+      <div id="petrol-history-list" class="tx-list" style="max-height:220px;overflow-y:auto;gap:6px"></div>
+      <div id="petrol-history-empty" class="empty hidden" style="padding:14px 0">
+        <div class="empty-ico" style="font-size:22px">⛽</div>
+        <p style="font-size:11.5px">${isZh ? '暂无加油记录' : 'No petrol records yet'}</p>
+        <small style="font-size:10px">${isZh ? '扫描油站小票或使用上方按键快速记一笔！' : 'Scan a station receipt or tap Log Petrol above!'}</small>
+      </div>
+    </div>
+  `;
+
+  renderCarPresets();
+  calcPetrolCost();
+}
+
+function adjustPetrolLiters(delta){
+  const inp = el('petrol-liters-inp');
+  if(!inp) return;
+  let val = (parseFloat(inp.value) || 0) + delta;
+  if(val < 1) val = 1;
+  inp.value = val;
+  calcPetrolCost();
 }
 
 function renderCarPresets(){
@@ -12204,10 +12694,11 @@ function renderCarPresets(){
   CAR_TANK_PRESETS.forEach((preset, idx) => {
     const chip = document.createElement('button');
     chip.type = 'button';
-    chip.className = 'car-chip' + (idx === 0 ? ' on' : '');
-    chip.innerHTML = `<span>🚗</span><span>${preset.name}</span>`;
+    chip.className = 'chip' + (idx === 0 ? ' on' : '');
+    chip.style.cssText = 'font-size:10.5px;padding:3px 8px;cursor:pointer';
+    chip.innerHTML = `<span>🚗 ${preset.name}</span>`;
     chip.onclick = () => {
-      wrap.querySelectorAll('.car-chip').forEach(c => c.classList.remove('on'));
+      wrap.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
       chip.classList.add('on');
       const inp = el('petrol-liters-inp');
       if(inp) inp.value = preset.liters;
@@ -12219,15 +12710,20 @@ function renderCarPresets(){
 
 function selectFuelType(type){
   currentFuelType = type;
-  ['ron95', 'ron97', 'diesel'].forEach(t => {
-    const card = el(`pt-card-${t}`);
-    if(card) card.classList.toggle('on', t === type);
+  const cards = {
+    ron95: { id: 'pt-card-ron95', col: 'var(--amber)' },
+    ron97: { id: 'pt-card-ron97', col: 'var(--green)' },
+    diesel: { id: 'pt-card-diesel', col: '#3b82f6' }
+  };
+  Object.keys(cards).forEach(t => {
+    const c = el(cards[t].id);
+    if(c) c.style.borderColor = (t === type) ? cards[t].col : 'var(--border)';
   });
   calcPetrolCost();
 }
 
 function calcPetrolCost(){
-  const litersInp = el('petrol-liters-inp') || el('petrol-liters-val');
+  const litersInp = el('petrol-liters-inp');
   const liters = parseFloat(litersInp ? litersInp.value : 36) || 0;
   const rate = (petrolPrices && petrolPrices[currentFuelType]) ? petrolPrices[currentFuelType] : 2.05;
   const total = liters * rate;
@@ -12238,7 +12734,7 @@ function calcPetrolCost(){
 }
 
 function logPetrolExpense(){
-  const litersInp = el('petrol-liters-inp') || el('petrol-liters-val');
+  const litersInp = el('petrol-liters-inp');
   const liters = parseFloat(litersInp ? litersInp.value : 0) || 0;
   const rate = (petrolPrices && petrolPrices[currentFuelType]) ? petrolPrices[currentFuelType] : 2.05;
   const total = (liters * rate).toFixed(2);
@@ -12255,9 +12751,93 @@ function logPetrolExpense(){
   el('tx-desc').value = `Petrol (${fuelName})`;
   el('tx-note').value = `${liters.toFixed(1)}L ${fuelName} @ RM ${rate.toFixed(2)}/L`;
   selCat = 'fuel';
+  selSubCat = 'trans_petrol_fuel';
+  currentTxTags = ['petrol', 'fuel', currentFuelType];
+  if(typeof renderTxTagChips === 'function') renderTxTagChips();
   if(el('tx-cats')) buildCats('tx-cats', 'expense', id => selCat = id);
   toast(`⛽ Pre-filled ${liters}L ${fuelName} (RM ${total})!`);
 }
+
+function renderPetrolHistory(){
+  const list = el('petrol-history-list');
+  const empty = el('petrol-history-empty');
+  const badge = el('petrol-month-total-badge');
+  if(!list) return;
+  list.innerHTML = '';
+
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const txs = (S.transactions || []).filter(t => {
+    if(t.category === 'fuel') return true;
+    if(t.subCategory === 'trans_petrol_fuel') return true;
+    if(Array.isArray(t.tags) && t.tags.some(tg => /petrol|fuel|ron95|ron97|diesel|setel|petronas|shell|petron|caltex|bhp/i.test(tg))) return true;
+    if(/petrol|fuel|petronas|shell|petron|bhp|caltex/i.test(t.desc || '')) return true;
+    return false;
+  }).sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+
+  // Calculate current month petrol total
+  const now = new Date();
+  const curMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthTotal = txs.filter(t => (t.date || '').startsWith(curMonthKey))
+                       .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  if(badge){
+    badge.textContent = `${isZh ? '本月: ' : 'This month: '}${fmt(monthTotal)}`;
+  }
+
+  if(!txs.length){
+    if(empty) empty.classList.remove('hidden');
+    return;
+  }
+  if(empty) empty.classList.add('hidden');
+
+  txs.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'tx-item';
+    item.style.cssText = 'padding:9px 12px;border-radius:12px;background:var(--bg2);cursor:pointer;margin-bottom:4px';
+    item.onclick = () => {
+      closeModal('petrol-modal');
+      if(typeof openTxDetailModal === 'function') openTxDetailModal(t.id);
+    };
+
+    const stationIcon = /petronas/i.test(t.desc||'') ? '🟢' : /shell/i.test(t.desc||'') ? '🟡' : '⛽';
+    const noteText = t.note || (t.items && t.items[0]?.name) || '';
+    const literMatch = noteText.match(/(d+(?:.d+)?)s*L/i);
+    const literStr = literMatch ? `${literMatch[1]}L` : '';
+
+    item.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;flex:1">
+        <div style="font-size:20px">${stationIcon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px">
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.desc || 'Petrol')}</span>
+            ${literStr ? `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(245,158,11,.15);color:var(--amber);font-weight:800">${literStr}</span>` : ''}
+          </div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:2px;display:flex;gap:8px">
+            <span>${t.date}</span>
+            ${t.location ? `<span>· 📍 ${esc(t.location)}</span>` : ''}
+            ${t.paymentMethod ? `<span>· 💳 ${esc(t.paymentMethod)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13.5px;font-weight:900;color:var(--red)">-${fmt(t.amount)}</div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+window.openPetrolModal = openPetrolModal;
+window.calcPetrolCost = calcPetrolCost;
+window.selectFuelType = selectFuelType;
+window.adjustPetrolLiters = adjustPetrolLiters;
+window.logPetrolExpense = logPetrolExpense;
+
+
+/* ── Module: features/mealSplitter/mealSplitter.js ── */
+/**
+ * Malaysian Receipt Meal Splitter
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 🧾 AUTHENTIC MALAYSIAN RECEIPT MEAL SPLITTER ────────
 let splitMode = 'equal';
@@ -12881,6 +13461,13 @@ function logSplitUserShare(){
   toast(isZh ? `🍜 已填入您的分摊金额: RM ${share.toFixed(2)} (${cInfo?.name || targetCategory})！` : `🍜 Pre-filled your share: RM ${share.toFixed(2)} (${cInfo?.name || targetCategory})!`);
 }
 
+
+/* ── Module: features/mealSplitter/payLater.js ── */
+/**
+ * Meal Pay Later & Pending Meals
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 🕐 MEAL PAY LATER / PENDING MEALS ─────────────────
 function saveMealPayLater(){
   const calc = calcBillSplit();
@@ -13074,6 +13661,13 @@ function formatDateNice(dateStr){
   } catch(e){ return dateStr; }
 }
 
+
+/* ── Module: services/inflation.js ── */
+/**
+ * Malaysia Inflation & CPI Tracker
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 📊 MALAYSIA INFLATION & CPI TRACKER MODAL ─────────────
 function openInflationModal(){
   fetchMalaysiaInflationData();
@@ -13114,6 +13708,13 @@ function renderInflationComparison(){
     }
   }
 }
+
+
+/* ── Module: services/fxRates.js ── */
+/**
+ * Live Travel Currency Converter
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 💱 LIVE TRAVEL CURRENCY CONVERTER (FRANKFURTER OPEN API) ─
 let liveRates = {
@@ -13219,6 +13820,13 @@ function logConvertedExpense(){
   toast(`💱 Converted & pre-filled: RM ${rmVal}!`);
 }
 
+
+/* ── Module: services/biometric.js ── */
+/**
+ * Biometric Security App Lock
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 🔒 BIOMETRIC APP LOCK (WEBAUTHN API) ────────────────
 function toggleBiometricLock(){
   S.biometricLock = !S.biometricLock;
@@ -13248,6 +13856,13 @@ function checkBiometricOnLaunch(){
   }
 }
 
+
+/* ── Module: features/benchmarks/taxRelief.js ── */
+/**
+ * LHDN Tax Relief Tracker
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 🏷️ LHDN MALAYSIAN TAX RELIEF TRACKER ────────────────
 const LHDN_RELIEF_CAPS = [
   { id: 'lifestyle', name: 'Lifestyle & Tech (Books, PC, Phone, Internet)', icon: '📱', cap: 2500, cats: ['shopping', 'education'], keywords: ['laptop', 'pc', 'phone', 'computer', 'broadband', 'unifi', 'maxis', 'book', 'buku'] },
@@ -13258,6 +13873,13 @@ const LHDN_RELIEF_CAPS = [
 ];
 
 function renderTaxRelief() {}
+
+
+/* ── Module: utils/greeting.js ── */
+/**
+ * Greeting & Payday UI Stubs
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── GREETING ───────────────────────────────────────────
 function greeting(){
@@ -13277,6 +13899,13 @@ function renderPaydayCountdown(){
   if(card) card.style.display = 'none';
 }
 function updatePaydaySettings(){}
+
+
+/* ── Module: features/analytics/spendingPrediction.js ── */
+/**
+ * Spending Prediction
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── FEATURE 9: SPENDING PREDICTION ────────────────────
 function renderSpendingPrediction(){
@@ -13326,6 +13955,13 @@ function renderSpendingPrediction(){
   
   textEl.innerHTML = msg;
 }
+
+
+/* ── Module: features/analytics/weeklyReport.js ── */
+/**
+ * Weekly Spending Report
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── FEATURE 2: WEEKLY SPENDING REPORT ─────────────────
 function openWeeklyReportModal(){
@@ -13445,6 +14081,13 @@ function renderWeeklyReport(){
   }
 }
 
+
+/* ── Module: core/bootstrap.js ── */
+/**
+ * App Initialization & Setup
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── OVERRIDE RENDER ALL TO HOOK NEW FEATURES ──────────
 const originalRenderAll_F = (typeof renderAll === 'function') ? renderAll : function(){};
 renderAll = function(){
@@ -13549,10 +14192,10 @@ function showLocationSuggestion(chain, placeName){
   
   chip.style.display = 'flex';
   chip.innerHTML = `
-    <span style="font-size:20px">\${chain.icon}</span>
+    <span style="font-size:20px">${chain.icon}</span>
     <div style="flex:1">
-      <div style="font-size:12px;font-weight:800;color:var(--text)">📍 Near \${esc(placeName)}</div>
-      <div style="font-size:11px;color:var(--muted)">Tap to auto-fill: \${chain.desc} (\${chain.category})</div>
+      <div style="font-size:12px;font-weight:800;color:var(--text)">📍 Near ${esc(placeName)}</div>
+      <div style="font-size:11px;color:var(--muted)">Tap to auto-fill: ${chain.desc} (${chain.category})</div>
     </div>
     <span style="font-size:11px;color:var(--amber);font-weight:700">Use ›</span>
   `;
@@ -13565,6 +14208,13 @@ function showLocationSuggestion(chain, placeName){
     toast(`📍 Auto-filled: ${chain.icon} ${chain.desc}`);
   };
 }
+
+
+/* ── Module: features/challenges/challenges.js ── */
+/**
+ * Challenges & Streaks
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── FEATURE 10: CHALLENGES & STREAKS ─────────────────────
 function updateStreaks(){
@@ -13597,6 +14247,13 @@ function updateStreaks(){
   S.streaks.lastCheckedDate = todayStr;
   save();
 }
+
+
+/* ── Module: features/analytics/calorieSystem.js ── */
+/**
+ * Calorie Estimation System
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── 🔥 CALORIE ESTIMATION SYSTEM ───────────────────────────
 // Built-in calorie lookup for common Malaysian food items (per serving)
@@ -14253,6 +14910,13 @@ function renderChallengesContent(){
   }).join('');
 }
 
+
+/* ── Module: services/monthlyPdf.js ── */
+/**
+ * Monthly PDF Statement Export
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── FEATURE 15: MONTHLY PDF STATEMENT ──────────────────
 function generateMonthlyStatement(){
   const now = new Date();
@@ -14341,6 +15005,13 @@ function generateMonthlyStatement(){
   setTimeout(() => { printWin.print(); }, 500);
   toast('📤 Statement generated! Use Print → Save as PDF');
 }
+
+
+/* ── Module: features/profile/familyWallet.js ── */
+/**
+ * Family Wallet
+ * Modularized from Pocket Winnie Core
+ */
 
 // ── FEATURE 14: FAMILY WALLET ──────────────────────────
 function openFamilyWalletModal(){
@@ -14494,6 +15165,13 @@ function openDocTaxHub(initialTab = 'gallery'){
   }
 }
 
+
+/* ── Module: core/compat.js ── */
+/**
+ * Resilience & Compatibility Layer
+ * Modularized from Pocket Winnie Core
+ */
+
 // ── 🛠️ RESILIENCE & COMPATIBILITY LAYER FOR HTML HANDLERS ──
 let txMoreOpen = false;
 function toggleTxMoreDetails(forceOpen){
@@ -14564,50 +15242,8 @@ window.openNewCategoryModal = function(){
   }
 };
 
-// Petrol modal dynamic render fallback
-const _origOpenPetrolModal = (typeof openPetrolModal === 'function') ? openPetrolModal : null;
-if(_origOpenPetrolModal){
-  window.openPetrolModal = function(){
-    const content = el('petrol-rates-content');
-    if(content && !content.children.length){
-      const p95 = (typeof petrolPrices !== 'undefined' && petrolPrices.ron95) ? petrolPrices.ron95 : 2.05;
-      const p97 = (typeof petrolPrices !== 'undefined' && petrolPrices.ron97) ? petrolPrices.ron97 : 3.19;
-      const pD = (typeof petrolPrices !== 'undefined' && petrolPrices.diesel) ? petrolPrices.diesel : 2.95;
-      content.innerHTML = `
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center">
-            <div style="font-size:11px;color:var(--muted);font-weight:700">RON95</div>
-            <div id="pt-price-ron95" style="font-size:17px;font-weight:900;color:var(--amber);margin:4px 0">RM ${p95.toFixed(2)}</div>
-            <div style="font-size:9.5px;color:var(--muted)">per liter</div>
-          </div>
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center">
-            <div style="font-size:11px;color:var(--muted);font-weight:700">RON97</div>
-            <div id="pt-price-ron97" style="font-size:17px;font-weight:900;color:var(--green);margin:4px 0">RM ${p97.toFixed(2)}</div>
-            <div style="font-size:9.5px;color:var(--muted)">per liter</div>
-          </div>
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center">
-            <div style="font-size:11px;color:var(--muted);font-weight:700">Diesel</div>
-            <div id="pt-price-diesel" style="font-size:17px;font-weight:900;color:#3b82f6;margin:4px 0">RM ${pD.toFixed(2)}</div>
-            <div style="font-size:9.5px;color:var(--muted)">per liter</div>
-          </div>
-        </div>
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:12px">
-          <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:8px">🚗 Tank Refill Estimator</div>
-          <div style="display:flex;gap:8px;margin-bottom:10px">
-            <button type="button" class="chip on" style="flex:1" onclick="this.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on');document.getElementById('pt-calc-est').textContent='RM ' + (${p95}*36).toFixed(2)">Myvi / Axia (36L)</button>
-            <button type="button" class="chip" style="flex:1" onclick="this.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on');document.getElementById('pt-calc-est').textContent='RM ' + (${p95}*43).toFixed(2)">City / Vios (43L)</button>
-            <button type="button" class="chip" style="flex:1" onclick="this.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));this.classList.add('on');document.getElementById('pt-calc-est').textContent='RM ' + (${p95}*50).toFixed(2)">Sedan / SUV (50L)</button>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;background:var(--bg2);border-radius:12px;padding:10px 14px">
-            <span style="font-size:12px;font-weight:700">Estimated Full Tank:</span>
-            <strong id="pt-calc-est" style="font-size:18px;font-weight:900;color:var(--amber)">RM ${(p95*36).toFixed(2)}</strong>
-          </div>
-        </div>
-      `;
-    }
-    _origOpenPetrolModal();
-  };
-}
+// Petrol modal export
+window.openPetrolModal = typeof openPetrolModal === 'function' ? openPetrolModal : function(){};
 
 // Weekly report modal dynamic render fallback
 const _origRenderWeeklyReport = (typeof renderWeeklyReport === 'function') ? renderWeeklyReport : null;
@@ -14645,6 +15281,13 @@ if(_origRenderWeeklyReport){
     _origRenderWeeklyReport();
   };
 }
+
+
+/* ── Module: features/diningPassport/passport.js ── */
+/**
+ * Global Dining & Restaurant Passport
+ * Modularized from Pocket Winnie Core
+ */
 
 // ═══════════════════════════════════════════════════════════════════
 // 🌏 GLOBAL DINING & RESTAURANT PASSPORT (跨国探店与美食足迹)
@@ -15854,6 +16497,13 @@ function syncExistingFoodTxsToPassport(silent = false){
 window.syncExistingFoodTxsToPassport = syncExistingFoodTxsToPassport;
 
 // ═══════════════════════════════════════════════════════════════════
+
+/* ── Module: features/transactions/tags.js ── */
+/**
+ * Transaction Tags & Labels System (#tags)
+ * Modularized from Pocket Winnie Core
+ */
+
 // FEATURE 3: TRANSACTION TAGS & LABELS SYSTEM (#tags)
 // ═══════════════════════════════════════════════════════════════════
 let currentTxTags = [];
@@ -15969,6 +16619,13 @@ window.renderTxTagChips = renderTxTagChips;
 window.renderTxTagFilterBar = renderTxTagFilterBar;
 
 // ═══════════════════════════════════════════════════════════════════
+
+/* ── Module: features/cashflow/cashflow.js ── */
+/**
+ * 30-Day Cash Flow Forecast
+ * Modularized from Pocket Winnie Core
+ */
+
 // FEATURE 1: 30-DAY CASH FLOW FORECAST & PAYDAY SURVIVAL
 // ═══════════════════════════════════════════════════════════════════
 function calculateCashFlow30Days(){
@@ -16240,6 +16897,13 @@ window.saveCashFlowPaydaySettings = saveCashFlowPaydaySettings;
 window.renderCashFlowForecast = renderCashFlowForecast;
 
 // ═══════════════════════════════════════════════════════════════════
+
+/* ── Module: features/heatmap/heatmap.js ── */
+/**
+ * Visual Spending Heatmap
+ * Modularized from Pocket Winnie Core
+ */
+
 // FEATURE 4: VISUAL SPENDING HEATMAP
 // ═══════════════════════════════════════════════════════════════════
 let heatmapInspectedYear = new Date().getFullYear();
@@ -16372,6 +17036,13 @@ window.inspectHeatmapDay = inspectHeatmapDay;
 window.renderSpendingHeatmap = renderSpendingHeatmap;
 
 // ═══════════════════════════════════════════════════════════════════
+
+/* ── Module: features/wrapped/wrapped.js ── */
+/**
+ * Pocket Winnie Wrapped / Year-in-Review
+ * Modularized from Pocket Winnie Core
+ */
+
 // FEATURE 2: YEAR-IN-REVIEW / POCKET WINNIE WRAPPED
 // ═══════════════════════════════════════════════════════════════════
 let wrappedActiveSlide = 0;
@@ -16582,6 +17253,13 @@ window.copyWrappedSummaryText = copyWrappedSummaryText;
 window.shareWrappedWhatsApp = shareWrappedWhatsApp;
 
 // ═══════════════════════════════════════════════════════════════════
+
+/* ── Module: features/aiCoach/aiCoach.js ── */
+/**
+ * AI Spending Coach
+ * Modularized from Pocket Winnie Core
+ */
+
 // FEATURE 5: AI SPENDING COACH (GEMINI WITH WINNIE PERSONA)
 // ═══════════════════════════════════════════════════════════════════
 let coachMessages = [];
@@ -16699,8 +17377,11 @@ Keep response concise, charming, and easy to read (max 150 words).
   let answer = '';
   if(S.geminiApiKey && typeof generateGeminiContent === 'function'){
     try {
-      const resp = await generateGeminiContent(prompt);
-      if(resp && resp.text) answer = resp.text;
+      const resp = await generateGeminiContent(S.geminiApiKey, {
+        contents: [{ parts: [{ text: prompt }] }]
+      });
+      const aiText = resp?.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if(aiText) answer = aiText;
     } catch(err) {
       console.warn('Gemini coach request failed:', err);
     }
@@ -16727,6 +17408,13 @@ window.sendCoachQuickPrompt = sendCoachQuickPrompt;
 window.sendCoachUserMessage = sendCoachUserMessage;
 window.handleCoachInputKeyDown = handleCoachInputKeyDown;
 
+
+/* ── Module: main.js ── */
+/**
+ * App Bootstrap & Lifecycle Entry
+ * Modularized from Pocket Winnie Core
+ */
+
 // Flush any pending debounced save before the page unloads
 window.addEventListener('beforeunload', () => {
   if(_saveTimer) saveImmediate();
@@ -16737,3 +17425,5 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+
+

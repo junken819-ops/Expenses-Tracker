@@ -1,0 +1,22 @@
+{
+  "name": "pocket-winnie",
+  "version": "4.6.0",
+  "description": "Pocket Winnie - Empathetic Personal Finance & Cute Expense Tracker",
+  "main": "app.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "node build.js",
+    "dev": "node build.js --watch",
+    "check": "node build.js --check",
+    "test": "node build.js --check && node -c app.js"
+  },
+  "keywords": [
+    "expense-tracker",
+    "finance",
+    "malaysia-finance",
+    "pwa",
+    "pocket-winnie"
+  ],
+  "author": "Pocket Winnie Team",
+  "license": "MIT"
+}

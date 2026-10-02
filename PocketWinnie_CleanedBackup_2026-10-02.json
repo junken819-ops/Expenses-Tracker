@@ -1,0 +1,1875 @@
+{
+  "app": "🍯 Pocket Winnie 🍯",
+  "version": "2.5",
+  "backupDate": "2026-10-02T10:44:49.382Z",
+  "cleanedNotes": "Corrected past years (2023-2025 to 2026), deduplicated Starbucks scans, fixed Mun Kee Bak Kut Teh category to food.",
+  "state": {
+    "transactions": [
+      {
+        "id": "item_a048823c-b5c1-494a-ad5a-52deefa44c9a",
+        "type": "expense",
+        "amount": 8,
+        "desc": "99 Speedmart",
+        "category": "groceries",
+        "subCategory": "groc_dairy_eggs",
+        "tags": [
+          "groceries",
+          "oat milk",
+          "oatside",
+          "convenience store"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 8,
+        "exchangeRate": 1,
+        "date": "2026-10-01",
+        "time": "20:51",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Taman Perpaduan Jaya",
+        "note": "Oatside Susu Oat Bancu (RM 7.99) [650kcal] [8g protein]",
+        "photo": null,
+        "items": [
+          {
+            "name": "Oatside Susu Oat Bancu",
+            "price": 7.99,
+            "qty": 1,
+            "calories": 650,
+            "protein": 8,
+            "subCategory": "groc_dairy_eggs",
+            "tags": [
+              "oat milk",
+              "beverage",
+              "dairy alternative"
+            ]
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0.01,
+        "taxesCollectedSummary": "Rounding: RM 0.01",
+        "taxReliefCat": null,
+        "taxReliefAmount": 8,
+        "taxReliefReason": null,
+        "createdAt": "2026-10-02T02:39:00.491Z"
+      },
+      {
+        "id": "item_b59a0190-d4dc-412d-a48a-c701487b0297",
+        "type": "expense",
+        "amount": 71.3,
+        "desc": "MUN KEE BAK KUT TEH",
+        "category": "food",
+        "subCategory": "food_restaurant",
+        "tags": [
+          "bak kut teh",
+          "pork",
+          "chinese",
+          "dinner"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 71.3,
+        "exchangeRate": 1,
+        "date": "2026-10-01",
+        "time": "18:36",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Bandar Cyber, Ipoh, Perak",
+        "note": "B02 肉骨茶(干) Bat Kut Teh Dried (RM 17.00) [650kcal] [35g protein], P03 南乳炸肉 Deep Fried Namyu Pork Belly (RM 25.00) [750kcal] [28g protein], P01 猪脚醋 Vinegar Pork Knuckle (RM 18.00) [580kcal] [30g protein], E03 白饭 White Rice x2 (RM 4.00) [200kcal] [4g protein], CC14 Chinese Tea 唐茶 (RM 0.80) [2kcal] [1g protein]",
+        "photo": null,
+        "items": [
+          {
+            "name": "B02 肉骨茶(干) Bat Kut Teh Dried",
+            "price": 17,
+            "qty": 1,
+            "calories": 650,
+            "protein": 35,
+            "subCategory": "food_restaurant",
+            "tags": [
+              "bak kut teh",
+              "pork"
+            ]
+          },
+          {
+            "name": "P03 南乳炸肉 Deep Fried Namyu Pork Belly",
+            "price": 25,
+            "qty": 1,
+            "calories": 750,
+            "protein": 28,
+            "subCategory": "food_restaurant",
+            "tags": [
+              "pork belly",
+              "fried pork"
+            ]
+          },
+          {
+            "name": "P01 猪脚醋 Vinegar Pork Knuckle",
+            "price": 18,
+            "qty": 1,
+            "calories": 580,
+            "protein": 30,
+            "subCategory": "food_restaurant",
+            "tags": [
+              "pork knuckle",
+              "vinegar"
+            ]
+          },
+          {
+            "name": "E03 白饭 White Rice",
+            "price": 4,
+            "qty": 2,
+            "calories": 200,
+            "protein": 4,
+            "subCategory": "food_restaurant",
+            "tags": [
+              "rice"
+            ]
+          },
+          {
+            "name": "CC14 Chinese Tea 唐茶",
+            "price": 0.8,
+            "qty": 1,
+            "calories": 2,
+            "protein": 1,
+            "subCategory": "food_restaurant",
+            "tags": [
+              "tea",
+              "drink"
+            ]
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 10,
+        "serviceChargeAmount": 6.48,
+        "roundingAmount": 0.02,
+        "taxesCollectedSummary": "Service Charge (10%): RM 6.48",
+        "taxReliefCat": null,
+        "taxReliefAmount": 71.3,
+        "taxReliefReason": null,
+        "createdAt": "2026-10-02T02:36:35.295Z"
+      },
+      {
+        "id": "item_f8d7fe4e-f91d-4b4b-9ce6-e6637e71b8d7",
+        "type": "expense",
+        "amount": 6,
+        "desc": "Jaya Grocer",
+        "category": "groceries",
+        "subCategory": "groc_snacks_sweets",
+        "tags": [
+          "jaya grocer",
+          "anpan",
+          "red bean bun",
+          "bakery",
+          "snacks"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 6,
+        "exchangeRate": 1,
+        "date": "2026-10-01",
+        "time": "13:44",
+        "accountId": "default",
+        "paymentMethod": "Touch 'n Go eWallet",
+        "location": "Ipoh Parade, Greentown, Ipoh",
+        "note": "ANPAN (RED BEAN) 3PCS (RM 6.00) [750kcal] [18g protein]",
+        "photo": null,
+        "items": [
+          {
+            "name": "ANPAN (RED BEAN) 3PCS",
+            "price": 6,
+            "qty": 1,
+            "calories": 750,
+            "protein": 18,
+            "subCategory": "groc_snacks_sweets",
+            "tags": [
+              "anpan",
+              "red bean bun",
+              "bakery"
+            ]
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 6,
+        "taxReliefReason": null,
+        "createdAt": "2026-10-02T02:34:19.383Z"
+      },
+      {
+        "id": "item_aca07db8-4919-4a4e-a178-db1fe3732872",
+        "type": "expense",
+        "amount": 40.3,
+        "desc": "PETRONAS",
+        "category": "fuel",
+        "subCategory": "trans_petrol_fuel",
+        "tags": [
+          "petrol",
+          "fuel",
+          "ron95",
+          "petronas",
+          "setel"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 40.3,
+        "exchangeRate": 1,
+        "date": "2026-09-30",
+        "time": "21:27",
+        "accountId": "default",
+        "paymentMethod": "Setel Wallet",
+        "location": "PETRONAS Jalan Raja Dihilir",
+        "note": "BUDI RON95 Petrol (20.251 L) (RM 40.30)",
+        "photo": null,
+        "items": [
+          {
+            "name": "BUDI RON95 Petrol (20.251 L)",
+            "price": 40.3,
+            "qty": 1,
+            "calories": 0,
+            "protein": 0,
+            "subCategory": "trans_petrol_fuel",
+            "tags": [
+              "fuel",
+              "ron95"
+            ]
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 40.3,
+        "taxReliefReason": null,
+        "createdAt": "2026-10-02T02:41:13.790Z"
+      },
+      {
+        "id": "item_ce143863-42e9-4352-bafe-8fa679198b89",
+        "type": "expense",
+        "amount": 25.55,
+        "desc": "Mad Ramen",
+        "category": "food",
+        "subCategory": "food_restaurant",
+        "tags": [
+          "ramen",
+          "pork",
+          "dinner",
+          "green tea"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 25.55,
+        "exchangeRate": 1,
+        "date": "2026-09-29",
+        "time": "21:17",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Jalan Market, Ipoh, Perak",
+        "note": "拉面+汤底 Ramen+Soup Base (*招牌豚骨汤 Signature Pork) (RM 23.80), 海苔 Seaweed (无 None) (-RM 2.50), 绿茶 (无限续) Green Tea (Refillable) (RM 2.80)",
+        "items": [
+          {
+            "name": "拉面+汤底 Ramen+Soup Base (*招牌豚骨汤 Signature Pork)",
+            "price": 23.8,
+            "qty": 1
+          },
+          {
+            "name": "海苔 Seaweed (无 None)",
+            "price": -2.5,
+            "qty": 1
+          },
+          {
+            "name": "绿茶 (无限续) Green Tea (Refillable)",
+            "price": 2.8,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 6,
+        "serviceChargeAmount": 1.45,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "Service Charge (6%): RM 1.45",
+        "taxReliefCat": null,
+        "taxReliefAmount": 25.55,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-29T13:34:59.367Z"
+      },
+      {
+        "id": "item_76b2506c-df67-45fe-ab1d-d85dab695ec5",
+        "type": "expense",
+        "amount": 8.4,
+        "desc": "Fresh Moo Sdn Bhd",
+        "category": "food",
+        "subCategory": "food_dessert_snack",
+        "tags": [
+          "yogurt",
+          "dessert",
+          "chocolate"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 8.4,
+        "exchangeRate": 1,
+        "date": "2026-09-26",
+        "time": "14:58",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Ipoh Parade, Ipoh",
+        "note": "SS02 Natural Yogurt + Beryl's Chocolate Sauce (RM 8.40)",
+        "photo": null,
+        "items": [
+          {
+            "name": "SS02 Natural Yogurt + Beryl's Chocolate Sauce",
+            "price": 8.4,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 0.47,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "Inclusive of 6% SST (RM 0.47)",
+        "taxReliefCat": null,
+        "taxReliefAmount": 8.4,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-26T07:02:13.255Z"
+      },
+      {
+        "id": "item_4cdbff0b-1c30-4ea1-ab71-bee0537ea19d",
+        "type": "expense",
+        "amount": 10.8,
+        "desc": "Tiffin WEIL Hotel Ipoh",
+        "category": "food",
+        "subCategory": "food_restaurant",
+        "tags": [
+          "salad",
+          "chicken",
+          "hotel dining",
+          "lunch"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 10.8,
+        "exchangeRate": 1,
+        "date": "2026-09-21",
+        "time": "12:28",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Jalan Sultan Idris Shah, Ipoh, Perak",
+        "note": "Chicken Shawarma Salad (RM 18.00), Staff Discount 40% (-RM 7.20)",
+        "photo": null,
+        "items": [
+          {
+            "name": "Chicken Shawarma Salad",
+            "price": 18,
+            "qty": 1
+          },
+          {
+            "name": "Staff Discount 40%",
+            "price": -7.2,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 0.61,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "Service Tax (6%): RM 0.61",
+        "taxReliefCat": null,
+        "taxReliefAmount": 10.8,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-22T01:51:24.021Z"
+      },
+      {
+        "id": "item_f8ba9cb0-c2b1-44f1-8c0b-0ce266763eb2",
+        "type": "expense",
+        "amount": 15.2,
+        "desc": "Jaya Grocer",
+        "category": "groceries",
+        "subCategory": "groc_dairy_eggs",
+        "tags": [
+          "eggs",
+          "groceries",
+          "jaya-grocer"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 15.2,
+        "exchangeRate": 1,
+        "date": "2026-09-20",
+        "time": "17:21",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Ipoh Parade",
+        "note": "EGG 30S (SIZE A) (RM 15.19)",
+        "items": [
+          {
+            "name": "EGG 30S (SIZE A)",
+            "price": 15.19,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0.01,
+        "taxesCollectedSummary": "Rounding: RM 0.01",
+        "taxReliefCat": null,
+        "taxReliefAmount": 15.2,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-21T01:31:47.523Z"
+      },
+      {
+        "id": "item_ffd5ea43-4add-48fc-9f49-56afab1bac50",
+        "type": "expense",
+        "amount": 7,
+        "desc": "McDonald's",
+        "category": "food",
+        "subCategory": "fast_food",
+        "tags": [
+          "fast food",
+          "mcdonalds",
+          "ayam goreng",
+          "dinner"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 7,
+        "exchangeRate": 1,
+        "date": "2026-09-20",
+        "time": "18:01",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Sunway City Ipoh, Perak",
+        "note": "M&M 1pc AG Ori Set (S Coke Zero) (RM 6.59)",
+        "items": [
+          {
+            "name": "M&M 1pc AG Ori Set (S Coke Zero)",
+            "price": 6.59,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 0.4,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0.01,
+        "taxesCollectedSummary": "SST (6%): RM 0.40",
+        "taxReliefCat": null,
+        "taxReliefAmount": 7,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-20T10:08:29.252Z"
+      },
+      {
+        "id": "item_cd647a11-08dc-4440-a949-ca167a27e4cc",
+        "type": "expense",
+        "amount": 4,
+        "desc": "McDonald's",
+        "category": "food",
+        "subCategory": "food_fastfood",
+        "tags": [
+          "mcdonalds",
+          "fast_food",
+          "nasi_lemak",
+          "takeout"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 4,
+        "exchangeRate": 1,
+        "date": "2026-09-20",
+        "time": "18:01",
+        "accountId": "default",
+        "paymentMethod": "Mobile Order",
+        "location": "Sunway City Ipoh DT, Perak",
+        "note": "Sambal (RM 0.94), Nasi NL (RM 2.83)",
+        "items": [
+          {
+            "name": "Sambal",
+            "price": 0.94,
+            "qty": 1
+          },
+          {
+            "name": "Nasi NL",
+            "price": 2.83,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 0.23,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "SST (6%): RM 0.23",
+        "taxReliefCat": null,
+        "taxReliefAmount": 4,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-20T10:07:39.886Z"
+      },
+      {
+        "id": "item_d36904f1-ff69-4b74-bad6-2f97f4dca6f2",
+        "type": "expense",
+        "amount": 6.9,
+        "desc": "Eggspert",
+        "category": "food",
+        "subCategory": "cafe_restaurant",
+        "tags": [
+          "waffle",
+          "dessert",
+          "snack",
+          "eggspert"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 6.9,
+        "exchangeRate": 1,
+        "date": "2026-09-19",
+        "time": "20:00",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Ipoh Parade, Ipoh, Perak",
+        "note": "Waffle (C p) (RM 6.90)",
+        "items": [
+          {
+            "name": "Waffle (C p)",
+            "price": 6.9,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 6.9,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-20T02:36:20.218Z"
+      },
+      {
+        "id": "item_c2abe6a6-7718-4f5a-a218-766b17bc523a",
+        "type": "expense",
+        "amount": 7.95,
+        "desc": "99 Speedmart",
+        "category": "groceries",
+        "subCategory": "groc_dairy_eggs",
+        "tags": [
+          "milk",
+          "dairy",
+          "farm fresh",
+          "groceries"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 7.95,
+        "exchangeRate": 1,
+        "date": "2026-09-15",
+        "time": "21:44",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Tmn Perpaduan Jaya",
+        "note": "FARM FRESH PURE FRESH (RM 7.95)",
+        "items": [
+          {
+            "name": "FARM FRESH PURE FRESH",
+            "price": 7.95,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 7.95,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-17T11:49:44.652Z"
+      },
+      {
+        "id": "item_cafa924d-ba30-4985-b909-06835cafeb45",
+        "type": "expense",
+        "amount": 27,
+        "desc": "Starbucks",
+        "category": "drinks",
+        "subCategory": "food_cafe_coffee",
+        "tags": [
+          "starbucks",
+          "coffee",
+          "frappuccino",
+          "cafe"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 27,
+        "exchangeRate": 1,
+        "date": "2026-09-15",
+        "time": "12:59",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Ipoh Parade",
+        "note": "A26 ROA MACD ISE - G LF E (RM 15.94), Discount (SR-DC LG-B12ND50%) (-RM 7.97), Chocolate Cream Chip Frappuccino (RM 17.50)",
+        "items": [
+          {
+            "name": "A26 ROA MACD ISE - G LF E",
+            "price": 15.94,
+            "qty": 1
+          },
+          {
+            "name": "Discount (SR-DC LG-B12ND50%)",
+            "price": -7.97,
+            "qty": 1
+          },
+          {
+            "name": "Chocolate Cream Chip Frappuccino",
+            "price": 17.5,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 1.53,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "SST (6%): RM 1.53",
+        "taxReliefCat": null,
+        "taxReliefAmount": 27,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-15T10:57:55.624Z"
+      },
+      {
+        "id": "item_70721edb-7970-463d-9f5c-382c3c41a336",
+        "type": "expense",
+        "amount": 27.9,
+        "desc": "Black Canyon Restaurant",
+        "category": "food",
+        "subCategory": "food_restaurant",
+        "tags": [
+          "thai",
+          "rice",
+          "lunch"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 27.9,
+        "exchangeRate": 1,
+        "date": "2026-09-15",
+        "time": "12:53",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Ipoh Parade, Ipoh, Perak",
+        "note": "43.FU.Chic Hot B (RM 13.95), 86.PKP Rice (RM 13.95)",
+        "items": [
+          {
+            "name": "43.FU.Chic Hot B",
+            "price": 13.95,
+            "qty": 1
+          },
+          {
+            "name": "86.PKP Rice",
+            "price": 13.95,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 1.44,
+        "serviceChargePct": 10,
+        "serviceChargeAmount": 2.41,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "SST (6%): RM 1.44 · Service Charge (10%): RM 2.41",
+        "taxReliefCat": null,
+        "taxReliefAmount": 27.9,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-15T10:53:46.785Z"
+      },
+      {
+        "id": "item_2e06f161-3270-46ae-bb81-7060f88fcccb",
+        "type": "expense",
+        "amount": 12.9,
+        "desc": "ChaTraMue",
+        "category": "drinks",
+        "subCategory": "groc_supermarket",
+        "tags": [
+          "chatramue",
+          "taro milk",
+          "thai tea",
+          "beverage"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 12.9,
+        "exchangeRate": 1,
+        "date": "2026-09-12",
+        "time": "14:51",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "AEON Mall Station 18, Ipoh",
+        "note": "Taro Creamy Milk (No Topping, 70% Sugar) (RM 12.90)",
+        "items": [
+          {
+            "name": "Taro Creamy Milk (No Topping, 70% Sugar)",
+            "price": 12.9,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 0.73,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "Service Tax (6%): RM 0.73",
+        "taxReliefCat": null,
+        "taxReliefAmount": 12.9,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:39:53.451Z"
+      },
+      {
+        "id": "item_e2d57f46-1264-42ac-a09b-92b9632bd946",
+        "type": "expense",
+        "amount": 121.6,
+        "desc": "Hai Di Lao",
+        "category": "drinks",
+        "subCategory": "food_restaurant",
+        "tags": [
+          "hotpot",
+          "haidilao",
+          "chinese",
+          "soup"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 121.6,
+        "exchangeRate": 1,
+        "date": "2026-09-12",
+        "time": "12:39",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Station 18, Ipoh, Perak",
+        "note": "四宫格 (猪肚胡椒/清水火锅) (RM 20.00), [B]豆腐皮(半) (RM 8.00), 捞派捞面 (RM 10.00), 一人食-虾滑套餐 (RM 45.90), 自选饮料 x2 (RM 10.00), [B]捞派鸭血 (半) (RM 11.00)",
+        "items": [
+          {
+            "name": "四宫格 (猪肚胡椒/清水火锅)",
+            "price": 20,
+            "qty": 1
+          },
+          {
+            "name": "[B]豆腐皮(半)",
+            "price": 8,
+            "qty": 1
+          },
+          {
+            "name": "捞派捞面",
+            "price": 10,
+            "qty": 1
+          },
+          {
+            "name": "一人食-虾滑套餐",
+            "price": 45.9,
+            "qty": 1
+          },
+          {
+            "name": "自选饮料",
+            "price": 10,
+            "qty": 2
+          },
+          {
+            "name": "[B]捞派鸭血 (半)",
+            "price": 11,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 6.29,
+        "serviceChargePct": 10,
+        "serviceChargeAmount": 10.49,
+        "roundingAmount": -0.08,
+        "taxesCollectedSummary": "SST (6%): RM 6.29 · Service Charge (10%): RM 10.49",
+        "taxReliefCat": null,
+        "taxReliefAmount": 121.6,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:39:27.908Z"
+      },
+      {
+        "id": "item_2b39b514-709c-4216-83c0-49d2ffd697c0",
+        "type": "expense",
+        "amount": 8.8,
+        "desc": "HOLA HOLA KOPITIAM",
+        "category": "food",
+        "subCategory": "food_restaurant",
+        "tags": [
+          "noodle",
+          "curry fishball",
+          "kopitiam",
+          "takeaway"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 8.8,
+        "exchangeRate": 1,
+        "date": "2026-09-11",
+        "time": "21:09",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": null,
+        "note": "Scallion Oil Noodle with Curry Fishball 咖喱鱼蛋葱油面 (Takeaway) (RM 8.80)",
+        "items": [
+          {
+            "name": "Scallion Oil Noodle with Curry Fishball 咖喱鱼蛋葱油面 (Takeaway)",
+            "price": 8.8,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 8.8,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T01:19:43.806Z"
+      },
+      {
+        "id": "item_4c1b0b4c-a0bf-4bb1-bc02-07de519abc8f",
+        "type": "expense",
+        "amount": 26.25,
+        "desc": "COSMO RESTAURANTS SDN BHD (BK IPOH PARADE)",
+        "category": "food",
+        "subCategory": "fast_food",
+        "tags": [
+          "fastfood",
+          "burger",
+          "lunch"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 26.25,
+        "exchangeRate": 1,
+        "date": "2026-09-11",
+        "time": "12:41",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Ipoh Parade",
+        "note": "VC B (RM 9.90), WHP JR AC, + BEEF PTY x2 (RM 6.00), CHZ FRIES (RM 1.00), COKE ZR MD, FNC AC (RM 9.35)",
+        "items": [
+          {
+            "name": "VC B",
+            "price": 9.9,
+            "qty": 1
+          },
+          {
+            "name": "WHP JR AC",
+            "price": 0,
+            "qty": 1
+          },
+          {
+            "name": "+ BEEF PTY",
+            "price": 6,
+            "qty": 2
+          },
+          {
+            "name": "CHZ FRIES",
+            "price": 1,
+            "qty": 1
+          },
+          {
+            "name": "COKE ZR MD",
+            "price": 0,
+            "qty": 1
+          },
+          {
+            "name": "FNC AC",
+            "price": 9.35,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 1.49,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "SST (6%): RM 1.49",
+        "taxReliefCat": null,
+        "taxReliefAmount": 26.25,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-11T04:44:21.554Z"
+      },
+      {
+        "id": "item_3e3ddf7a-4aaf-402c-a760-55f5c6f20ecf",
+        "type": "expense",
+        "amount": 21.25,
+        "desc": "Guardian",
+        "category": "period_care",
+        "subCategory": "pads_tampons",
+        "tags": [
+          "guardian",
+          "sanitary pad",
+          "personal care",
+          "pharmacy"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 21.25,
+        "exchangeRate": 1,
+        "date": "2026-09-08",
+        "time": "11:07",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Ipoh Parade",
+        "note": "PURC PAD 245MM 16S (RM 9.81), DEAR/S PAD 29CM 14 (RM 11.44)",
+        "items": [
+          {
+            "name": "PURC PAD 245MM 16S",
+            "price": 9.81,
+            "qty": 1
+          },
+          {
+            "name": "DEAR/S PAD 29CM 14",
+            "price": 11.44,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 21.25,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-11T03:37:35.457Z"
+      },
+      {
+        "id": "item_2ecb7f47-4385-47d1-ba66-0348caf38bc4",
+        "type": "expense",
+        "amount": 6,
+        "desc": "Mixue",
+        "category": "drinks",
+        "subCategory": "food_drinks_boba",
+        "tags": [
+          "mixue",
+          "grape tea",
+          "boba",
+          "tea",
+          "beverage"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 6,
+        "exchangeRate": 1,
+        "date": "2026-09-06",
+        "time": "14:27",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Medan Gopeng, Gunung Rapat, Perak",
+        "note": "Taro Grape Tea (West) (RM 6.00)",
+        "items": [
+          {
+            "name": "Taro Grape Tea (West)",
+            "price": 6,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 6,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:45:52.793Z"
+      },
+      {
+        "id": "item_38ae1072-588b-403d-a81d-4c188bd2b8ef",
+        "type": "expense",
+        "amount": 10,
+        "desc": "Happy Potato",
+        "category": "food",
+        "subCategory": "food_dessert_snack",
+        "tags": [
+          "happy potato",
+          "fries",
+          "snack",
+          "ipoh parade"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 10,
+        "exchangeRate": 1,
+        "date": "2026-09-06",
+        "time": "19:53",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Ipoh Parade, Ipoh, Perak",
+        "note": "Waffle Fries - R (Corn Cheese) (RM 9.43)",
+        "items": [
+          {
+            "name": "Waffle Fries - R (Corn Cheese)",
+            "price": 9.43,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 0.57,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "Service Tax (6%): RM 0.57",
+        "taxReliefCat": null,
+        "taxReliefAmount": 10,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:45:05.853Z"
+      },
+      {
+        "id": "item_1c34432f-eb08-4364-af53-91637c93105b",
+        "type": "expense",
+        "amount": 22,
+        "desc": "Restaurant Ting Hao",
+        "category": "food",
+        "subCategory": "food_restaurant",
+        "tags": [
+          "chinese",
+          "noodles",
+          "rice",
+          "dinner"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 22,
+        "exchangeRate": 1,
+        "date": "2026-09-05",
+        "time": "20:31",
+        "accountId": "default",
+        "paymentMethod": "Cash (现金)",
+        "location": "AEON Kinta City Shopping Centre, Ipoh",
+        "note": "Sambal Brinjal Rice (RM 10.00), Singapore Fried Mee Hoon (RM 10.00)",
+        "items": [
+          {
+            "name": "Sambal Brinjal Rice",
+            "price": 10,
+            "qty": 1
+          },
+          {
+            "name": "Singapore Fried Mee Hoon",
+            "price": 10,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 10,
+        "serviceChargeAmount": 2,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "Service Charge (10%): RM 2.00",
+        "taxReliefCat": null,
+        "taxReliefAmount": 22,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:46:28.370Z"
+      },
+      {
+        "id": "item_9d7b696c-d23d-4eb5-b616-f1208e96ca6a",
+        "type": "expense",
+        "amount": 44.9,
+        "desc": "AEON",
+        "category": "groceries",
+        "subCategory": "groc_pantry_staples",
+        "tags": [
+          "supermarket",
+          "groceries",
+          "aeon",
+          "samyang"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 44.9,
+        "exchangeRate": 1,
+        "date": "2026-09-05",
+        "time": "19:16",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "AEON Taman Maluri SC, Cheras, Kuala Lumpur",
+        "note": "MIXY YOGURT MIXED CEREAL AND S (RM 6.00), KEWPIE DRESSING ROASTED SESAME (RM 15.90), SAMYANG HOT CHICKEN ROSE FLAV (RM 22.99)",
+        "items": [
+          {
+            "name": "MIXY YOGURT MIXED CEREAL AND S",
+            "price": 6,
+            "qty": 1
+          },
+          {
+            "name": "KEWPIE DRESSING ROASTED SESAME",
+            "price": 15.9,
+            "qty": 1
+          },
+          {
+            "name": "SAMYANG HOT CHICKEN ROSE FLAV",
+            "price": 22.99,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0.01,
+        "taxesCollectedSummary": "Rounding: RM 0.01",
+        "taxReliefCat": null,
+        "taxReliefAmount": 44.9,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:42:13.949Z"
+      },
+      {
+        "id": "item_8639dfef-be58-4342-bc0a-5eb7f414f387",
+        "type": "expense",
+        "amount": 3,
+        "desc": "Popular",
+        "category": "education",
+        "subCategory": "edu_stationery_supplies",
+        "tags": [
+          "stationery",
+          "tape",
+          "popular bookstore"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 3,
+        "exchangeRate": 1,
+        "date": "2026-09-05",
+        "time": "18:37",
+        "accountId": "default",
+        "paymentMethod": "Touch 'n Go eWallet",
+        "location": "AEON Mall Kinta City, Ipoh",
+        "note": "S.AUTO TAPE 1.5M12MM (RM 3.00)",
+        "items": [
+          {
+            "name": "S.AUTO TAPE 1.5M12MM",
+            "price": 3,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 3,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T03:05:57.976Z"
+      },
+      {
+        "id": "item_cbb22f23-0986-4460-9e92-c2e879bf3885",
+        "type": "expense",
+        "amount": 47.5,
+        "desc": "Guardian (My Share)",
+        "category": "health",
+        "subCategory": "health_vitamins_supp",
+        "date": "2026-09-05",
+        "time": "11:01",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": null,
+        "note": "21ST C1G T/R 120 x2 (RM 95.00) · Split bill at Guardian (2 pax · Total: RM 95.00)",
+        "items": [
+          {
+            "name": "21ST C1G T/R 120",
+            "price": 95,
+            "qty": 2
+          }
+        ],
+        "isAdvance": false,
+        "advance": false,
+        "advancePerson": null,
+        "advanceDebtor": null,
+        "advanceStatus": null,
+        "advanceReimbursed": false,
+        "createdAt": "2026-09-12T03:01:36.568Z"
+      },
+      {
+        "id": "item_aa86c9f0-5292-4973-a757-ea2853fa43bb",
+        "type": "expense",
+        "amount": 6.5,
+        "desc": "MR. D.I.Y.",
+        "category": "shopping",
+        "subCategory": "shop_home_furniture",
+        "tags": [
+          "mrdiy",
+          "plate gripper",
+          "kitchenware",
+          "household"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 6.5,
+        "exchangeRate": 1,
+        "date": "2026-09-04",
+        "time": "13:47",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Ipoh Parade",
+        "note": "PLATE GRIPPER #XS1408008 (RM 6.50)",
+        "items": [
+          {
+            "name": "PLATE GRIPPER #XS1408008",
+            "price": 6.5,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 6.5,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:53:41.627Z"
+      },
+      {
+        "id": "item_8cb44116-16f7-49bf-85d4-3aa99fc71cb3",
+        "type": "expense",
+        "amount": 17.15,
+        "desc": "Sushi Mentai (Ipoh)",
+        "category": "food",
+        "subCategory": "food_restaurant",
+        "tags": [
+          "sushi",
+          "japanese",
+          "dinner",
+          "ipoh"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 17.15,
+        "exchangeRate": 1,
+        "date": "2026-09-04",
+        "time": "18:46",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Greentown Business Centre, Ipoh",
+        "note": "Sushi 1.80 (RM 1.80), Sushi 2.80 x5 (RM 14.00), Shoyu (RM 0.20), Wasabi (RM 0.20)",
+        "items": [
+          {
+            "name": "Sushi 1.80",
+            "price": 1.8,
+            "qty": 1
+          },
+          {
+            "name": "Sushi 2.80",
+            "price": 14,
+            "qty": 5
+          },
+          {
+            "name": "Shoyu",
+            "price": 0.2,
+            "qty": 1
+          },
+          {
+            "name": "Wasabi",
+            "price": 0.2,
+            "qty": 1
+          }
+        ],
+        "sstPct": 6,
+        "sstAmount": 0.97,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": -0.02,
+        "taxesCollectedSummary": "SST (6%): RM 0.97",
+        "taxReliefCat": null,
+        "taxReliefAmount": 17.15,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:50:51.260Z"
+      },
+      {
+        "id": "item_b52b3c65-5812-40ec-abde-8811cb0133e8",
+        "type": "expense",
+        "amount": 12.8,
+        "desc": "AEON",
+        "category": "groceries",
+        "subCategory": "supermarket",
+        "tags": [
+          "groceries",
+          "supermarket",
+          "aeon",
+          "bakery"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 12.8,
+        "exchangeRate": 1,
+        "date": "2026-09-04",
+        "time": "21:45",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "AEON Ipoh Kinta City",
+        "note": "Sunshine Dorayaki Azuki Red Bean (RM 3.00), LFF Tomatoes (RM 3.78), Sunshine Komugi Gold Hojicha Loaf (RM 6.00)",
+        "items": [
+          {
+            "name": "Sunshine Dorayaki Azuki Red Bean",
+            "price": 3,
+            "qty": 1
+          },
+          {
+            "name": "LFF Tomatoes",
+            "price": 3.78,
+            "qty": 1
+          },
+          {
+            "name": "Sunshine Komugi Gold Hojicha Loaf",
+            "price": 6,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0.02,
+        "taxesCollectedSummary": "Rounding: RM 0.02",
+        "taxReliefCat": null,
+        "taxReliefAmount": 12.8,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:48:14.430Z"
+      },
+      {
+        "id": "item_4441e1b2-28d1-44d1-a395-cfb4e4414209",
+        "type": "expense",
+        "amount": 7.05,
+        "desc": "AEON",
+        "category": "groceries",
+        "subCategory": "groc_meat_seafood",
+        "tags": [
+          "pork",
+          "meat",
+          "groceries",
+          "aeon"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 7.05,
+        "exchangeRate": 1,
+        "date": "2026-09-04",
+        "time": "21:40",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Taman Maluri, Cheras, Kuala Lumpur",
+        "note": "PORK MEAT PROMOTION-6865_SOLID (RM 7.03)",
+        "items": [
+          {
+            "name": "PORK MEAT PROMOTION-6865_SOLID",
+            "price": 7.03,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0.02,
+        "taxesCollectedSummary": "Rounding: RM 0.02",
+        "taxReliefCat": null,
+        "taxReliefAmount": 7.05,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T03:04:14.285Z"
+      },
+      {
+        "id": "item_0d2ead2d-57fb-41ae-a3ee-60f90a53c566",
+        "type": "expense",
+        "amount": 32.15,
+        "desc": "Watsons",
+        "category": "health",
+        "subCategory": "health_pharmacy_rx",
+        "tags": [
+          "watsons",
+          "shampoo",
+          "personal care",
+          "herbal essences"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 32.15,
+        "exchangeRate": 1,
+        "date": "2026-09-04",
+        "time": "21:19",
+        "accountId": "default",
+        "paymentMethod": "Online Banking (FPX / DuitNow)",
+        "location": "Kinta City Shopping (KC)",
+        "note": "HE BIO SHP TEA TRE (RM 26.80), HE BIO SHP TEA TRE (2nd @ 80% off) (RM 5.36)",
+        "items": [
+          {
+            "name": "HE BIO SHP TEA TRE",
+            "price": 26.8,
+            "qty": 1
+          },
+          {
+            "name": "HE BIO SHP TEA TRE (2nd @ 80% off)",
+            "price": 5.36,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": -0.01,
+        "taxesCollectedSummary": "Rounding: RM -0.01",
+        "taxReliefCat": null,
+        "taxReliefAmount": 32.15,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T03:02:42.758Z"
+      },
+      {
+        "id": "item_eb199f05-57e4-4b19-9c3a-6bb849c238eb",
+        "type": "expense",
+        "amount": 15.2,
+        "desc": "Jaya Grocer",
+        "category": "groceries",
+        "subCategory": "groc_dairy_eggs",
+        "tags": [
+          "groceries",
+          "eggs",
+          "supermarket",
+          "jaya grocer"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 15.2,
+        "exchangeRate": 1,
+        "date": "2026-09-03",
+        "time": "19:18",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Ipoh Parade, Ipoh, Perak",
+        "note": "EGG 30S (SIZE A) (RM 15.19)",
+        "items": [
+          {
+            "name": "EGG 30S (SIZE A)",
+            "price": 15.19,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0.01,
+        "taxesCollectedSummary": "Rounding: RM 0.01",
+        "taxReliefCat": null,
+        "taxReliefAmount": 15.2,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:58:36.407Z"
+      },
+      {
+        "id": "item_9f25ee81-daa3-40f0-832b-6158b6e5d73b",
+        "type": "expense",
+        "amount": 50,
+        "desc": "WEIL RESOURCES SDN. BHD.",
+        "category": "toll_parking",
+        "subCategory": "trans_parking",
+        "tags": [
+          "parking",
+          "duitnow",
+          "transfer"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 50,
+        "exchangeRate": 1,
+        "date": "2026-09-01",
+        "time": "21:03",
+        "accountId": "default",
+        "paymentMethod": "RHB Bank",
+        "location": null,
+        "note": "Parking (RM 50.00)",
+        "items": [
+          {
+            "name": "Parking",
+            "price": 50,
+            "qty": 1
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 50,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T09:03:13.016Z"
+      },
+      {
+        "id": "item_3267addf-803d-4bb9-b806-49a0aefbee81",
+        "type": "expense",
+        "amount": 19.8,
+        "desc": "AEON",
+        "category": "groceries",
+        "subCategory": "groc_household_cleaning",
+        "tags": [
+          "fabric spray",
+          "household",
+          "aeon",
+          "natucair"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 19.8,
+        "exchangeRate": 1,
+        "date": "2026-08-29",
+        "time": "14:49",
+        "accountId": "default",
+        "paymentMethod": "Credit Card",
+        "location": "AEON Ipoh Station 18",
+        "note": "NATUCAIR DREAMY FABRIC SPRAY P x2 (RM 19.80)",
+        "items": [
+          {
+            "name": "NATUCAIR DREAMY FABRIC SPRAY P",
+            "price": 19.8,
+            "qty": 2
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 19.8,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-12T08:47:22.552Z"
+      },
+      {
+        "id": "item_53e701ea-52f4-4632-8fa0-b6b6e081b9c9",
+        "type": "expense",
+        "amount": 27.5,
+        "desc": "Guardian",
+        "category": "health",
+        "subCategory": "health_pharmacy_rx",
+        "tags": [
+          "guardian",
+          "toothpaste",
+          "colgate",
+          "pharmacy",
+          "personal care"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 27.5,
+        "exchangeRate": 1,
+        "date": "2026-08-08",
+        "time": "18:59",
+        "accountId": "default",
+        "paymentMethod": "Cash",
+        "location": "Ipoh Parade",
+        "note": "GWP SHOK CAPY BAG, COLG OW PURPLE PO2 x2 (RM 27.50)",
+        "items": [
+          {
+            "name": "GWP SHOK CAPY BAG",
+            "price": 0,
+            "qty": 1
+          },
+          {
+            "name": "COLG OW PURPLE PO2",
+            "price": 27.5,
+            "qty": 2
+          }
+        ],
+        "sstPct": 0,
+        "sstAmount": 0,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": null,
+        "taxReliefCat": null,
+        "taxReliefAmount": 27.5,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-17T12:01:18.238Z"
+      },
+      {
+        "id": "item_d4984b1e-2796-4c05-97f0-c84b8d0fa289",
+        "type": "expense",
+        "amount": 328,
+        "desc": "Abi Motors Sdn Bhd",
+        "category": "transport",
+        "subCategory": "trans_car_maintenance",
+        "tags": [
+          "car service",
+          "perodua",
+          "maintenance",
+          "oil change"
+        ],
+        "originalCurrency": "MYR",
+        "originalAmount": 328,
+        "exchangeRate": 1,
+        "date": "2026-07-31",
+        "time": "15:46",
+        "accountId": "default",
+        "paymentMethod": "RHB Bank",
+        "location": "Ipoh, Perak",
+        "note": "MAINTENANCE SERVICE OM [50,000 km] (RM 42.77), EVAPORATOR CLEANER (LABOUR) (RM 29.70), ADD CABIN FILTER (LABOUR), ELEMENT S/A, OIL FILTER (BLUE) (RM 11.25), PEO FULLY SYNTHETIC 0W-20 API SN 3.5L (RM 144.99), GASKET (RM 3.42), EVAPORATOR CLEANER (RM 60.85), CABIN AIR FILTER (CHARCOAL) (RM 35.00)",
+        "items": [
+          {
+            "name": "MAINTENANCE SERVICE OM [50,000 km]",
+            "price": 42.77,
+            "qty": 1
+          },
+          {
+            "name": "EVAPORATOR CLEANER (LABOUR)",
+            "price": 29.7,
+            "qty": 1
+          },
+          {
+            "name": "ADD CABIN FILTER (LABOUR)",
+            "price": 0,
+            "qty": 1
+          },
+          {
+            "name": "ELEMENT S/A, OIL FILTER (BLUE)",
+            "price": 11.25,
+            "qty": 1
+          },
+          {
+            "name": "PEO FULLY SYNTHETIC 0W-20 API SN 3.5L",
+            "price": 144.99,
+            "qty": 1
+          },
+          {
+            "name": "GASKET",
+            "price": 3.42,
+            "qty": 1
+          },
+          {
+            "name": "EVAPORATOR CLEANER",
+            "price": 60.85,
+            "qty": 1
+          },
+          {
+            "name": "CABIN AIR FILTER (CHARCOAL)",
+            "price": 35,
+            "qty": 1
+          }
+        ],
+        "sstPct": 8,
+        "sstAmount": 5.37,
+        "serviceChargePct": 0,
+        "serviceChargeAmount": 0,
+        "roundingAmount": 0,
+        "taxesCollectedSummary": "SST (8%): RM 5.37",
+        "taxReliefCat": null,
+        "taxReliefAmount": 328,
+        "taxReliefReason": null,
+        "createdAt": "2026-09-17T11:57:51.720Z"
+      }
+    ],
+    "budgets": [],
+    "goals": [],
+    "reminders": [],
+    "debts": [],
+    "recurring": [],
+    "monthlyBudget": 0,
+    "accounts": [
+      {
+        "id": "default",
+        "name": "Wallet",
+        "type": "cash",
+        "icon": "🍯",
+        "color": "#f59e0b",
+        "openingBalance": 0
+      }
+    ],
+    "quickPresets": [
+      {
+        "icon": "🍜",
+        "name": "Mamak",
+        "amount": 10,
+        "category": "food"
+      },
+      {
+        "icon": "☕",
+        "name": "Coffee",
+        "amount": 7,
+        "category": "food"
+      },
+      {
+        "icon": "⛽",
+        "name": "Petrol",
+        "amount": 50,
+        "category": "fuel"
+      },
+      {
+        "icon": "🚗",
+        "name": "Grab",
+        "amount": 15,
+        "category": "toll_parking"
+      },
+      {
+        "icon": "🛒",
+        "name": "Groceries",
+        "amount": 30,
+        "category": "groceries"
+      },
+      {
+        "icon": "🅿️",
+        "name": "Parking",
+        "amount": 5,
+        "category": "toll_parking"
+      }
+    ],
+    "expCategories": [
+      {
+        "id": "food",
+        "name": "Food & Dining",
+        "icon": "🍜"
+      },
+      {
+        "id": "drinks",
+        "name": "Drinks & Coffee",
+        "icon": "🧋"
+      },
+      {
+        "id": "groceries",
+        "name": "Groceries & Market",
+        "icon": "🛒"
+      },
+      {
+        "id": "period_care",
+        "name": "Period Care & Hygiene",
+        "icon": "🌸"
+      },
+      {
+        "id": "fuel",
+        "name": "Petrol & Fuel",
+        "icon": "⛽"
+      },
+      {
+        "id": "toll_parking",
+        "name": "Toll & Parking",
+        "icon": "🚗"
+      },
+      {
+        "id": "transport",
+        "name": "Public Transit & Grab",
+        "icon": "🚕"
+      },
+      {
+        "id": "shopping",
+        "name": "Shopping & Retail",
+        "icon": "🛍️"
+      },
+      {
+        "id": "beauty",
+        "name": "Beauty & Skincare",
+        "icon": "💄"
+      },
+      {
+        "id": "bills",
+        "name": "Bills & Utilities",
+        "icon": "⚡"
+      },
+      {
+        "id": "rent_housing",
+        "name": "Rent & Housing",
+        "icon": "🏠"
+      },
+      {
+        "id": "health",
+        "name": "Healthcare & Medical",
+        "icon": "💊"
+      },
+      {
+        "id": "entertainment",
+        "name": "Entertainment & Fun",
+        "icon": "🎬"
+      },
+      {
+        "id": "education",
+        "name": "Education & Books",
+        "icon": "📚"
+      },
+      {
+        "id": "pets",
+        "name": "Pet Care",
+        "icon": "🐾"
+      },
+      {
+        "id": "donation",
+        "name": "Charity & Gifts",
+        "icon": "💖"
+      },
+      {
+        "id": "other",
+        "name": "General / Other",
+        "icon": "📦"
+      }
+    ],
+    "incCategories": [
+      {
+        "id": "salary",
+        "name": "Monthly Salary",
+        "icon": "💼"
+      },
+      {
+        "id": "freelance",
+        "name": "Freelance & Gigs",
+        "icon": "💻"
+      },
+      {
+        "id": "business",
+        "name": "Business & Sales",
+        "icon": "🏢"
+      },
+      {
+        "id": "investment",
+        "name": "Investments & Dividends",
+        "icon": "📈"
+      },
+      {
+        "id": "gift",
+        "name": "Gifts & Allowance",
+        "icon": "🎁"
+      },
+      {
+        "id": "cashback",
+        "name": "Cashback & Rewards",
+        "icon": "💧"
+      },
+      {
+        "id": "other",
+        "name": "Other Income",
+        "icon": "🤝"
+      }
+    ],
+    "quickLogTitle": "⚡ Quick Log",
+    "lang": "en",
+    "userName": "Pocket Winnie",
+    "currency": "RM",
+    "theme": "dark",
+    "period": "month",
+    "selAcc": "all",
+    "lastUsedAccId": "default",
+    "gsheetUrl": "",
+    "lastSync": "",
+    "biometricLock": false,
+    "pendingMeals": [],
+    "restaurantRecords": [],
+    "paydayDate": 25,
+    "paydayAmount": 0,
+    "challenges": [],
+    "streaks": {
+      "noSpendBest": 365,
+      "noSpendCurrent": 2,
+      "lastCheckedDate": "2026-10-02"
+    },
+    "roundUpJar": 0,
+    "partnerData": null,
+    "partnerName": "",
+    "familyMode": false,
+    "weeklyReportLastShown": "",
+    "locationSuggestEnabled": true,
+    "wallpaperUrl": "https://i.pinimg.com/736x/d4/f4/44/d4f4446eec7e530e612f30f10db39d77.jpg",
+    "wallpaperOpacity": 35,
+    "periodTracker": {
+      "lastPeriodDate": "2026-09-14",
+      "hasSetFirstDate": true,
+      "periodLength": 5,
+      "cycleLength": 28,
+      "history": [
+        {
+          "startDate": "2026-09-14",
+          "endDate": null,
+          "note": "Initial Period Start Date"
+        }
+      ]
+    },
+    "lastUpdated": 1790937889382
+  }
+}
