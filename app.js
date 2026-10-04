@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-10-02T10:48:38.323Z
+   Last build: 2026-10-04T10:36:58.649Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -1861,6 +1861,13 @@ function applyStateObject(p){
     locationSuggestEnabled: p.locationSuggestEnabled !== false,
     wallpaperUrl: p.wallpaperUrl !== undefined ? p.wallpaperUrl : 'https://i.pinimg.com/736x/d4/f4/44/d4f4446eec7e530e612f30f10db39d77.jpg',
     wallpaperOpacity: p.wallpaperOpacity !== undefined ? p.wallpaperOpacity : 35,
+    periodTracker: (p && p.periodTracker) ? p.periodTracker : (S.periodTracker || {
+      lastPeriodDate: null,
+      hasSetFirstDate: false,
+      periodLength: 5,
+      cycleLength: 28,
+      history: []
+    }),
     geminiApiKey: p.geminiApiKey || (typeof S !== 'undefined' && S ? S.geminiApiKey : '') || ''
   };
 
@@ -1883,7 +1890,6 @@ function toast(msg,ms=2400){
   clearTimeout(t._t);
   t._t=setTimeout(()=>t.classList.add('hidden'),ms);
 }
-
 
 /* ── Module: ui/theme.js ── */
 /**
@@ -2339,18 +2345,49 @@ function resolveAccountIdFromPayment(paymentStr, fallbackAccId){
  */
 
 // ── RECURRING ──────────────────────────────────────────
-function nextDue(from,freq){
-  const d=new Date(from+'T00:00:00');
-  if(freq==='daily') d.setDate(d.getDate()+1);
-  else if(freq==='weekly') d.setDate(d.getDate()+7);
-  else if(freq==='monthly') d.setMonth(d.getMonth()+1);
-  else if(freq==='yearly') d.setFullYear(d.getFullYear()+1);
+function nextDue(from, freq){
+  const d = new Date((from || today()) + 'T00:00:00');
+  if(isNaN(d.getTime())) return today();
+  if(freq === 'daily') d.setDate(d.getDate() + 1);
+  else if(freq === 'weekly') d.setDate(d.getDate() + 7);
+  else if(freq === 'monthly') d.setMonth(d.getMonth() + 1);
+  else if(freq === 'yearly') d.setFullYear(d.getFullYear() + 1);
   return d.toISOString().split('T')[0];
 }
-function applyRecurring() {}
 
-function confirmRecurring(id) {}
+function applyRecurring(){
+  if(!Array.isArray(S.recurring)) S.recurring = [];
+  S.recurring.forEach(r => {
+    if(!r.nextDue) r.nextDue = today();
+  });
+}
 
+function confirmRecurring(id){
+  if(!Array.isArray(S.recurring)) return;
+  const r = S.recurring.find(x => x.id === id);
+  if(!r) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const txDate = (r.nextDue && r.nextDue <= today()) ? r.nextDue : today();
+  const newTx = {
+    id: uid('rec'),
+    type: r.type || 'expense',
+    amount: Number(r.amount) || 0,
+    desc: r.desc,
+    category: r.category || 'bills',
+    date: txDate,
+    paymentMethod: r.paymentMethod || 'Auto-Debit',
+    note: isZh ? `周期性账单: ${r.desc}` : `Recurring bill: ${r.desc}`,
+    accountId: 'default',
+    createdAt: new Date().toISOString()
+  };
+  if(!Array.isArray(S.transactions)) S.transactions = [];
+  S.transactions.unshift(newTx);
+  r.lastLogged = txDate;
+  r.nextDue = nextDue(txDate, r.freq || 'monthly');
+  save();
+  renderAll();
+  toast(isZh ? `✅ 已入账: ${r.desc} (${fmt(r.amount)})` : `✅ Recorded: ${r.desc} (${fmt(r.amount)})`);
+}
 
 /* ── Module: features/analytics/healthScore.js ── */
 /**
@@ -3480,13 +3517,12 @@ function getTxInstantAiAlert(tx){
 let activeAiAlerts = [];
 let currentAiAlertIdx = 0;
 let dismissedAlertTitles = new Set();
-let aiBannerSwipeBound = false;
 
 function initFloatingAiAlerts(resetDismissed = false){
   if(resetDismissed){
     dismissedAlertTitles.clear();
   }
-  const allAlerts = buildInsights().filter(a => a.tag === 'alert' || a.tag === 'warn' || a.tag === 'tip');
+  const allAlerts = (typeof buildInsights === 'function' ? buildInsights() : []).filter(a => a.tag === 'alert' || a.tag === 'warn' || a.tag === 'tip');
   
   // Filter out any dismissed alerts for current session
   activeAiAlerts = allAlerts.filter(a => !dismissedAlertTitles.has(a.title));
@@ -3530,8 +3566,8 @@ function renderFloatingAiAlert(){
     div.className = `ai-floating-alert alert-level-${alert.tag || 'warn'}`;
     
     let actionHtml = '';
-    if (alert.action) {
-      actionHtml = `<div class="ai-float-action"><button type="button" class="ai-float-btn" onclick="${alert.action.onClick.replace(/"/g, '&quot;')}"><span>${alert.action.label}</span></button></div>`;
+    if (alert.action && alert.action.label) {
+      actionHtml = `<div class="ai-float-action"><button type="button" class="ai-float-btn"><span>${esc(alert.action.label)}</span></button></div>`;
     }
     
     const countBadge = isZh ? `第 ${idx + 1} / ${activeAiAlerts.length} 条` : `${idx + 1} of ${activeAiAlerts.length}`;
@@ -3543,22 +3579,48 @@ function renderFloatingAiAlert(){
         <div class="ai-float-badge">${levelText} · ${countBadge}</div>
         <div class="ai-float-controls">
           ${swipeHint}
-          <button type="button" class="ai-float-close-btn" onclick="dismissAiAlert('${alert.title.replace(/'/g, "\\'")}')" title="${dismissTitle}">✕</button>
+          <button type="button" class="ai-float-close-btn" title="${dismissTitle}">✕</button>
         </div>
       </div>
       <div class="ai-float-content">
         <div class="ai-float-icon">${alert.icon || '🤖'}</div>
         <div class="ai-float-info">
-          <div class="ai-float-title">${alert.title || (isZh ? 'AI 开销提醒' : 'AI Spending Alert')}</div>
-          <div class="ai-float-desc">${alert.text || ''}</div>
+          <div class="ai-float-title">${esc(alert.title || (isZh ? 'AI 开销提醒' : 'AI Spending Alert'))}</div>
+          <div class="ai-float-desc">${esc(alert.text || '')}</div>
           ${actionHtml}
         </div>
       </div>
     `;
+
+    const closeBtn = div.querySelector('.ai-float-close-btn');
+    if(closeBtn){
+      closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        dismissAiAlert(alert.title);
+      };
+    }
+
+    if(alert.action){
+      const actionBtn = div.querySelector('.ai-float-btn');
+      if(actionBtn){
+        actionBtn.onclick = (e) => {
+          e.stopPropagation();
+          if(typeof alert.action.onClick === 'function'){
+            alert.action.onClick();
+          } else if(typeof alert.action.onClick === 'string'){
+            try {
+              new Function(alert.action.onClick)();
+            } catch(err){
+              console.error('Error executing alert action:', err);
+            }
+          }
+        };
+      }
+    }
+
     container.appendChild(div);
   });
 }
-
 
 /* ── Module: features/reminders/dueSoon.js ── */
 /**
@@ -4350,7 +4412,7 @@ function deleteTx(id, skipConfirm = false){
     ? (S.lang === 'zh' ? '删除这笔内部转账？\n\n两个账户的对应转账记录都会移除。' : 'Delete this internal transfer?\n\nThe matching entry in the other account will also be removed.')
     : 'Delete this transaction?\n\n'+cat.icon+' '+tx.desc+'\n'+fmt(tx.amount)+' · '+tx.date;
   if(skipConfirm || confirm(confirmation)){
-    S.transactions=S.transactions.filter(t=>!isTransfer || t.transferId !== tx.transferId);
+    S.transactions = S.transactions.filter(t => isTransfer ? (t.transferId !== tx.transferId) : (t.id !== tx.id));
     save();renderAll();toast(isTransfer ? (S.lang === 'zh' ? '🗑️ 内部转账已删除' : '🗑️ Internal transfer deleted') : '🗑️ Transaction deleted');
     return true;
   }
@@ -9212,7 +9274,7 @@ function renderPeriodCalendarGrid(){
   // Get info & predicted cycles
   const info = getPeriodPhaseInfo();
   const pt = S.periodTracker;
-  const lastD = new Date(pt.lastPeriodDate + 'T00:00:00');
+  const lastD = (pt && pt.lastPeriodDate) ? new Date(pt.lastPeriodDate + 'T00:00:00') : null;
   const cycleDays = pt.cycleLength || 28;
   const periodDays = pt.periodLength || 5;
 
@@ -9232,37 +9294,40 @@ function renderPeriodCalendarGrid(){
   // 2. Current month days
   for(let d = 1; d <= totalDays; d++){
     const dateStr = `${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const currD = new Date(dateStr + 'T00:00:00');
-    const diff = Math.floor((currD - lastD) / (1000 * 60 * 60 * 24));
-    const cycleDay = diff >= 0 ? ((diff % cycleDays) + 1) : (cycleDays + ((diff % cycleDays) + 1));
-
     // Phase determination for each day using clean wording tags (NO emoji symbols)
-    let cellBg = 'rgba(255,255,255,.08)';
-    let cellColor = '#111827';
-    let borderStyle = '1px solid transparent';
+    let cellBg = 'rgba(255,255,255,.06)';
+    let cellColor = 'var(--text)';
+    let borderStyle = '1px solid var(--border)';
     let phaseTagHtml = '';
     let boxShadow = 'none';
+    let cycleDay = 0;
 
-    if(cycleDay <= periodDays){
-      cellBg = 'rgba(236,72,153,.72)';
-      cellColor = '#111827';
-      borderStyle = '1.5px solid #ec4899';
-      phaseTagHtml = `<span class="period-cell-tag period-tag-flow">${isZh ? '经期' : 'Period'}</span>`;
-    } else if(cycleDay >= (cycleDays - 16) && cycleDay <= (cycleDays - 10)){
-      cellBg = 'rgba(139,92,246,.72)';
-      cellColor = '#111827';
-      borderStyle = '1.5px solid #a78bfa';
-      phaseTagHtml = `<span class="period-cell-tag period-tag-ovul">${isZh ? '排卵' : 'Fertile'}</span>`;
-    } else if((cycleDays - cycleDay) <= 5 && (cycleDays - cycleDay) >= 0){
-      cellBg = 'rgba(245,158,11,.68)';
-      cellColor = '#111827';
-      borderStyle = '1.5px dashed #fbbf24';
-      phaseTagHtml = `<span class="period-cell-tag period-tag-pms">${isZh ? '经前' : 'PMS'}</span>`;
-    } else {
-      cellBg = 'rgba(16,185,129,.62)';
-      cellColor = '#111827';
-      borderStyle = '1px solid rgba(16,185,129,.35)';
-      phaseTagHtml = `<span class="period-cell-tag period-tag-safe">${isZh ? '安全' : 'Safe'}</span>`;
+    if(info.isConfigured && lastD && !isNaN(lastD.getTime())){
+      const currD = new Date(dateStr + 'T00:00:00');
+      const diff = Math.floor((currD - lastD) / (1000 * 60 * 60 * 24));
+      cycleDay = diff >= 0 ? ((diff % cycleDays) + 1) : (cycleDays + ((diff % cycleDays) + 1));
+
+      if(cycleDay <= periodDays){
+        cellBg = 'rgba(236,72,153,.72)';
+        cellColor = '#ffffff';
+        borderStyle = '1.5px solid #ec4899';
+        phaseTagHtml = `<span class="period-cell-tag period-tag-flow">${isZh ? '经期' : 'Period'}</span>`;
+      } else if(cycleDay >= (cycleDays - 16) && cycleDay <= (cycleDays - 10)){
+        cellBg = 'rgba(139,92,246,.72)';
+        cellColor = '#ffffff';
+        borderStyle = '1.5px solid #a78bfa';
+        phaseTagHtml = `<span class="period-cell-tag period-tag-ovul">${isZh ? '排卵' : 'Fertile'}</span>`;
+      } else if((cycleDays - cycleDay) <= 5 && (cycleDays - cycleDay) >= 0){
+        cellBg = 'rgba(245,158,11,.68)';
+        cellColor = '#ffffff';
+        borderStyle = '1.5px dashed #fbbf24';
+        phaseTagHtml = `<span class="period-cell-tag period-tag-pms">${isZh ? '经前' : 'PMS'}</span>`;
+      } else {
+        cellBg = 'rgba(16,185,129,.62)';
+        cellColor = '#ffffff';
+        borderStyle = '1px solid rgba(16,185,129,.35)';
+        phaseTagHtml = `<span class="period-cell-tag period-tag-safe">${isZh ? '安全' : 'Safe'}</span>`;
+      }
     }
 
     const box = document.createElement('div');
@@ -11560,15 +11625,40 @@ function clearData(){
 }
 
 function exportCSV(){
-  if(!S.transactions.length){toast('No transactions to export');return;}
-  const rows=['Date,Time,Type,Account,Payment Method,Location,Category,Description,Amount,Note'];
-  S.transactions.sort((a,b)=>a.date.localeCompare(b.date)).forEach(tx=>{
-    const cat=catInfo(tx.type,tx.category), acc=S.accounts.find(a=>a.id===tx.accountId);
-    rows.push('"'+tx.date+'","'+(tx.time||'')+'","'+tx.type+'","'+(acc?acc.name:'')+'","'+(tx.paymentMethod||'')+'","'+(tx.location||'')+'","'+cat.name+'","'+tx.desc+'","'+tx.amount+'","'+(tx.note||'')+'"');
+  if(!S.transactions || !S.transactions.length){
+    toast(S.lang === 'zh' ? '暂无账单数据可导出' : 'No transactions to export');
+    return;
+  }
+  const clean = v => `"${String(v !== undefined && v !== null ? v : '').replace(/"/g, '""')}"`;
+  const rows = ['Date,Time,Type,Account,Payment Method,Location,Category,Subcategory,Tags,Description,Amount,Note'];
+  [...S.transactions].sort((a,b) => (a.date || '').localeCompare(b.date || '')).forEach(tx => {
+    const cat = catInfo(tx.type, tx.category);
+    const sub = getSubCatInfo(tx.subCategory);
+    const acc = S.accounts ? S.accounts.find(a => a.id === tx.accountId) : null;
+    const tagStr = (Array.isArray(tx.tags) && tx.tags.length) ? tx.tags.join(';') : '';
+    rows.push([
+      clean(tx.date),
+      clean(tx.time || ''),
+      clean(tx.type || 'expense'),
+      clean(acc ? acc.name : 'Wallet'),
+      clean(tx.paymentMethod || ''),
+      clean(tx.location || ''),
+      clean(cat ? cat.name : (tx.category || '')),
+      clean(sub ? sub.name : ''),
+      clean(tagStr),
+      clean(tx.desc || ''),
+      clean(tx.amount || 0),
+      clean(tx.note || '')
+    ].join(','));
   });
-  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='pocket_winnie_'+today()+'.csv';a.click();
-  toast('📤 Export complete!');
+  const csvContent = '\uFEFF' + rows.join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `pocket_winnie_${today()}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast(S.lang === 'zh' ? '📤 CSV 导出成功 (支持 Excel)！' : '📤 CSV Export complete (Excel compatible)!');
 }
 
 function exportFullBackupJSON(){
@@ -11576,7 +11666,7 @@ function exportFullBackupJSON(){
   delete safeState.geminiApiKey; // Exclude secret API key from downloadable backups
   const backup = {
     app: '🍯 Pocket Winnie 🍯',
-    version: '2.5',
+    version: '4.6',
     backupDate: new Date().toISOString(),
     state: safeState
   };
@@ -11588,7 +11678,7 @@ function exportFullBackupJSON(){
   a.download = `PocketWinnie_FullBackup_${today()}.json`;
   a.click();
   URL.revokeObjectURL(url);
-  toast('💾 Full Backup downloaded! Keep this file safe.');
+  toast(S.lang === 'zh' ? '💾 完整备份文件已下载！请妥善保管。' : '💾 Full Backup downloaded! Keep this file safe.');
 }
 
 function importFullBackupJSON(){
@@ -11607,13 +11697,13 @@ function importFullBackupJSON(){
           applyStateObject(newState);
           save();
           renderAll();
-          renderCalendar();
-          toast(`✅ Restored ${S.transactions.length} transactions successfully!`);
+          if(typeof renderCalendar === 'function') renderCalendar();
+          toast(S.lang === 'zh' ? `✅ 成功恢复 ${S.transactions.length} 笔账单数据！` : `✅ Restored ${S.transactions.length} transactions successfully!`);
         } else {
-          toast('⚠️ Invalid backup file format');
+          toast(S.lang === 'zh' ? '⚠️ 无效的备份文件格式' : '⚠️ Invalid backup file format');
         }
       } catch(err){
-        toast('⚠️ Could not parse backup JSON file');
+        toast(S.lang === 'zh' ? '⚠️ 无法解析备份 JSON 文件' : '⚠️ Could not parse backup JSON file');
       }
     };
     reader.readAsText(file);
@@ -11629,7 +11719,6 @@ function purgePhotoCache(){
   toast(S.lang === 'zh' ? '✨ 小票照片已清空，系统不保留收据图片' : '✨ Receipt photos cleared; photos are never stored');
 }
 
-
 /* ── Module: services/pdfGenerator.js ── */
 /**
  * PDF Statement Generator
@@ -11644,12 +11733,14 @@ function exportMonthlyPDF(){
   }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const cur = (typeof S !== 'undefined' && S && S.currency) ? S.currency : 'RM';
 
-  const mNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const mNames = isZh ? MONTH_NAMES_ZH : ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const now = new Date();
-  const monthName = mNames[now.getMonth()] + ' ' + now.getFullYear();
+  const monthName = isZh ? `${now.getFullYear()}年 ${mNames[now.getMonth()]}` : `${mNames[now.getMonth()]} ${now.getFullYear()}`;
 
-  const txs = S.transactions.filter(t => inMonth(t, now.getMonth(), now.getFullYear()));
+  const txs = (S.transactions || []).filter(t => inMonth(t, now.getMonth(), now.getFullYear()));
   const inc = txs.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount) || 0, 0);
   const exp = txs.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount) || 0, 0);
   const net = inc - exp;
@@ -11661,11 +11752,11 @@ function exportMonthlyPDF(){
   doc.setTextColor(78, 52, 46);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text("🍯 POCKET WINNIE 🍯", 14, 16);
+  doc.text("POCKET WINNIE", 14, 16);
 
   doc.setFontSize(10.5);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Monthly Financial Statement — ${monthName}`, 14, 23);
+  doc.text(`Monthly Financial Statement - ${monthName}`, 14, 23);
   doc.text(`User: ${S.userName || 'Finance User'}`, 140, 23);
 
   // Summary Metrics
@@ -11676,28 +11767,28 @@ function exportMonthlyPDF(){
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Total Income: RM ${inc.toFixed(2)}`, 14, 48);
-  doc.text(`Total Expenses: RM ${exp.toFixed(2)}`, 75, 48);
-  doc.text(`Net Savings: RM ${net.toFixed(2)}`, 140, 48);
+  doc.text(`Total Income: ${cur} ${inc.toFixed(2)}`, 14, 48);
+  doc.text(`Total Expenses: ${cur} ${exp.toFixed(2)}`, 75, 48);
+  doc.text(`Net Savings: ${cur} ${net.toFixed(2)}`, 140, 48);
 
   const tableRows = txs.map(t => {
-    const acc = S.accounts.find(a => a.id === t.accountId);
-    const cat = (t.type === 'income' ? INC_CATS : EXP_CATS).find(c => c.id === t.category);
+    const acc = S.accounts ? S.accounts.find(a => a.id === t.accountId) : null;
+    const cat = catInfo(t.type, t.category);
     return [
       t.date || '',
       t.desc || '',
       cat ? cat.name : (t.category || ''),
-      acc ? acc.name : '',
+      acc ? acc.name : 'Wallet',
       t.paymentMethod || '',
-      (t.type === 'income' ? '+ RM ' : '- RM ') + parseFloat(t.amount).toFixed(2)
+      (t.type === 'income' ? `+ ${cur} ` : `- ${cur} `) + parseFloat(t.amount || 0).toFixed(2)
     ];
   });
 
   if(doc.autoTable){
     doc.autoTable({
       startY: 55,
-      head: [['Date', 'Description', 'Category', 'Bank / Wallet', 'Payment Method', 'Amount']],
-      body: tableRows.length > 0 ? tableRows : [['-', 'No transactions logged this month', '-', '-', '-', 'RM 0.00']],
+      head: [['Date', 'Description', 'Category', 'Account', 'Payment Method', 'Amount']],
+      body: tableRows.length > 0 ? tableRows : [['-', 'No transactions logged this month', '-', '-', '-', `${cur} 0.00`]],
       headStyles: { fillColor: [255, 179, 0], textColor: [78, 52, 46], fontStyle: 'bold' },
       styles: { fontSize: 8.5, cellPadding: 2.8 },
       alternateRowStyles: { fillColor: [253, 247, 227] }
@@ -11706,9 +11797,8 @@ function exportMonthlyPDF(){
 
   const fileName = `Statement_${now.getFullYear()}_${String(now.getMonth() + 1).padStart(2, '0')}.pdf`;
   doc.save(fileName);
-  toast('📄 PDF Statement downloaded!');
+  toast(isZh ? '📄 PDF 月度账单已导出下载！' : '📄 PDF Statement downloaded!');
 }
-
 
 /* ── Module: features/analytics/healthMatrix.js ── */
 /**
@@ -12800,7 +12890,7 @@ function renderPetrolHistory(){
 
     const stationIcon = /petronas/i.test(t.desc||'') ? '🟢' : /shell/i.test(t.desc||'') ? '🟡' : '⛽';
     const noteText = t.note || (t.items && t.items[0]?.name) || '';
-    const literMatch = noteText.match(/(d+(?:.d+)?)s*L/i);
+    const literMatch = noteText.match(/(\d+(?:\.\d+)?)\s*L/i);
     const literStr = literMatch ? `${literMatch[1]}L` : '';
 
     item.innerHTML = `
@@ -14920,12 +15010,15 @@ function renderChallengesContent(){
 // ── FEATURE 15: MONTHLY PDF STATEMENT ──────────────────
 function generateMonthlyStatement(){
   const now = new Date();
-  const monthName = now.toLocaleDateString('en-MY', { month: 'long', year: 'numeric' });
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const cur = (typeof S !== 'undefined' && S && S.currency) ? S.currency : 'RM';
+  const monthName = now.toLocaleDateString(isZh ? 'zh-CN' : 'en-MY', { month: 'long', year: 'numeric' });
   const monthStart = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
   const todayStr = today();
   
-  const txs = filteredTx().filter(t => t.date >= monthStart && t.date <= todayStr)
-    .sort((a,b) => a.date.localeCompare(b.date));
+  const txs = (typeof filteredTx === 'function' ? filteredTx() : (S.transactions || []))
+    .filter(t => t.date >= monthStart && t.date <= todayStr)
+    .sort((a,b) => (a.date || '').localeCompare(b.date || ''));
   
   const totalExp = txs.filter(t => t.type === 'expense').reduce((s,t) => s + (Number(t.amount)||0), 0);
   const totalInc = txs.filter(t => t.type === 'income').reduce((s,t) => s + (Number(t.amount)||0), 0);
@@ -14940,12 +15033,12 @@ function generateMonthlyStatement(){
   const catRows = Object.values(catTotals).sort((a,b) => b.total - a.total);
   
   const printWin = window.open('', '_blank');
-  if(!printWin){ toast('⚠️ Please allow popups'); return; }
+  if(!printWin){ toast(isZh ? '⚠️ 请允许浏览器弹出窗口以生成账单' : '⚠️ Please allow popups'); return; }
   
-  printWin.document.write(`<!DOCTYPE html><html><head><title>Financial Statement — ${monthName}</title>
+  printWin.document.write(`<!DOCTYPE html><html><head><title>${isZh ? '月度财务报告' : 'Financial Statement'} — ${monthName}</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:24px;color:#1a1a1a;max-width:800px;margin:0 auto}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,sans-serif;padding:24px;color:#1a1a1a;max-width:800px;margin:0 auto}
     h1{font-size:20px;margin-bottom:4px}
     .sub{color:#666;font-size:12px;margin-bottom:20px}
     .summary{display:flex;gap:16px;margin-bottom:20px}
@@ -14966,46 +15059,45 @@ function generateMonthlyStatement(){
     .footer{margin-top:24px;text-align:center;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:12px}
     @media print{body{padding:12px}}
   </style></head><body>
-  <h1>📊 Monthly Financial Statement</h1>
-  <div class="sub">${monthName} · Generated ${new Date().toLocaleString('en-MY')} · 🍯 Pocket Winnie 🍯</div>
+  <h1>📊 ${isZh ? '月度财务收支报告' : 'Monthly Financial Statement'}</h1>
+  <div class="sub">${monthName} · ${isZh ? '生成时间: ' : 'Generated '}${new Date().toLocaleString(isZh ? 'zh-CN' : 'en-MY')} · 🍯 Pocket Winnie 🍯</div>
   
   <div class="summary">
-    <div class="sum-box inc"><div class="sum-label">Total Income</div><div class="sum-val" style="color:#059669">RM ${totalInc.toFixed(2)}</div></div>
-    <div class="sum-box exp"><div class="sum-label">Total Expenses</div><div class="sum-val" style="color:#dc2626">RM ${totalExp.toFixed(2)}</div></div>
-    <div class="sum-box net"><div class="sum-label">Net ${net>=0?'Savings':'Deficit'}</div><div class="sum-val" style="color:${net>=0?'#059669':'#dc2626'}">${net>=0?'+':''}RM ${net.toFixed(2)}</div></div>
+    <div class="sum-box inc"><div class="sum-label">${isZh ? '本月总收入' : 'Total Income'}</div><div class="sum-val" style="color:#059669">${cur} ${totalInc.toFixed(2)}</div></div>
+    <div class="sum-box exp"><div class="sum-label">${isZh ? '本月总支出' : 'Total Expenses'}</div><div class="sum-val" style="color:#dc2626">${cur} ${totalExp.toFixed(2)}</div></div>
+    <div class="sum-box net"><div class="sum-label">${isZh ? '净结余 (收支平衡)' : ('Net ' + (net>=0?'Savings':'Deficit'))}</div><div class="sum-val" style="color:${net>=0?'#059669':'#dc2626'}">${net>=0?'+':''}${cur} ${net.toFixed(2)}</div></div>
   </div>
   
-  <h2>📋 Category Breakdown</h2>
-  ${catRows.map(c => `<div class="cat-row"><span>${c.icon} ${c.name}</span><span class="exp-amt">RM ${c.total.toFixed(2)}</span></div>`).join('')}
+  <h2>📋 ${isZh ? '分类开支占比' : 'Category Breakdown'}</h2>
+  ${catRows.map(c => `<div class="cat-row"><span>${c.icon} ${c.name}</span><span class="exp-amt">${cur} ${c.total.toFixed(2)}</span></div>`).join('')}
   
-  <h2>📝 All Transactions</h2>
+  <h2>📝 ${isZh ? '交易明细列表' : 'All Transactions'}</h2>
   <table>
-    <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Account</th><th class="amt">Amount</th></tr></thead>
+    <thead><tr><th>${isZh ? '日期' : 'Date'}</th><th>${isZh ? '描述' : 'Description'}</th><th>${isZh ? '分类' : 'Category'}</th><th>${isZh ? '账户' : 'Account'}</th><th class="amt">${isZh ? '金额' : 'Amount'}</th></tr></thead>
     <tbody>
       ${txs.map(t => {
         const c = catInfo(t.type, t.category);
-        const acc = S.accounts.find(a => a.id === t.accountId);
+        const acc = S.accounts ? S.accounts.find(a => a.id === t.accountId) : null;
         return `<tr>
           <td>${t.date}</td>
           <td>${t.desc || '—'}</td>
           <td>${c.icon} ${c.name}</td>
-          <td>${acc ? acc.name : '—'}</td>
-          <td class="amt ${t.type==='expense'?'exp-amt':'inc-amt'}">${t.type==='expense'?'-':'+'} RM ${(Number(t.amount)||0).toFixed(2)}</td>
+          <td>${acc ? acc.name : 'Wallet'}</td>
+          <td class="amt ${t.type==='expense'?'exp-amt':'inc-amt'}">${t.type==='expense'?'-':'+'} ${cur} ${(Number(t.amount)||0).toFixed(2)}</td>
         </tr>`;
       }).join('')}
     </tbody>
   </table>
   
   <div class="footer">
-    🍯 Pocket Winnie 🍯 · Personal Finance Tracker · ${txs.length} transactions · ${monthName}
+    🍯 Pocket Winnie 🍯 · ${isZh ? '个人收支与经期关爱管家' : 'Personal Finance Tracker'} · ${txs.length} ${isZh ? '笔记录' : 'transactions'} · ${monthName}
   </div>
   </body></html>`);
   
   printWin.document.close();
   setTimeout(() => { printWin.print(); }, 500);
-  toast('📤 Statement generated! Use Print → Save as PDF');
+  toast(isZh ? '📤 账单已生成！可选择打印或另存为 PDF' : '📤 Statement generated! Use Print → Save as PDF');
 }
-
 
 /* ── Module: features/profile/familyWallet.js ── */
 /**
@@ -15030,7 +15122,7 @@ function exportMyData(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `pocket_winnie_${(S.userName||'user').replace(/\\s+/g,'_')}_${today()}.json`;
+  a.download = `pocket_winnie_${(S.userName||'user').replace(/\s+/g,'_')}_${today()}.json`;
   a.click();
   URL.revokeObjectURL(url);
   toast('📤 Data exported! Share this file with your partner.');
