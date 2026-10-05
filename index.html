@@ -47,9 +47,6 @@
           <div class="hdr-sub"><span id="greeting-txt">Good afternoon</span> · <span data-i18n="track_honey">Let's track your Honey Pot 🐝</span></div>
         </div>
         <div class="home-hdr-actions">
-          <button type="button" class="top-hdr-btn" id="top-lang-btn" onclick="toggleLanguage()" title="Switch Language / 切换语言 (EN / 中文)" style="font-weight:800;font-size:11.5px;background:rgba(245,158,11,.14);border-color:var(--amber);color:var(--amber)">EN</button>
-          <button type="button" class="top-hdr-btn" onclick="openCurrencyModal()" title="💱 Live Currency Exchange & FX Converter" style="background:rgba(6,182,212,.14);border-color:var(--cyan);color:var(--cyan)">💱</button>
-
           <button type="button" class="top-hdr-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
           <button type="button" class="top-hdr-btn" id="avatar-btn" onclick="go('profile')" title="Profile & Settings" style="font-weight:800;font-size:12.5px;color:var(--amber);background:var(--bg2);border-color:var(--amber)">
             <span id="avatar-initials">PW</span>
@@ -117,6 +114,558 @@
       <button class="see-all" onclick="go('transactions')" data-i18n="view_all">See all</button>
     </div>
     <div id="recent-list" class="tx-list"></div>
+    <!-- Meal Roulette (opened from the top header 🎡 button or Dining Passport Wishlist) -->
+    <div id="roulette-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);backdrop-filter:blur(4px);flex-direction:column;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;overflow-y:auto">
+
+      <!-- Setup panel: choices, wishlist sync, quick chips -->
+      <div id="roulette-setup" style="width:min(94vw,440px);background:var(--bg2,#fff);color:var(--text,#222);border-radius:18px;padding:18px;box-sizing:border-box;box-shadow:0 12px 36px rgba(0,0,0,.35);max-height:92vh;overflow-y:auto">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <div id="roulette-title" style="font-size:17px;font-weight:800;display:flex;align-items:center;gap:6px">
+            <span>🎡</span> <span>What to eat? Roulette</span>
+          </div>
+          <button type="button" id="roulette-setup-close-btn" style="border:none;background:transparent;color:var(--muted,#888);font-size:18px;line-height:1;padding:4px 8px;cursor:pointer;border-radius:8px">✕</button>
+        </div>
+        <div id="roulette-hint" style="font-size:12px;color:var(--muted,#777);margin-bottom:12px">Type your own choices or load unvisited places from your Wishlist!</div>
+
+        <!-- Wishlist Integration Box -->
+        <div id="roulette-wishlist-box" style="background:rgba(245,158,11,.08);border:1.5px dashed var(--amber,#f59e0b);border-radius:12px;padding:10px 12px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div style="font-size:12.5px;font-weight:800;color:var(--text,#222);display:flex;align-items:center;gap:6px">
+              <span>📌</span> <span id="roulette-wl-title">Wishlist</span>
+            </div>
+            <span id="roulette-wl-badge" style="font-size:10.5px;padding:2px 8px;border-radius:10px;background:rgba(245,158,11,.2);color:var(--amber,#f59e0b);font-weight:800">0 pending</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <div id="roulette-wl-sub" style="font-size:11px;color:var(--muted,#777);line-height:1.3;flex:1">
+              Filter out visited places; only unvisited places appear!
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button type="button" id="roulette-wl-load-btn" style="padding:5px 10px;border-radius:8px;border:none;background:var(--amber,#f59e0b);color:#fff;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">
+                ⚡ Load
+              </button>
+              <button type="button" id="roulette-wl-append-btn" style="padding:5px 9px;border-radius:8px;border:1px solid var(--amber,#f59e0b);background:transparent;color:var(--text,#222);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap">
+                ➕ Append
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Idea Chips -->
+        <div style="margin-bottom:10px">
+          <div id="roulette-chips-label" style="font-size:11px;font-weight:700;color:var(--muted,#888);margin-bottom:6px">💡 Quick ideas (tap to add):</div>
+          <div id="roulette-chips" style="display:flex;gap:5px;flex-wrap:wrap">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+
+        <!-- Textarea input (always editable, manual input always supported) -->
+        <div style="position:relative">
+          <textarea id="roulette-input" rows="4" placeholder="e.g. Nasi Lemak, Sushi, Ramen, Pizza" style="width:100%;box-sizing:border-box;padding:10px;border-radius:12px;border:1.5px solid var(--amber,#ffb300);background:var(--bg,#fff);color:var(--text,#222);font-family:inherit;font-size:13.5px;line-height:1.45;resize:vertical"></textarea>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;margin-bottom:6px">
+          <span id="roulette-count-badge" style="font-size:11.5px;color:var(--muted,#777);font-weight:600">0 choices</span>
+          <button type="button" id="roulette-clear-btn" style="background:transparent;border:none;color:#ef4444;font-size:11.5px;font-weight:700;cursor:pointer;padding:2px 6px">🗑️ Clear</button>
+        </div>
+
+        <div id="roulette-msg" style="font-size:11.5px;color:#ef4444;min-height:16px;margin-bottom:8px"></div>
+
+        <div style="display:flex;gap:8px">
+          <button type="button" id="roulette-start-btn" style="flex:1;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:800;font-size:14.5px;cursor:pointer;box-shadow:0 3px 12px rgba(245,158,11,.35)">
+            🎡 Spin!
+          </button>
+          <button type="button" id="roulette-cancel-btn" style="padding:12px 18px;border-radius:12px;border:1px solid rgba(150,150,150,.3);background:transparent;color:var(--text,#222);font-weight:700;font-size:13.5px;cursor:pointer">
+            Cancel
+          </button>
+        </div>
+      </div>
+
+      <!-- Wheel panel: big rolling circle & winner actions -->
+      <div id="roulette-wheel-panel" style="display:none;flex-direction:column;align-items:center;max-width:440px;width:100%">
+        <div style="position:relative;width:min(86vw,380px);aspect-ratio:1/1">
+          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);z-index:2;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:28px solid #fff;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))"></div>
+          <canvas id="roulette-canvas" width="840" height="840" style="width:100%;height:100%;border-radius:50%;box-shadow:0 0 0 6px #fff,0 8px 30px rgba(0,0,0,.6)"></canvas>
+        </div>
+
+        <div id="roulette-result" style="margin-top:16px;min-height:36px;font-size:22px;font-weight:900;color:#fff;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.6)"></div>
+
+        <!-- Matched Wishlist / Winner Action Card -->
+        <div id="roulette-winner-card" style="display:none;width:min(90vw,380px);background:var(--bg2,#fff);color:var(--text,#222);border-radius:14px;padding:12px 14px;margin-top:12px;box-sizing:border-box;box-shadow:0 6px 20px rgba(0,0,0,.35)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span id="roulette-winner-source-badge" style="font-size:11px;font-weight:800;color:var(--amber,#f59e0b);background:rgba(245,158,11,.12);padding:2px 8px;border-radius:8px">
+              📌 Wishlist Pick
+            </span>
+            <span id="roulette-winner-meta" style="font-size:11px;color:var(--muted,#777)"></span>
+          </div>
+          <div id="roulette-winner-name" style="font-size:15px;font-weight:800;margin-bottom:8px;color:var(--text,#222)"></div>
+          <div id="roulette-winner-actions" style="display:flex;gap:6px;flex-wrap:wrap">
+            <a id="roulette-winner-map-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;flex:1;text-align:center;padding:7px 10px;border-radius:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:#3b82f6;font-size:12px;font-weight:700;text-decoration:none">
+              📍 Map
+            </a>
+            <button type="button" id="roulette-winner-checkin-btn" style="display:none;flex:1.4;padding:7px 12px;border-radius:8px;border:none;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:12px;font-weight:800;cursor:pointer">
+              ✅ Check-in & Log
+            </button>
+            <button type="button" id="roulette-winner-save-wl-btn" style="display:none;flex:1;padding:7px 10px;border-radius:8px;border:1px solid var(--amber,#f59e0b);background:transparent;color:var(--amber,#f59e0b);font-size:12px;font-weight:800;cursor:pointer">
+              📌 Save to Wishlist
+            </button>
+          </div>
+          <div id="roulette-winner-status-msg" style="display:none;font-size:11.5px;color:#10b981;font-weight:700;margin-top:6px;text-align:center"></div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;justify-content:center">
+          <button type="button" id="roulette-again-btn" style="padding:10px 18px;border-radius:12px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.4)">🔄 Spin again</button>
+          <button type="button" id="roulette-edit-btn" style="padding:10px 16px;border-radius:12px;border:1px solid #fff;background:rgba(255,255,255,.15);color:#fff;font-weight:800;font-size:14px;cursor:pointer">✏️ Edit</button>
+          <button type="button" id="roulette-close-btn" style="padding:10px 16px;border-radius:12px;border:1px solid #fff;background:rgba(255,255,255,.15);color:#fff;font-weight:800;font-size:14px;cursor:pointer">✕ Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function () {
+      var COLORS = ['#f59e0b','#ef4444','#10b981','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#84cc16','#f97316','#14b8a6'];
+      var KEY = 'pw_roulette_options';
+      var rot = 0, spinning = false, items = [], currentWinnerName = '';
+      var $ = function (id) { return document.getElementById(id); };
+
+      var PRESETS = {
+        en: ['🍣 Sushi', '🍜 Ramen', '🍔 Burger', '🍲 Hotpot', '🍛 Nasi Lemak', '🥗 Salad', '☕ Cafe', '🥢 Chinese'],
+        zh: ['🍣 寿司', '🍜 拉面', '🍔 汉堡', '🍲 火锅', '🍛 椰浆饭', '🥗 轻食沙拉', '☕ 咖啡简餐', '🥢 中餐炒菜']
+      };
+
+      function zh() {
+        try { return typeof S !== 'undefined' && S && S.lang === 'zh'; } catch (e) { return false; }
+      }
+
+      var TXT = {
+        en: {
+          title: '🎡 What to eat? Roulette',
+          hint: 'Type your own choices or load unvisited places from your Wishlist!',
+          wlTitle: 'Wishlist',
+          wlPending: 'pending',
+          wlDesc: 'Visited places are automatically excluded. Only unvisited places load.',
+          load: '⚡ Load',
+          append: '➕ Append',
+          chipsLabel: '💡 Quick ideas (tap to add):',
+          ph: 'e.g. Nasi Lemak, Sushi, Ramen, Pizza (one per line or separated by comma)',
+          clear: '🗑️ Clear',
+          spin: '🎡 Spin!',
+          cancel: 'Cancel',
+          again: '🔄 Spin again',
+          edit: '✏️ Edit',
+          close: '✕ Close',
+          min: 'Please enter at least 2 choices.',
+          noWl: 'No unvisited places in your Wishlist yet! Add some from Dining Passport.',
+          loadedWl: 'Loaded {n} unvisited places from Wishlist!',
+          appendedWl: 'Appended {n} places from Wishlist!',
+          winnerWlBadge: '📌 Wishlist Spot',
+          winnerCustomBadge: '💡 Custom Idea',
+          checkinBtn: '✅ Check-in & Log',
+          checkedInOk: '✅ Checked in! This place will not appear in future spins.',
+          mapBtn: '📍 Map',
+          saveWlBtn: '📌 Save to Wishlist',
+          savedWlOk: '📌 Saved to Wishlist!',
+          btn: 'What to eat? Roulette',
+          choicesCount: '{n} choice{s}'
+        },
+        zh: {
+          title: '🎡 吃什么？转盘',
+          hint: '输入你自己的选项，或一键导入想吃清单中未打卡的餐厅！',
+          wlTitle: '想吃清单',
+          wlPending: '待探店',
+          wlDesc: '已打卡去过的餐厅自动排除，仅导入尚未打卡的想吃餐厅。',
+          load: '⚡ 导入',
+          append: '➕ 追加',
+          chipsLabel: '💡 快捷灵感（点击加入）：',
+          ph: '例如：椰浆饭、寿司、拉面、披萨（换行或逗号分隔，可自由增删）',
+          clear: '🗑️ 清空',
+          spin: '🎡 开转！',
+          cancel: '取消',
+          again: '🔄 再转一次',
+          edit: '✏️ 修改选项',
+          close: '✕ 关闭',
+          min: '请至少输入 2 个选项。',
+          noWl: '想吃清单暂无未打卡餐厅！可在美食护照中粘贴地图链接添加。',
+          loadedWl: '已导入 {n} 家未打卡的想吃餐厅！',
+          appendedWl: '已追加 {n} 家想吃餐厅！',
+          winnerWlBadge: '📌 想吃心水餐厅',
+          winnerCustomBadge: '💡 自定义灵感',
+          checkinBtn: '✅ 打卡记账',
+          checkedInOk: '✅ 已成功打卡！后续转盘将不再出现该餐厅。',
+          mapBtn: '📍 地图导航',
+          saveWlBtn: '📌 加入想吃清单',
+          savedWlOk: '📌 已加入想吃清单！',
+          btn: '吃什么？转盘',
+          choicesCount: '{n} 个选项'
+        }
+      };
+
+      function t(k) { return TXT[zh() ? 'zh' : 'en'][k]; }
+
+      // Get pending wishlist places (strictly status === 'pending', visited restaurants excluded)
+      function getPendingWishlistPlaces() {
+        if (typeof rollForwardPendingWishlist === 'function') {
+          rollForwardPendingWishlist();
+        }
+        if (typeof S === 'undefined' || !S || !Array.isArray(S.restaurantRecords)) return [];
+        return S.restaurantRecords.filter(function (r) {
+          return r && r.status === 'pending' && r.name && r.name.trim();
+        });
+      }
+
+      function parseItems() {
+        var val = ($('roulette-input').value || '').trim();
+        if (!val) return [];
+        return val.split(/[,\n，、;；]+/)
+          .map(function (s) { return s.trim(); })
+          .filter(Boolean);
+      }
+
+      function updateItemCount() {
+        var count = parseItems().length;
+        var s = (count === 1) ? '' : 's';
+        var badge = $('roulette-count-badge');
+        if (badge) {
+          badge.textContent = t('choicesCount').replace('{n}', count).replace('{s}', s);
+        }
+      }
+
+      function updateWishlistBadge() {
+        var pending = getPendingWishlistPlaces();
+        var badge = $('roulette-wl-badge');
+        if (badge) {
+          badge.textContent = pending.length + ' ' + t('wlPending');
+        }
+      }
+
+      function renderPresets() {
+        var box = $('roulette-chips');
+        if (!box) return;
+        box.innerHTML = '';
+        var list = PRESETS[zh() ? 'zh' : 'en'];
+        list.forEach(function (preset) {
+          var chip = document.createElement('button');
+          chip.type = 'button';
+          chip.textContent = preset;
+          chip.style.cssText = 'padding:3px 9px;border-radius:12px;border:1px solid rgba(245,158,11,.3);background:rgba(245,158,11,.08);color:var(--text,#222);font-size:11.5px;cursor:pointer;font-weight:600';
+          chip.addEventListener('click', function () {
+            appendOption(preset);
+          });
+          box.appendChild(chip);
+        });
+      }
+
+      function appendOption(text) {
+        var val = ($('roulette-input').value || '').trim();
+        var current = parseItems();
+        var clean = text.trim();
+        if (!clean) return;
+        if (current.some(function (c) { return c.toLowerCase() === clean.toLowerCase(); })) {
+          return;
+        }
+        if (val) {
+          $('roulette-input').value = val + '\n' + clean;
+        } else {
+          $('roulette-input').value = clean;
+        }
+        updateItemCount();
+        try { localStorage.setItem(KEY, $('roulette-input').value); } catch (e) {}
+      }
+
+      function loadWishlist(isAppend) {
+        var pending = getPendingWishlistPlaces();
+        if (pending.length === 0) {
+          $('roulette-msg').textContent = t('noWl');
+          return;
+        }
+        $('roulette-msg').textContent = '';
+        var names = pending.map(function (r) { return r.name.trim(); }).filter(Boolean);
+        if (isAppend) {
+          var current = parseItems();
+          var addedCount = 0;
+          names.forEach(function (n) {
+            if (!current.some(function (c) { return c.toLowerCase() === n.toLowerCase(); })) {
+              appendOption(n);
+              addedCount++;
+            }
+          });
+          $('roulette-msg').textContent = t('appendedWl').replace('{n}', addedCount);
+        } else {
+          $('roulette-input').value = names.join('\n');
+          updateItemCount();
+          try { localStorage.setItem(KEY, $('roulette-input').value); } catch (e) {}
+          $('roulette-msg').textContent = t('loadedWl').replace('{n}', names.length);
+        }
+      }
+
+      function applyLang() {
+        $('roulette-title').innerHTML = '<span>🎡</span> <span>' + t('title') + '</span>';
+        $('roulette-hint').textContent = t('hint');
+        $('roulette-wl-title').textContent = t('wlTitle');
+        $('roulette-wl-sub').textContent = t('wlDesc');
+        $('roulette-wl-load-btn').textContent = t('load');
+        $('roulette-wl-append-btn').textContent = t('append');
+        $('roulette-chips-label').textContent = t('chipsLabel');
+        $('roulette-input').placeholder = t('ph');
+        $('roulette-clear-btn').textContent = t('clear');
+        $('roulette-start-btn').textContent = t('spin');
+        $('roulette-cancel-btn').textContent = t('cancel');
+        $('roulette-again-btn').textContent = t('again');
+        $('roulette-edit-btn').textContent = t('edit');
+        $('roulette-close-btn').textContent = t('close');
+        var hb = document.querySelector('button[onclick="openRoulette()"]');
+        if (hb) hb.title = t('btn');
+        renderPresets();
+        updateWishlistBadge();
+        updateItemCount();
+      }
+
+      function draw() {
+        var cv = $('roulette-canvas');
+        if (!cv) return;
+        var ctx = cv.getContext('2d');
+        var W = cv.width, R = W / 2, n = items.length, seg = 2 * Math.PI / n;
+        ctx.clearRect(0, 0, W, W);
+        for (var i = 0; i < n; i++) {
+          var a0 = rot + i * seg, a1 = a0 + seg;
+          ctx.beginPath(); ctx.moveTo(R, R); ctx.arc(R, R, R - 2, a0, a1); ctx.closePath();
+          ctx.fillStyle = COLORS[i % COLORS.length]; ctx.fill();
+          ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+          ctx.save();
+          ctx.translate(R, R); ctx.rotate(a0 + seg / 2);
+          ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+          var fs = Math.max(22, Math.min(46, 400 / Math.max(n, 4)));
+          var FONT = 'Quicksand, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Hiragino Sans GB", sans-serif';
+          ctx.font = '800 ' + fs + 'px ' + FONT;
+          var maxW = R - 36 - 50;
+          var label = Array.from(items[i]);
+          var fitted = label.join('');
+          if (ctx.measureText(fitted).width > maxW) {
+            var f2 = fs;
+            while (f2 > 18 && ctx.measureText(fitted).width > maxW) { f2 -= 2; ctx.font = '800 ' + f2 + 'px ' + FONT; }
+            while (label.length > 1 && ctx.measureText(label.join('') + '…').width > maxW && ctx.measureText(fitted).width > maxW) { label.pop(); fitted = label.join('') + '…'; }
+          }
+          ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 4;
+          ctx.fillText(fitted, R - 36, 0);
+          ctx.restore();
+        }
+        ctx.beginPath(); ctx.arc(R, R, 34, 0, 2 * Math.PI);
+        ctx.fillStyle = '#fff'; ctx.fill();
+        ctx.fillStyle = '#f59e0b'; ctx.font = '36px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🍽️', R, R + 2);
+      }
+
+      function rand() {
+        if (window.crypto && crypto.getRandomValues) {
+          var u = new Uint32Array(1); crypto.getRandomValues(u); return u[0] / 4294967296;
+        }
+        return Math.random();
+      }
+
+      function handleWinner(winnerName) {
+        currentWinnerName = winnerName;
+        var card = $('roulette-winner-card');
+        var sourceBadge = $('roulette-winner-source-badge');
+        var metaEl = $('roulette-winner-meta');
+        var nameEl = $('roulette-winner-name');
+        var mapLink = $('roulette-winner-map-link');
+        var checkinBtn = $('roulette-winner-checkin-btn');
+        var saveWlBtn = $('roulette-winner-save-wl-btn');
+        var statusMsg = $('roulette-winner-status-msg');
+
+        if (!card) return;
+        statusMsg.style.display = 'none';
+        statusMsg.textContent = '';
+        nameEl.textContent = winnerName;
+
+        // Check if winner matches a pending wishlist place
+        var pending = getPendingWishlistPlaces();
+        var matched = pending.find(function (r) {
+          return r && r.name && r.name.trim().toLowerCase() === winnerName.trim().toLowerCase();
+        });
+
+        if (matched) {
+          sourceBadge.textContent = t('winnerWlBadge');
+          metaEl.textContent = [matched.city, matched.country, matched.cuisine].filter(Boolean).join(' · ');
+          
+          if (matched.mapUrl && /^https?:\/\//i.test(matched.mapUrl)) {
+            mapLink.href = matched.mapUrl;
+            mapLink.textContent = t('mapBtn');
+            mapLink.style.display = 'inline-block';
+          } else {
+            mapLink.style.display = 'none';
+          }
+
+          checkinBtn.style.display = 'none';
+
+          saveWlBtn.style.display = 'none';
+          card.style.display = 'block';
+        } else {
+          // Custom / manual idea
+          sourceBadge.textContent = t('winnerCustomBadge');
+          metaEl.textContent = '';
+          mapLink.style.display = 'none';
+          checkinBtn.style.display = 'none';
+
+          saveWlBtn.style.display = 'inline-block';
+          saveWlBtn.textContent = t('saveWlBtn');
+          saveWlBtn.onclick = function () {
+            if (typeof S !== 'undefined' && S && Array.isArray(S.restaurantRecords)) {
+              var newRec = {
+                id: 'rest_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                name: winnerName,
+                status: 'pending',
+                date: (typeof today === 'function' ? today() : new Date().toISOString().slice(0, 10)),
+                country: 'Malaysia',
+                city: '',
+                currency: (S.currency || 'MYR'),
+                createdAt: Date.now()
+              };
+              S.restaurantRecords.unshift(newRec);
+              if (typeof save === 'function') save();
+              if (typeof renderRestaurantPassportWidget === 'function') renderRestaurantPassportWidget();
+              if (typeof renderRestaurantPassport === 'function') renderRestaurantPassport();
+              if (typeof renderPassportPage === 'function') renderPassportPage();
+              statusMsg.textContent = t('savedWlOk');
+              statusMsg.style.display = 'block';
+              saveWlBtn.style.display = 'none';
+              updateWishlistBadge();
+            }
+          };
+
+          card.style.display = 'block';
+        }
+      }
+
+      function removeOption(name) {
+        var current = parseItems();
+        var updated = current.filter(function (c) {
+          return c.toLowerCase() !== name.toLowerCase();
+        });
+        items = updated;
+        $('roulette-input').value = updated.join('\n');
+        updateItemCount();
+        try { localStorage.setItem(KEY, $('roulette-input').value); } catch (e) {}
+      }
+
+      function spin() {
+        if (spinning || items.length < 2) return;
+        spinning = true;
+        $('roulette-result').textContent = '';
+        $('roulette-winner-card').style.display = 'none';
+        $('roulette-again-btn').disabled = true;
+        $('roulette-edit-btn').disabled = true;
+        var n = items.length, seg = 2 * Math.PI / n, TAU = 2 * Math.PI;
+        var winner = Math.floor(rand() * n);
+        var frac = 0.12 + rand() * 0.76;
+        var desired = 1.5 * Math.PI - (winner + frac) * seg;
+        var delta = (((desired - rot) % TAU) + TAU) % TAU;
+        var turns = 5 + Math.floor(rand() * 4);
+        var start = rot, total = turns * TAU + delta, dur = 5000 + rand() * 1500, t0 = null;
+        function step(ts) {
+          if (t0 === null) t0 = ts;
+          var p = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - p, 4);
+          rot = start + total * e; draw();
+          if (p < 1) { requestAnimationFrame(step); }
+          else {
+            rot = rot % TAU; spinning = false;
+            $('roulette-again-btn').disabled = false;
+            $('roulette-edit-btn').disabled = false;
+            var wName = items[winner];
+            $('roulette-result').textContent = '🎉 ' + wName + '!';
+            handleWinner(wName);
+          }
+        }
+        requestAnimationFrame(step);
+      }
+
+      function showSetup() {
+        $('roulette-wheel-panel').style.display = 'none';
+        $('roulette-setup').style.display = 'block';
+        updateWishlistBadge();
+        updateItemCount();
+      }
+
+      function openRoulette(source) {
+        applyLang();
+        try { $('roulette-input').value = localStorage.getItem(KEY) || ''; } catch (e) {}
+        $('roulette-msg').textContent = '';
+        
+        // If opened from Wishlist tab, automatically load pending wishlist places
+        if (source === 'wishlist') {
+          var pending = getPendingWishlistPlaces();
+          if (pending.length > 0) {
+            loadWishlist(false);
+          }
+        }
+
+        updateWishlistBadge();
+        updateItemCount();
+        $('roulette-overlay').style.display = 'flex';
+        showSetup();
+        setTimeout(function () { $('roulette-input').focus(); }, 50);
+      }
+
+      function startSpin() {
+        items = parseItems();
+        if (items.length < 2) {
+          $('roulette-msg').textContent = t('min');
+          return;
+        }
+        $('roulette-msg').textContent = '';
+        try { localStorage.setItem(KEY, $('roulette-input').value); } catch (e) {}
+        $('roulette-setup').style.display = 'none';
+        $('roulette-wheel-panel').style.display = 'flex';
+        $('roulette-result').textContent = '';
+        $('roulette-winner-card').style.display = 'none';
+        draw();
+        setTimeout(spin, 350);
+      }
+
+      function closeRoulette() {
+        if (!spinning) $('roulette-overlay').style.display = 'none';
+      }
+
+      window.openRoulette = openRoulette;
+
+      function init() {
+        $('roulette-start-btn').addEventListener('click', startSpin);
+        $('roulette-cancel-btn').addEventListener('click', closeRoulette);
+        $('roulette-setup-close-btn').addEventListener('click', closeRoulette);
+        $('roulette-again-btn').addEventListener('click', function () {
+          if (items.length >= 2) {
+            draw();
+            spin();
+          } else {
+            showSetup();
+          }
+        });
+        $('roulette-edit-btn').addEventListener('click', function () { if (!spinning) showSetup(); });
+        $('roulette-close-btn').addEventListener('click', closeRoulette);
+        
+        $('roulette-wl-load-btn').addEventListener('click', function () { loadWishlist(false); });
+        $('roulette-wl-append-btn').addEventListener('click', function () { loadWishlist(true); });
+        
+        $('roulette-clear-btn').addEventListener('click', function () {
+          $('roulette-input').value = '';
+          updateItemCount();
+          $('roulette-msg').textContent = '';
+          try { localStorage.removeItem(KEY); } catch (e) {}
+        });
+
+        $('roulette-input').addEventListener('input', function () {
+          updateItemCount();
+          $('roulette-msg').textContent = '';
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+    </script>
+
     <div id="empty-home" class="empty hidden"><div class="empty-ico">🍯</div><p>No transactions yet</p><small>Tap ➕ Add Expense or 📸 Smart AI Upload to start!</small><button type="button" class="ghost-btn" onclick="importFullBackupJSON()" style="margin-top:12px;padding:8px 12px;font-size:12px">📂 Restore transactions from a backup</button></div>
 
     <!-- Due Soon Section -->
@@ -164,15 +713,20 @@
 
       <!-- 🌏 World Dining & Restaurant Passport -->
       <div class="widget-card" id="passport-card" onclick="go('passport')" style="cursor:pointer">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div style="flex:1;min-width:0">
             <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#ec4899;margin-bottom:2px">🌏 Dining Passport</div>
             <div style="font-size:13px;font-weight:800;color:var(--text)" id="passport-widget-title">World Dining Log</div>
-            <div style="font-size:10.5px;color:var(--muted);margin-top:1px" id="passport-widget-sub">Track visited & pending restaurants ›</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="passport-widget-sub">Track visited & pending restaurants ›</div>
           </div>
-          <div style="text-align:right">
-            <div style="font-size:22px;font-weight:900;color:#ec4899;line-height:1"><span id="passport-widget-countries">0</span> <span style="font-size:11px">flags</span></div>
-            <div style="font-size:10.5px;font-weight:800;color:var(--muted);margin-top:2px" id="passport-widget-counts">0 restaurants</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+            <button type="button" onclick="event.stopPropagation();openRoulette()" title="What to eat? Roulette" style="padding:6px 11px;border-radius:12px;border:1px solid rgba(236,72,153,.35);background:rgba(236,72,153,.12);color:#ec4899;font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:4px;box-shadow:0 2px 6px rgba(236,72,153,.1)">
+              <span>🎡</span> <span id="passport-widget-roulette-txt">Roulette</span>
+            </button>
+            <div style="text-align:right">
+              <div style="font-size:20px;font-weight:900;color:#ec4899;line-height:1"><span id="passport-widget-countries">0</span> <span style="font-size:11px">flags</span></div>
+              <div style="font-size:10px;font-weight:800;color:var(--muted);margin-top:2px" id="passport-widget-counts">0 restaurants</div>
+            </div>
           </div>
         </div>
       </div>
@@ -305,8 +859,11 @@
           <div style="font-size:10px;color:var(--muted)" data-i18n="passport_page_sub">全球美食餐厅足迹 · 跨国探店与待吃清单</div>
         </div>
       </div>
-      <div style="display:flex;gap:6px">
-        <button type="button" class="primary-btn" onclick="openAddRestaurantModal()" style="padding:5px 12px;font-size:11.5px;margin-bottom:0;background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff">
+      <div style="display:flex;gap:6px;align-items:center">
+        <button type="button" class="ghost-btn" onclick="openCurrencyModal()" title="💱 Live Currency Exchange & FX Converter" style="padding:5px 9px;font-size:11.5px;margin-bottom:0;border-color:rgba(6,182,212,.35);background:rgba(6,182,212,.12);color:var(--cyan);display:inline-flex;align-items:center;gap:4px">
+          <span>💱</span> <span style="font-size:11px;font-weight:800">FX</span>
+        </button>
+        <button type="button" class="primary-btn" onclick="openAddPassportPlace('page')" style="padding:5px 12px;font-size:11.5px;margin-bottom:0;background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff">
           ➕ Add
         </button>
       </div>
@@ -1401,14 +1958,24 @@
       <span class="fab-item-text" data-i18n="btn_expense">Add Expense</span>
       <span class="fab-item-arrow">›</span>
     </button>
-    <button type="button" class="fab-item" onclick="closeFab();openBudgetModal()">
-      <span class="fab-item-badge badge-budget">📊</span>
-      <span class="fab-item-text">Set Monthly Budget</span>
-      <span class="fab-item-arrow">›</span>
-    </button>
     <button type="button" class="fab-item" onclick="closeFab();openUniversalUpload('expense')">
       <span class="fab-item-badge badge-scan">📸</span>
       <span class="fab-item-text">Smart AI Receipt Scan</span>
+      <span class="fab-item-arrow">›</span>
+    </button>
+    <button type="button" class="fab-item" onclick="closeFab();openCurrencyModal()">
+      <span class="fab-item-badge" style="background:rgba(6,182,212,.18);color:#06b6d4">💱</span>
+      <span class="fab-item-text" data-i18n="btn_currency_calc">Currency Exchange & Rates</span>
+      <span class="fab-item-arrow">›</span>
+    </button>
+    <button type="button" class="fab-item" onclick="closeFab();openRoulette()">
+      <span class="fab-item-badge" style="background:rgba(236,72,153,.18);color:#ec4899">🎡</span>
+      <span class="fab-item-text" data-i18n="btn_meal_roulette">What to Eat? Roulette</span>
+      <span class="fab-item-arrow">›</span>
+    </button>
+    <button type="button" class="fab-item" onclick="closeFab();openBudgetModal()">
+      <span class="fab-item-badge badge-budget">📊</span>
+      <span class="fab-item-text">Set Monthly Budget</span>
       <span class="fab-item-arrow">›</span>
     </button>
     <button type="button" class="fab-item" onclick="closeFab();go('period')">
@@ -2815,7 +3382,7 @@
 
         <!-- Action Buttons -->
         <div style="display:flex;gap:6px;margin-bottom:8px">
-          <button type="button" class="primary-btn" onclick="openAddRestaurantModal()" style="flex:1;background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff;font-size:11.5px;padding:6px 10px;margin-bottom:0">
+          <button type="button" class="primary-btn" onclick="openAddPassportPlace('modal')" style="flex:1;background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff;font-size:11.5px;padding:6px 10px;margin-bottom:0">
             ➕ Add Restaurant
           </button>
           <button type="button" class="ghost-btn" onclick="syncExistingFoodTxsToPassport()" title="Sync dining records from your food transactions" style="font-size:10.5px;padding:6px 8px;color:var(--amber);border-color:rgba(245,158,11,.3);white-space:nowrap">
@@ -2838,6 +3405,38 @@
       </div>
 
       <button type="button" class="ghost-btn" onclick="closeModal('restaurant-passport-modal')" style="margin-top:8px;flex-shrink:0">Close</button>
+    </div>
+  </div>
+
+  <!-- 📌 QUICK ADD WISHLIST MODAL (Google Maps link auto-capture with zero manual typing) -->
+  <div id="quick-wishlist-modal" class="modal-overlay hidden" onclick="closeModalIf(event,'quick-wishlist-modal')">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-handle"></div>
+      <div class="modal-title">
+        <span id="quick-wishlist-modal-title">📌 Add to Wishlist</span>
+        <button type="button" class="modal-close-btn" onclick="closeModal('quick-wishlist-modal')">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.4" id="quick-wishlist-modal-sub">
+        Paste any Google Maps link — restaurant name, city, country & pin location will be auto-captured with zero typing!
+      </div>
+      <div class="form-row" style="margin-bottom:10px">
+        <label class="form-label" id="quick-wishlist-lbl">📍 Google Maps Link or Share Text</label>
+        <textarea id="quick-wishlist-url-inp" class="form-input" rows="3" placeholder="Paste Google Maps link (e.g. https://maps.app.goo.gl/...)" style="font-size:13px;width:100%;box-sizing:border-box" oninput="onQuickWishlistInput(this.value)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitQuickWishlistModal();}"></textarea>
+      </div>
+      <div id="quick-wishlist-status" style="font-size:11.5px;min-height:18px;margin-bottom:12px;color:var(--muted);line-height:1.4"></div>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="primary-btn" id="quick-wishlist-submit-btn" onclick="submitQuickWishlistModal()" style="flex:1;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;font-weight:800;font-size:13px;padding:10px;margin:0">
+          ⚡ Auto-Capture & Save
+        </button>
+        <button type="button" class="ghost-btn" onclick="closeModal('quick-wishlist-modal')" style="width:auto;padding:10px 14px;margin:0">
+          Cancel
+        </button>
+      </div>
+      <div style="margin-top:12px;text-align:center">
+        <button type="button" onclick="closeModal('quick-wishlist-modal');openAddRestaurantModal(null,null,'pending');" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline">
+          Need to type manually? Switch to full form ›
+        </button>
+      </div>
     </div>
   </div>
 
@@ -2867,50 +3466,79 @@
           <input type="hidden" id="rest-status-inp" value="visited"/>
         </div>
 
-        <!-- Restaurant Name -->
-        <div class="form-row">
-          <label class="form-label">Restaurant Name (餐厅/店名) *</label>
-          <input type="text" id="rest-name-inp" class="form-input" placeholder="e.g. Ichiran Ramen, Jay Fai, Tai Ho Jiak" required oninput="autoDetectCountryFromRestName(this.value)"/>
-        </div>
-
-        <!-- Country & City -->
-        <div class="form-row" style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px">
-          <div>
-            <label class="form-label">Country (国家) *</label>
-            <select id="rest-country-sel" class="form-input" onchange="onRestCountryChange(this.value)" required>
-              <option value="Malaysia" data-code="MY" data-flag="🇲🇾" data-currency="MYR">🇲🇾 Malaysia (马来西亚)</option>
-              <option value="Japan" data-code="JP" data-flag="🇯🇵" data-currency="JPY">🇯🇵 Japan (日本)</option>
-              <option value="Thailand" data-code="TH" data-flag="🇹🇭" data-currency="THB">🇹🇭 Thailand (泰国)</option>
-              <option value="Singapore" data-code="SG" data-flag="🇸🇬" data-currency="SGD">🇸🇬 Singapore (新加坡)</option>
-              <option value="Taiwan" data-code="TW" data-flag="🇹🇼" data-currency="TWD">🇹🇼 Taiwan (台湾)</option>
-              <option value="South Korea" data-code="KR" data-flag="🇰🇷" data-currency="KRW">🇰🇷 South Korea (韩国)</option>
-              <option value="China" data-code="CN" data-flag="🇨🇳" data-currency="CNY">🇨🇳 China (中国)</option>
-              <option value="United Kingdom" data-code="GB" data-flag="🇬🇧" data-currency="GBP">🇬🇧 United Kingdom (英国)</option>
-              <option value="United States" data-code="US" data-flag="🇺🇸" data-currency="USD">🇺🇸 United States (美国)</option>
-              <option value="Australia" data-code="AU" data-flag="🇦🇺" data-currency="AUD">🇦🇺 Australia (澳洲)</option>
-              <option value="Vietnam" data-code="VN" data-flag="🇻🇳" data-currency="VND">🇻🇳 Vietnam (越南)</option>
-              <option value="Indonesia" data-code="ID" data-flag="🇮🇩" data-currency="IDR">🇮🇩 Indonesia (印尼)</option>
-              <option value="Hong Kong" data-code="HK" data-flag="🇭🇰" data-currency="HKD">🇭🇰 Hong Kong (香港)</option>
-              <option value="Other" data-code="XX" data-flag="🌐" data-currency="USD">🌐 Other Country (其他国家)</option>
-            </select>
+        <!-- 📍 Google Maps link: paste to auto-capture name / country / city / coordinates -->
+        <div id="rest-map-row" class="form-row" style="background:var(--bg2);border:1.5px dashed var(--amber);border-radius:12px;padding:12px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <label class="form-label" style="margin-bottom:0;font-size:12px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px">
+              <span>📍</span> <span id="rest-map-label">Google Maps Link (粘贴地图链接)</span>
+            </label>
+            <span style="font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(245,158,11,.15);color:var(--amber);font-weight:800">⚡ Auto-Capture</span>
           </div>
-          <div>
-            <label class="form-label">City / Area (城市/区域)</label>
-            <input type="text" id="rest-city-inp" class="form-input" placeholder="e.g. Tokyo, Bangkok, KL"/>
-          </div>
-        </div>
-
-        <!-- Custom Country Name if "Other" -->
-        <div id="rest-custom-country-row" class="form-row hidden">
-          <label class="form-label">Custom Country Name & Flag</label>
           <div style="display:flex;gap:6px">
-            <input type="text" id="rest-custom-flag-inp" class="form-input" placeholder="Flag (e.g. 🇫🇷)" style="width:70px;text-align:center"/>
-            <input type="text" id="rest-custom-country-inp" class="form-input" placeholder="Country Name (e.g. France)" style="flex:1"/>
+            <input type="text" id="rest-map-inp" class="form-input" placeholder="Paste Google Maps link or share text here…" autocomplete="off" oninput="onRestMapInput(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();submitRestModalQuickSave();}" onpaste="setTimeout(()=>autoFillFromMapsLink(document.getElementById('rest-map-inp').value, true), 60)" style="flex:1;min-width:0;border-color:var(--amber);font-size:12.5px"/>
+            <button type="button" class="primary-btn" id="rest-map-quick-save-btn" onclick="submitRestModalQuickSave()" style="width:auto;margin:0;padding:6px 14px;font-size:12px;font-weight:800;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;white-space:nowrap;border:none">
+              ⚡ Save
+            </button>
           </div>
+          <div id="rest-map-status" style="font-size:11px;margin-top:6px;min-height:14px;color:var(--muted);line-height:1.4"></div>
+          <input type="hidden" id="rest-lat-inp" value=""/>
+          <input type="hidden" id="rest-lng-inp" value=""/>
         </div>
 
-        <!-- Date & Rating -->
-        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <!-- Restaurant Name -->
+
+        <!-- Manual Details Fold (Name & Location) -->
+        <details id="rest-manual-details-fold" class="form-row" style="border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--bg2);margin-bottom:12px">
+          <summary id="rest-manual-details-summary" style="font-size:11.5px;font-weight:700;color:var(--muted);cursor:pointer;user-select:none">
+            ✏️ Edit place name & location manually (手动填写或修改店名/国家 - 可选)
+          </summary>
+          <div style="margin-top:10px">
+            <!-- Restaurant Name -->
+            <div class="form-row" style="margin-bottom:8px">
+              <label class="form-label">Restaurant Name (餐厅/店名) *</label>
+              <input type="text" id="rest-name-inp" class="form-input" placeholder="e.g. Ichiran Ramen, Jay Fai, Tai Ho Jiak" oninput="autoDetectCountryFromRestName(this.value)"/>
+            </div>
+
+            <!-- Country & City -->
+            <div class="form-row" style="display:grid;grid-template-columns:1.2fr 1fr;gap:8px;margin-bottom:8px">
+              <div>
+                <label class="form-label">Country (国家) *</label>
+                <select id="rest-country-sel" class="form-input" onchange="onRestCountryChange(this.value)">
+                  <option value="Malaysia" data-code="MY" data-flag="🇲🇾" data-currency="MYR">🇲🇾 Malaysia (马来西亚)</option>
+                  <option value="Japan" data-code="JP" data-flag="🇯🇵" data-currency="JPY">🇯🇵 Japan (日本)</option>
+                  <option value="Thailand" data-code="TH" data-flag="🇹🇭" data-currency="THB">🇹🇭 Thailand (泰国)</option>
+                  <option value="Singapore" data-code="SG" data-flag="🇸🇬" data-currency="SGD">🇸🇬 Singapore (新加坡)</option>
+                  <option value="Taiwan" data-code="TW" data-flag="🇹🇼" data-currency="TWD">🇹🇼 Taiwan (台湾)</option>
+                  <option value="South Korea" data-code="KR" data-flag="🇰🇷" data-currency="KRW">🇰🇷 South Korea (韩国)</option>
+                  <option value="China" data-code="CN" data-flag="🇨🇳" data-currency="CNY">🇨🇳 China (中国)</option>
+                  <option value="United Kingdom" data-code="GB" data-flag="🇬🇧" data-currency="GBP">🇬🇧 United Kingdom (英国)</option>
+                  <option value="United States" data-code="US" data-flag="🇺🇸" data-currency="USD">🇺🇸 United States (美国)</option>
+                  <option value="Australia" data-code="AU" data-flag="🇦🇺" data-currency="AUD">🇦🇺 Australia (澳洲)</option>
+                  <option value="Vietnam" data-code="VN" data-flag="🇻🇳" data-currency="VND">🇻🇳 Vietnam (越南)</option>
+                  <option value="Indonesia" data-code="ID" data-flag="🇮🇩" data-currency="IDR">🇮🇩 Indonesia (印尼)</option>
+                  <option value="Hong Kong" data-code="HK" data-flag="🇭🇰" data-currency="HKD">🇭🇰 Hong Kong (香港)</option>
+                  <option value="Other" data-code="XX" data-flag="🌐" data-currency="USD">🌐 Other Country (其他国家)</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">City / Area (城市/区域)</label>
+                <input type="text" id="rest-city-inp" class="form-input" placeholder="e.g. Tokyo, Bangkok, KL"/>
+              </div>
+            </div>
+
+            <!-- Custom Country Name if "Other" -->
+            <div id="rest-custom-country-row" class="form-row hidden">
+              <label class="form-label">Custom Country Name & Flag</label>
+              <div style="display:flex;gap:6px">
+                <input type="text" id="rest-custom-flag-inp" class="form-input" placeholder="Flag (e.g. 🇫🇷)" style="width:70px;text-align:center"/>
+                <input type="text" id="rest-custom-country-inp" class="form-input" placeholder="Country Name (e.g. France)" style="flex:1"/>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- Date & Rating (Visited only) -->
+        <div id="rest-date-rating-row" class="form-row rest-visited-only" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div>
             <label class="form-label" id="rest-date-lbl">Visited Date (日期)</label>
             <input type="date" id="rest-date-inp" class="form-input"/>
@@ -2927,8 +3555,8 @@
           </div>
         </div>
 
-        <!-- Spending (Speeding) & Currency with Live Conversion -->
-        <div class="form-row">
+        <!-- Spending (Speeding) & Currency with Live Conversion (Visited only) -->
+        <div id="rest-spending-row" class="form-row rest-visited-only">
           <label class="form-label">Spending (消费金额与币种)</label>
           <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:6px">
             <div style="display:flex;gap:4px">
@@ -2957,8 +3585,8 @@
           </div>
         </div>
 
-        <!-- Food Dishes & Nutrition (Calories & Protein) -->
-        <div class="form-row">
+        <!-- Food Dishes & Nutrition (Calories & Protein) (Visited only) -->
+        <div id="rest-dishes-row" class="form-row rest-visited-only">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
             <label class="form-label" style="margin-bottom:0">Dishes & Nutrition (菜品与营养) 🥗</label>
             <button type="button" class="chip" onclick="addRestFoodItemRow()" style="font-size:10px;padding:3px 8px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);color:#10b981;font-weight:700">＋ Add Dish</button>
@@ -2970,21 +3598,21 @@
           </div>
         </div>
 
-        <!-- Notes / Highlights -->
-        <div class="form-row">
+        <!-- Notes / Highlights (Visited only) -->
+        <div id="rest-notes-row" class="form-row rest-visited-only">
           <label class="form-label">Notes & Signature Dishes (必点招牌 / 备忘)</label>
           <textarea id="rest-notes-inp" class="form-input" rows="2" placeholder="e.g. Signature braised pork loin, secret chilli sauce, long queue after 6pm"></textarea>
         </div>
 
-        <!-- Optional: Also log as an expense transaction -->
-        <div id="rest-sync-tx-box" class="form-row" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:8px 10px">
+        <!-- Optional: Also log as an expense transaction (Visited only) -->
+        <div id="rest-sync-tx-box" class="form-row rest-visited-only" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:8px 10px">
           <label style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text);cursor:pointer">
             <input type="checkbox" id="rest-sync-tx-chk" checked/>
             <span>Also save as an Expense transaction in Pocket Winnie (同步计入日常记账支出)</span>
           </label>
         </div>
 
-        <button type="submit" class="primary-btn" style="background:linear-gradient(135deg,#ec4899,#d946ef);margin-top:10px">
+        <button type="submit" id="rest-submit-btn" class="primary-btn" style="background:linear-gradient(135deg,#ec4899,#d946ef);margin-top:10px">
           💾 Save Restaurant Record (保存探店记录)
         </button>
         <button type="button" class="ghost-btn" onclick="closeModal('add-restaurant-modal')">Cancel</button>
@@ -3302,7 +3930,7 @@
   <div id="toast" class="toast hidden"></div>
 </div>
 
-<script src="app.js?v=4.5"></script>
+<script src="app.js?v=5.0"></script>
 <script>
   // Register Service Worker for PWA offline support
   if ('serviceWorker' in navigator) {

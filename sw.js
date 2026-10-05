@@ -1,7 +1,7 @@
-// sw.js — Pocket Winnie Service Worker
+// sw.js â€” Pocket Winnie Service Worker
 // Provides offline caching for the PWA
 
-const CACHE_NAME = 'pocket-winnie-v5';
+const CACHE_NAME = 'pocket-winnie-v14';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -6720,3 +6720,17 @@ div[id*="feedback"],
   transform: translateY(-1px);
 }
 
+/* Dining Passport Add Restaurant Modal - Clean Wishlist Mode */
+#rest-manual-details-fold.visited-mode {
+  border: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+  margin-bottom: 0 !important;
+}
+#rest-manual-details-fold.visited-mode > summary {
+  display: none !important;
+}
+#rest-manual-details-fold.visited-mode > div {
+  margin-top: 0 !important;
+}
+

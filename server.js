@@ -1,6 +1,42 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+
+// ── Google Maps short-link resolver (maps.app.goo.gl → full google.com/maps URL) ──
+// Only Google hosts are ever contacted (prevents this endpoint being used as an open proxy / SSRF).
+const MAPS_ALLOWED_HOST = /^(maps\.app\.goo\.gl|goo\.gl|g\.co|share\.google|(www\.|maps\.)?google\.[a-z.]+)$/i;
+function resolveMapsUrl(startUrl, cb, hops = 0) {
+  let u;
+  try { u = new URL(startUrl); } catch (e) { return cb(new Error('Invalid URL')); }
+  // Consent interstitials wrap the real destination in ?continue=
+  if (/^consent\.google\.[a-z.]+$/i.test(u.hostname) && u.searchParams.get('continue')) {
+    return resolveMapsUrl(u.searchParams.get('continue'), cb, hops + 1);
+  }
+  if (u.protocol !== 'https:' || !MAPS_ALLOWED_HOST.test(u.hostname)) return cb(new Error('Host not allowed'));
+  if (hops > 6) return cb(new Error('Too many redirects'));
+  let finished = false;
+  const done = (err, val) => { if (!finished) { finished = true; cb(err, val); } };
+  const req = https.request(u, {
+    method: 'GET',
+    timeout: 7000,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+      'Accept-Language': 'en'
+    }
+  }, (resp) => {
+    resp.resume(); // we only need the headers
+    if (resp.statusCode >= 300 && resp.statusCode < 400 && resp.headers.location) {
+      let next;
+      try { next = new URL(resp.headers.location, u).toString(); } catch (e) { return done(new Error('Bad redirect')); }
+      return resolveMapsUrl(next, done, hops + 1);
+    }
+    done(null, u.toString());
+  });
+  req.on('timeout', () => req.destroy(new Error('Timeout')));
+  req.on('error', (e) => done(e));
+  req.end();
+}
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || undefined; // undefined = all interfaces (phone/LAN access)
@@ -107,6 +143,25 @@ const server = http.createServer((req, res) => {
     }
     res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8', 'Allow': 'GET, POST' });
     res.end(JSON.stringify({ success: false, error: 'Method not allowed' }));
+    return;
+  }
+
+  // API: expand Google Maps short links (used by the Dining Passport auto-fill)
+  if (parsedUrl === '/api/resolve-map') {
+    if (req.method !== 'GET') {
+      res.writeHead(405, { 'Content-Type': 'application/json; charset=utf-8', 'Allow': 'GET' });
+      res.end(JSON.stringify({ error: 'Method not allowed' }));
+      return;
+    }
+    let target = '';
+    try { target = new URL(req.url, 'http://localhost').searchParams.get('url') || ''; } catch (e) {}
+    resolveMapsUrl(target, (err, finalUrl) => {
+      res.writeHead(err ? 400 : 200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Cache-Control': 'no-store'
+      });
+      res.end(JSON.stringify(err ? { error: err.message } : { url: finalUrl }));
+    });
     return;
   }
 

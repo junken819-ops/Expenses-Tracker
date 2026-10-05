@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-10-04T10:36:58.649Z
+   Last build: 2026-10-05T08:49:22.957Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -528,6 +528,8 @@ const I18N = {
     "btn_dup": "Duplicate",
     "btn_transfer": "Transfer",
     "btn_period_tracker": "Girl Period Tracker",
+    "btn_currency_calc": "Currency Exchange & Rates",
+    "btn_meal_roulette": "What to Eat? Roulette",
     "row_period_tracker": "Girl Period & Health Care Tracker",
     "row_period_tracker_sub": "Cycle countdown · Ovulation forecast · Partner care guide & sanitary expenses",
     "period_modal_title": "Girl Period & Health Care Tracker",
@@ -864,6 +866,8 @@ const I18N = {
     "btn_dup": "再记一笔",
     "btn_transfer": "转账/充值",
     "btn_period_tracker": "女生经期关怀",
+    "btn_currency_calc": "实时汇率换算",
+    "btn_meal_roulette": "吃什么？转盘选店",
     "row_period_tracker": "🌸 女生经期与贴心关怀助手",
     "row_period_tracker_sub": "经期倒计时 · 生理期/排卵预测 · 伴侣体贴提示 · 卫生用品开销",
     "period_modal_title": "女生经期与贴心关怀助手",
@@ -1879,6 +1883,11 @@ function applyStateObject(p){
   // Keep converted legacy transfers on this device without requiring a server.
   if(migratedInternalTransfers){
     try { localStorage.setItem('ff2', JSON.stringify(S)); } catch(e){}
+  }
+
+  // Roll forward any un-checked-in wishlist records from past months into the current month
+  if(typeof rollForwardPendingWishlist === 'function'){
+    rollForwardPendingWishlist();
   }
 }
 
@@ -8761,7 +8770,7 @@ function renderPeriodTrackerUI(){
   }
 
   // Render Auto-Grouped Period Expenses List (sorted by date descending)
-  const periodTxs = S.transactions
+  const periodTxs = (S.transactions || [])
     .filter(t => t.type === 'expense' && isPeriodCareExpense(t))
     .sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : (b.id > a.id ? 1 : -1)));
   const periodTotal = periodTxs.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
@@ -15445,6 +15454,8 @@ function renderRestaurantPassportWidget(){
   const pendingCount = records.filter(r => r.status === 'pending').length;
 
   if(countriesEl) countriesEl.textContent = distinctCountries.length;
+  const rouletteTxt = el('passport-widget-roulette-txt');
+  if(rouletteTxt) rouletteTxt.textContent = isZh ? '转盘选店' : 'Roulette';
   if(countsEl){
     countsEl.textContent = isZh 
       ? `${visitedCount} 打卡 · ${pendingCount} 待探店` 
@@ -15540,7 +15551,111 @@ function filterPassportPageCountry(country){
 }
 window.filterPassportPageCountry = filterPassportPageCountry;
 
+// Open the Add Restaurant form or Quick Wishlist modal depending on active tab
+// (Wishlist tab => Quick Add from Google Maps with zero typing, Visited tab => visited form).
+function openAddPassportPlace(source){
+  const st = (source === 'modal' || source === 'popup') ? passportActiveStatusFilter : passportPageStatusFilter;
+  if(st === 'pending'){
+    openQuickWishlistModal();
+  } else {
+    openAddRestaurantModal(null, null, 'visited');
+  }
+}
+window.openAddPassportPlace = openAddPassportPlace;
+
+// Inline Quick-Add Bar rendered directly at the top of the Wishlist tab
+function passportQuickAddBarHTML(source, isZh){
+  return `
+    <div class="pp-quick-add-box" style="background:var(--bg2);border:1.5px dashed var(--amber);border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 2px 8px rgba(245,158,11,.08)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:12.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px">
+          <span>📌</span> <span>${isZh ? '粘贴 Google 地图链接秒入想吃清单' : 'Paste Google Maps Link to Auto-Add Wishlist'}</span>
+        </div>
+        <span style="font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(245,158,11,.15);color:var(--amber);font-weight:800">⚡ Auto</span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="passport-quick-map-url-${source}" class="form-input" style="flex:1;min-height:38px;padding:6px 10px;font-size:12.5px;border-color:var(--amber)" placeholder="${isZh ? '直接粘贴 Google 地图链接或分享文本...' : 'Paste Google Maps link or share text here...'}" onpaste="setTimeout(()=>handleInlineWishlistPaste('${source}'), 60)" onkeydown="if(event.key==='Enter'){event.preventDefault();submitInlineWishlistQuickAdd('${source}');}"/>
+        <button type="button" class="primary-btn" id="passport-quick-map-btn-${source}" onclick="pasteAndAutoAdd('${source}')" style="width:auto;margin:0;padding:6px 14px;font-size:12px;font-weight:800;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;white-space:nowrap;border:none;display:inline-flex;align-items:center;gap:4px">
+          📋 ${isZh ? '粘贴链接' : 'Paste'}
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:8px">
+        <div id="passport-quick-map-status-${source}" style="font-size:11px;color:var(--muted);line-height:1.4;flex:1">
+          ${isZh ? '💡 自动识别店名、城市、国家与定位，完全无需手动输入！' : '💡 Zero manual typing: auto-captures place name, city, country & pin location!'}
+        </div>
+        <button type="button" onclick="openRoulette('wishlist')" style="background:rgba(236,72,153,.12);border:1px solid rgba(236,72,153,.35);color:#ec4899;border-radius:8px;font-size:11px;font-weight:800;padding:3px 9px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px">
+          <span>🎡</span> <span>${isZh ? '纠结吃哪家？转盘选' : 'Spin Wishlist'}</span>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// Empty-state card for the Wishlist / Visited tabs, always with an Add button
+function passportEmptyStateHTML(status, source, isZh){
+  const isWish = (status === 'pending');
+  const icon = isWish ? '📌' : '✅';
+  const title = isWish
+    ? (isZh ? '想吃清单是空的' : 'Your wishlist is empty')
+    : (isZh ? '还没有打卡记录' : 'No visited places yet');
+  const sub = isWish
+    ? (isZh ? '把想去的餐厅加入清单，之后可一键打卡记账！' : 'Save restaurants you want to try, then check in & log them later!')
+    : (isZh ? '记录你去过的餐厅吧！' : 'Log the restaurants you have been to!');
+  const btn = isWish
+    ? (isZh ? '粘贴地图链接快速添加' : 'Paste Map Link to Auto-Add')
+    : (isZh ? '添加打卡餐厅' : 'Add Visited Place');
+  const action = isWish ? `openQuickWishlistModal()` : `openAddPassportPlace('${source}')`;
+  const bg = isWish ? 'linear-gradient(135deg,#f59e0b,#d97706)' : 'linear-gradient(135deg,#ec4899,#d946ef)';
+  return `
+    <div style="text-align:center;padding:28px 16px;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:14px">
+      <div style="font-size:36px;margin-bottom:6px">${icon}</div>
+      <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:4px">${title}</div>
+      <div style="font-size:11px;line-height:1.5;margin-bottom:14px;max-width:280px;margin-left:auto;margin-right:auto">${sub}</div>
+      <button type="button" class="primary-btn" onclick="${action}" style="font-size:12px;padding:8px 16px;width:auto;margin-bottom:0;background:${bg};color:#fff;border:none">⚡ ${btn}</button>
+    </div>
+  `;
+}
+
+// "Add" button shown under the list on the Wishlist / Visited tabs
+function passportAddFooterHTML(status, source, isZh){
+  const isWish = (status === 'pending');
+  const label = isWish
+    ? (isZh ? '⚡ 粘贴 Google 地图链接快速添加想吃餐厅' : '⚡ Paste Google Maps Link to Auto-Add')
+    : (isZh ? '➕ 添加打卡餐厅' : '➕ Add Visited Place');
+  const action = isWish ? `openQuickWishlistModal()` : `openAddPassportPlace('${source}')`;
+  const color = isWish ? 'var(--amber)' : '#ec4899';
+  return `
+    <button type="button" class="ghost-btn" onclick="${action}" style="width:100%;margin-top:4px;padding:10px;font-size:12px;font-weight:800;color:${color};border:1px dashed ${color};border-radius:12px;background:transparent">${label}</button>
+  `;
+}
+
+// Automatically rolls forward any pending wishlist records from previous months to the current month.
+// Visited records (already checked in) are left untouched with their historical visit dates.
+function rollForwardPendingWishlist(){
+  if(typeof S === 'undefined' || !S || !Array.isArray(S.restaurantRecords)) return false;
+  const currentYM = (typeof today === 'function' ? today() : new Date().toISOString().slice(0, 10)).slice(0, 7);
+  let changed = false;
+
+  S.restaurantRecords.forEach(r => {
+    if(r && r.status === 'pending'){
+      const recordYM = (r.date || '').slice(0, 7);
+      if(recordYM && recordYM < currentYM){
+        r.originalDate = r.originalDate || r.date;
+        r.date = typeof today === 'function' ? today() : new Date().toISOString().slice(0, 10);
+        changed = true;
+      }
+    }
+  });
+
+  if(changed && typeof save === 'function'){
+    save();
+  }
+  return changed;
+}
+window.rollForwardPendingWishlist = rollForwardPendingWishlist;
+
 function renderPassportPage(){
+  rollForwardPendingWishlist();
   const container = el('passport-page-country-list');
   const pillsContainer = el('passport-page-country-pills');
   if(!container) return;
@@ -15670,6 +15785,10 @@ function renderPassportPage(){
   }
 
   if(records.length === 0){
+    if(passportPageStatusFilter === 'pending'){
+      container.innerHTML = passportQuickAddBarHTML('page', isZh) + passportEmptyStateHTML('pending', 'page', isZh);
+      return;
+    }
     container.innerHTML = `
       <div style="text-align:center;padding:28px 16px;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:14px">
         <div style="font-size:36px;margin-bottom:6px">🌏</div>
@@ -15689,6 +15808,11 @@ function renderPassportPage(){
         </div>
       </div>
     `;
+    return;
+  }
+
+  if(filteredRecords.length === 0 && !passportSearchQuery && passportPageCountryFilter === 'all' && (passportPageStatusFilter === 'pending' || passportPageStatusFilter === 'visited')){
+    container.innerHTML = (passportPageStatusFilter === 'pending' ? passportQuickAddBarHTML('page', isZh) : '') + passportEmptyStateHTML(passportPageStatusFilter, 'page', isZh);
     return;
   }
 
@@ -15744,7 +15868,7 @@ function renderPassportPage(){
     return filteredCountryGroups[b].records.length - filteredCountryGroups[a].records.length;
   });
 
-  let html = '';
+  let html = (passportPageStatusFilter === 'pending') ? passportQuickAddBarHTML('page', isZh) : '';
   visibleCountryKeys.forEach(cName => {
     const cg = filteredCountryGroups[cName];
     const sortedRestList = [...cg.records].sort((a,b) => {
@@ -15812,13 +15936,27 @@ function renderPassportPage(){
                 <div class="pp-item-sub">
                   <div class="pp-item-meta">
                     ${r.city ? `<span>📍 ${esc(r.city)}</span>` : ''}
-                    ${r.date ? `<span>📅 ${fmtDate(r.date)}</span>` : ''}
+                    ${(isPending && r.originalDate) ? `<span style="color:var(--amber);font-weight:700" title="${isZh ? '加入想吃日期：' + r.originalDate : 'Added: ' + r.originalDate}">🔄 ${isZh ? '跨月顺延' : 'Rolled forward'}</span>` : (r.date ? `<span>📅 ${fmtDate(r.date)}</span>` : '')}
                     ${stars ? `<span>${stars}</span>` : ''}
                     ${r.totalCalories > 0 ? `<span style="color:#10b981;font-weight:700">🔥 ${r.totalCalories} kcal</span>` : ''}
                     ${r.totalProtein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩 ${r.totalProtein}g</span>` : ''}
                   </div>
                   <span class="pp-item-expand-arrow">▼</span>
                 </div>
+
+                ${isPending ? `
+                <!-- Quick action buttons outside drawer for easy access -->
+                <div onclick="event.stopPropagation()" style="display:flex;gap:6px;padding:6px 0 2px;flex-wrap:wrap">
+                  <button type="button" onclick="markRestaurantVisited('${r.id}')" style="flex:1;padding:6px 10px;border-radius:8px;border:none;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px">
+                    ✅ ${isZh ? '打卡记账' : 'Check-in & Log'}
+                  </button>
+                  <label onclick="event.stopPropagation()" style="flex:1;padding:6px 10px;border-radius:8px;border:1.5px dashed rgba(245,158,11,.5);background:rgba(245,158,11,.08);color:var(--amber,#f59e0b);font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;text-align:center">
+                    📸 ${isZh ? '收据打卡' : 'Receipt'}
+                    <input type="file" accept="image/*" capture="environment" onchange="receiptCheckIn('${r.id}', this)" style="display:none"/>
+                  </label>
+                  ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<a href="${esc(r.mapUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="padding:6px 10px;border-radius:8px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.08);color:#3b82f6;font-size:11.5px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px">📍 ${isZh ? '导航' : 'Map'}</a>` : ''}
+                </div>
+                ` : ''}
 
                 <!-- Collapsible Drawer (Details, Dishes, Actions) -->
                 <div class="pp-item-drawer" onclick="event.stopPropagation()">
@@ -15841,11 +15979,7 @@ function renderPassportPage(){
                   ` : ''}
 
                   <div class="pp-item-actions">
-                    ${isPending ? `
-                      <button type="button" class="primary-btn" onclick="markRestaurantVisited('${r.id}')" style="font-size:10.5px;padding:3px 10px;border-radius:6px;background:linear-gradient(135deg,#10b981,#059669);margin-bottom:0;width:auto">
-                        ✅ ${isZh ? '打卡记账' : 'Check-in & Log'}
-                      </button>
-                    ` : ''}
+                    ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<a href="${esc(r.mapUrl)}" target="_blank" rel="noopener noreferrer" class="ghost-btn" style="font-size:10px;padding:3px 8px;border-radius:6px;text-decoration:none;color:#3b82f6;border-color:rgba(59,130,246,.35)">📍 ${isZh ? '地图' : 'Map'}</a>` : ''}
                     <button type="button" class="ghost-btn" onclick="openAddRestaurantModal('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px">
                       ✏️ ${isZh ? '编辑' : 'Edit'}
                     </button>
@@ -15862,6 +15996,9 @@ function renderPassportPage(){
     `;
   });
 
+  if(passportPageStatusFilter === 'pending' || passportPageStatusFilter === 'visited'){
+    html += passportAddFooterHTML(passportPageStatusFilter, 'page', isZh);
+  }
   container.innerHTML = html;
 }
 window.renderPassportPage = renderPassportPage;
@@ -15889,6 +16026,7 @@ function renderRestaurantPassport(){
   const container = el('passport-country-list');
   const pillsContainer = el('passport-country-pills');
   if(!container) return;
+  rollForwardPendingWishlist();
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
 
   const records = S.restaurantRecords || [];
@@ -15970,6 +16108,10 @@ function renderRestaurantPassport(){
     : countryKeys.filter(k => k === passportActiveCountryFilter);
 
   if(visibleCountries.length === 0){
+    if(passportActiveStatusFilter === 'pending'){
+      container.innerHTML = passportQuickAddBarHTML('popup', isZh) + passportEmptyStateHTML('pending', 'modal', isZh);
+      return;
+    }
     container.innerHTML = `
       <div style="text-align:center;padding:32px 16px;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:16px">
         <div style="font-size:36px;margin-bottom:8px">🌏</div>
@@ -15993,7 +16135,7 @@ function renderRestaurantPassport(){
   }
 
   // Render each visible country category section
-  let html = '';
+  let cardsHtml = '';
   visibleCountries.forEach(cName => {
     const cg = countryGroups[cName];
     // Filter records by active status
@@ -16010,7 +16152,7 @@ function renderRestaurantPassport(){
     if(filteredRecords.length === 0 && passportActiveStatusFilter !== 'all') return;
 
     const isCollapsed = !!passportCollapsedCountries[cName];
-    html += `
+    cardsHtml += `
       <div class="pp-group ${isCollapsed ? 'collapsed' : ''}">
         <!-- Country Category Header -->
         <div class="pp-group-hdr" onclick="togglePassportCountryCollapse('${esc(cName)}')">
@@ -16060,13 +16202,27 @@ function renderRestaurantPassport(){
                 <div class="pp-item-sub">
                   <div class="pp-item-meta">
                     ${r.city ? `<span>📍 ${esc(r.city)}</span>` : ''}
-                    ${r.date ? `<span>📅 ${fmtDate(r.date)}</span>` : ''}
+                    ${(isPending && r.originalDate) ? `<span style="color:var(--amber);font-weight:700" title="${isZh ? '加入想吃日期：' + r.originalDate : 'Added: ' + r.originalDate}">🔄 ${isZh ? '跨月顺延' : 'Rolled forward'}</span>` : (r.date ? `<span>📅 ${fmtDate(r.date)}</span>` : '')}
                     ${stars ? `<span>${stars}</span>` : ''}
                     ${r.totalCalories > 0 ? `<span style="color:#10b981;font-weight:700">🔥 ${r.totalCalories} kcal</span>` : ''}
                     ${r.totalProtein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩 ${r.totalProtein}g</span>` : ''}
                   </div>
                   <span class="pp-item-expand-arrow">▼</span>
                 </div>
+
+                ${isPending ? `
+                <!-- Quick action buttons outside drawer for easy access -->
+                <div onclick="event.stopPropagation()" style="display:flex;gap:6px;padding:6px 0 2px;flex-wrap:wrap">
+                  <button type="button" onclick="markRestaurantVisited('${r.id}')" style="flex:1;padding:6px 10px;border-radius:8px;border:none;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px">
+                    ✅ ${isZh ? '打卡记账' : 'Check-in & Log'}
+                  </button>
+                  <label onclick="event.stopPropagation()" style="flex:1;padding:6px 10px;border-radius:8px;border:1.5px dashed rgba(245,158,11,.5);background:rgba(245,158,11,.08);color:var(--amber,#f59e0b);font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;text-align:center">
+                    📸 ${isZh ? '收据打卡' : 'Receipt'}
+                    <input type="file" accept="image/*" capture="environment" onchange="receiptCheckIn('${r.id}', this)" style="display:none"/>
+                  </label>
+                  ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<a href="${esc(r.mapUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="padding:6px 10px;border-radius:8px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.08);color:#3b82f6;font-size:11.5px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px">📍 ${isZh ? '导航' : 'Map'}</a>` : ''}
+                </div>
+                ` : ''}
 
                 <!-- Collapsible Drawer -->
                 <div class="pp-item-drawer" onclick="event.stopPropagation()">
@@ -16089,11 +16245,7 @@ function renderRestaurantPassport(){
                   ` : ''}
 
                   <div class="pp-item-actions">
-                    ${isPending ? `
-                      <button type="button" class="primary-btn" onclick="markRestaurantVisited('${r.id}')" style="font-size:10px;padding:3px 10px;border-radius:6px;background:linear-gradient(135deg,#10b981,#059669);margin-bottom:0;width:auto">
-                        ✅ ${isZh ? '打卡记账' : 'Check-in & Log'}
-                      </button>
-                    ` : ''}
+                    ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<a href="${esc(r.mapUrl)}" target="_blank" rel="noopener noreferrer" class="ghost-btn" style="font-size:10px;padding:3px 8px;border-radius:6px;text-decoration:none;color:#3b82f6;border-color:rgba(59,130,246,.35)">📍 ${isZh ? '地图' : 'Map'}</a>` : ''}
                     <button type="button" class="ghost-btn" onclick="openAddRestaurantModal('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px">
                       ✏️ ${isZh ? '编辑' : 'Edit'}
                     </button>
@@ -16110,6 +16262,15 @@ function renderRestaurantPassport(){
     `;
   });
 
+  if(!cardsHtml){
+    container.innerHTML = (passportActiveStatusFilter === 'pending' ? passportQuickAddBarHTML('popup', isZh) : '') + passportEmptyStateHTML(passportActiveStatusFilter, 'modal', isZh);
+    return;
+  }
+  let html = (passportActiveStatusFilter === 'pending') ? passportQuickAddBarHTML('popup', isZh) : '';
+  html += cardsHtml;
+  if(passportActiveStatusFilter === 'pending' || passportActiveStatusFilter === 'visited'){
+    html += passportAddFooterHTML(passportActiveStatusFilter, 'modal', isZh);
+  }
   container.innerHTML = html;
 }
 
@@ -16122,6 +16283,11 @@ function openAddRestaurantModal(editId, defaultCountry, defaultStatus){
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const dishesContainer = el('rest-dishes-container');
   if(dishesContainer) dishesContainer.innerHTML = '';
+  if(el('rest-map-inp')) el('rest-map-inp').value = '';
+  if(el('rest-lat-inp')) el('rest-lat-inp').value = '';
+  if(el('rest-lng-inp')) el('rest-lng-inp').value = '';
+  if(el('rest-map-status')) el('rest-map-status').textContent = '';
+  _restMapLastUrl = '';
 
   if(editId){
     const record = (S.restaurantRecords || []).find(r => r.id === editId);
@@ -16140,6 +16306,10 @@ function openAddRestaurantModal(editId, defaultCountry, defaultStatus){
       if(el('rest-curr-sel')) el('rest-curr-sel').value = record.currency || 'MYR';
       if(el('rest-amount-inp')) el('rest-amount-inp').value = record.amountOriginal || '';
       if(el('rest-notes-inp')) el('rest-notes-inp').value = record.notes || '';
+      if(el('rest-map-inp')) el('rest-map-inp').value = record.mapUrl || '';
+      if(el('rest-lat-inp')) el('rest-lat-inp').value = (record.lat !== undefined && record.lat !== null) ? record.lat : '';
+      if(el('rest-lng-inp')) el('rest-lng-inp').value = (record.lng !== undefined && record.lng !== null) ? record.lng : '';
+      _restMapLastUrl = record.mapUrl || '';
       if(el('rest-sync-tx-chk')) el('rest-sync-tx-chk').checked = false;
 
       calcRestConvertedMYR();
@@ -16184,22 +16354,80 @@ function setRestStatus(status){
   const pendingBtn = el('rest-status-pending-btn');
   const dateLbl = el('rest-date-lbl');
   const syncTxBox = el('rest-sync-tx-box');
+  const titleEl = el('add-rest-modal-title');
+  const submitBtn = el('rest-submit-btn');
+  const mapRow = el('rest-map-row');
+  const mapLabel = el('rest-map-label');
+  const quickSaveBtn = el('rest-map-quick-save-btn');
+  const manualFold = el('rest-manual-details-fold');
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const isEditing = !!(el('rest-edit-id') && el('rest-edit-id').value);
+  const visitedOnlyRows = document.querySelectorAll('.rest-visited-only');
 
   if(inp) inp.value = status;
   if(status === 'visited'){
     if(visitedBtn) visitedBtn.classList.add('on');
     if(pendingBtn) pendingBtn.classList.remove('on');
     if(dateLbl) dateLbl.textContent = isZh ? 'Visited Date (打卡日期)' : 'Visited Date';
-    if(syncTxBox) syncTxBox.style.display = 'block';
+    if(titleEl) titleEl.textContent = isEditing ? (isZh ? '✏️ 编辑餐厅记录' : '✏️ Edit Restaurant Record') : (isZh ? '🍽️ 添加跨国探店记录' : '🍽️ Add Restaurant Record');
+    if(submitBtn) submitBtn.textContent = isZh ? '💾 保存探店记录' : '💾 Save Restaurant Record';
+    if(mapLabel) mapLabel.textContent = isZh ? 'Google Maps Link (粘贴地图链接自动填写)' : 'Google Maps Link (Auto-fill)';
+    if(quickSaveBtn) quickSaveBtn.textContent = isZh ? '✨ 识别' : '✨ Fill';
+    if(mapRow){
+      mapRow.style.borderColor = 'var(--border)';
+      mapRow.style.background = 'var(--bg2)';
+    }
+    visitedOnlyRows.forEach(r => { r.style.display = ''; });
+    if(manualFold){
+      manualFold.open = true;
+      manualFold.classList.add('visited-mode');
+    }
   } else {
     if(pendingBtn) pendingBtn.classList.add('on');
     if(visitedBtn) visitedBtn.classList.remove('on');
     if(dateLbl) dateLbl.textContent = isZh ? 'Target Date (计划前往日期)' : 'Target Date (Optional)';
-    if(syncTxBox) syncTxBox.style.display = 'none';
+    if(titleEl) titleEl.textContent = isEditing ? (isZh ? '✏️ 编辑想吃餐厅' : '✏️ Edit Wishlist Place') : (isZh ? '📌 添加到想吃清单' : '📌 Add to Wishlist');
+    if(submitBtn) submitBtn.textContent = isZh ? '💾 保存到想吃清单' : '💾 Save to Wishlist';
+    if(mapLabel) mapLabel.textContent = isZh ? 'Google Maps Link (粘贴地图链接秒存想吃)' : 'Google Maps Link (Auto-Capture & Save)';
+    if(quickSaveBtn) quickSaveBtn.textContent = isZh ? '⚡ 保存' : '⚡ Save';
+    if(mapRow){
+      mapRow.style.borderColor = 'var(--amber)';
+      mapRow.style.background = 'var(--bg2)';
+    }
+    visitedOnlyRows.forEach(r => { r.style.display = 'none'; });
+    if(manualFold){
+      manualFold.classList.remove('visited-mode');
+      const hasName = el('rest-name-inp') && el('rest-name-inp').value.trim();
+      manualFold.open = isEditing && !!hasName;
+    }
   }
 }
 window.setRestStatus = setRestStatus;
+
+async function submitRestModalQuickSave(){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const urlInp = el('rest-map-inp');
+  const rawUrl = urlInp ? urlInp.value.trim() : '';
+  const nameInp = el('rest-name-inp');
+  const nameVal = nameInp ? nameInp.value.trim() : '';
+
+  if(!rawUrl && !nameVal){
+    toast(isZh ? '⚠️ 请粘贴 Google 地图链接或输入店名' : '⚠️ Please paste a Google Maps link or enter place name');
+    return;
+  }
+
+  if(!nameVal && rawUrl && extractMapsUrl(rawUrl)){
+    const statusEl = el('rest-map-status');
+    if(statusEl){
+      statusEl.textContent = isZh ? '⏳ 正在自动识别地点信息并保存…' : '⏳ Auto-capturing place & saving…';
+      statusEl.style.color = 'var(--amber)';
+    }
+    await autoFillFromMapsLink(rawUrl, true);
+  }
+
+  saveRestaurantRecord();
+}
+window.submitRestModalQuickSave = submitRestModalQuickSave;
 
 function onRestCountryChange(countryVal){
   const customRow = el('rest-custom-country-row');
@@ -16219,6 +16447,409 @@ function onRestCountryChange(countryVal){
   calcRestConvertedMYR();
 }
 window.onRestCountryChange = onRestCountryChange;
+
+// ─── 📍 Google Maps link auto-fill ────────────────────────────────────
+// Paste a Google Maps link (full or short maps.app.goo.gl) and the form fills
+// name, coordinates, country and city automatically.
+const MAPS_SHORT_HOST_RE = /^(maps\.app\.goo\.gl|goo\.gl|g\.co|share\.google)$/i;
+
+// Find the first Google Maps URL inside arbitrary pasted text (e.g. the text the Maps app "Share" gives)
+function extractMapsUrl(text){
+  const found = String(text || '').match(/https?:\/\/[^\s<>"']+/gi);
+  if(!found) return null;
+  for(const raw of found){
+    try{
+      const u = new URL(raw.replace(/[),.;]+$/, ''));
+      const isShort = MAPS_SHORT_HOST_RE.test(u.hostname);
+      const isGoogle = /^(www\.|maps\.)?google\.[a-z.]+$/i.test(u.hostname) && (/^\/maps/.test(u.pathname) || /^maps\./i.test(u.hostname));
+      if(isShort || isGoogle) return u.toString();
+    }catch(e){}
+  }
+  return null;
+}
+window.extractMapsUrl = extractMapsUrl;
+
+// Extract place name from share message if mobile user copied share text
+function extractPlaceNameFromShareText(rawText) {
+  if (!rawText) return '';
+  const lines = String(rawText).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    let cleaned = line
+      .replace(/https?:\/\/[^\s<>"']+/gi, '')
+      .replace(/^(check out|take a look at|look at|shared from Google Maps:?|Google Maps:?|在\s*(?:Google\s*地图|Google\s*Maps)\s*(?:上)?(?:查看|看)?[:：\s]*)\s*/i, '')
+      .replace(/\s*(on Google Maps|at Google Maps|Google Maps|在\s*(?:Google\s*地图|Google\s*Maps)|Google\s*地图)\s*[:：]?\s*$/i, '')
+      .replace(/[:：\-–—\s]+$/, '')
+      .replace(/^【|】$/g, '')
+      .replace(/^"|"$/g, '')
+      .replace(/^'|'$/g, '')
+      .trim();
+    if (cleaned && cleaned.length >= 2 && cleaned.length <= 80 && !/^\d+[\s,.\d]*$/.test(cleaned)) {
+      return cleaned;
+    }
+  }
+  return '';
+}
+window.extractPlaceNameFromShareText = extractPlaceNameFromShareText;
+
+// Pull place name + coordinates out of an expanded Google Maps URL
+function parseGoogleMapsUrl(urlStr){
+  const out = { name: '', lat: null, lng: null };
+  let decoded = String(urlStr || '');
+  try{ decoded = decodeURIComponent(decoded); }catch(e){}
+
+  // Pin coordinates (!3d..!4d..) are the most accurate; @lat,lng is the map centre
+  let m = decoded.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/)
+       || decoded.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/)
+       || decoded.match(/[?&](?:q|ll|query|destination|center)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/);
+  if(m){
+    const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+    if(isFinite(lat) && isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180){ out.lat = lat; out.lng = lng; }
+  }
+
+  try{
+    const u = new URL(urlStr);
+    let nm = '';
+    const pm = u.pathname.match(/\/maps\/(?:place|search)\/([^/]+)/);
+    if(pm) nm = pm[1];
+    else nm = u.searchParams.get('q') || u.searchParams.get('query') || '';
+    nm = nm.replace(/\+/g, ' ');
+    try{ nm = decodeURIComponent(nm); }catch(e){}
+    nm = nm.trim();
+    if(nm && !/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(nm)) out.name = nm;
+  }catch(e){}
+  return out;
+}
+window.parseGoogleMapsUrl = parseGoogleMapsUrl;
+
+function restCodeToFlag(code){
+  code = String(code || '').toUpperCase();
+  if(!/^[A-Z]{2}$/.test(code)) return '🌐';
+  return String.fromCodePoint(...[...code].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+}
+window.restCodeToFlag = restCodeToFlag;
+
+// Complete zero-manual-input extraction pipeline
+async function capturePlaceFromGoogleMaps(raw){
+  const url = extractMapsUrl(raw);
+  if(!url){
+    return { ok: false, error: 'no_url' };
+  }
+
+  // 1) Expand short links via local backend
+  let finalUrl = url;
+  if(MAPS_SHORT_HOST_RE.test(new URL(url).hostname)){
+    try{
+      const r = await fetch('/api/resolve-map?url=' + encodeURIComponent(url));
+      const j = await r.json();
+      if(j && j.url) finalUrl = j.url;
+    }catch(e){}
+  }
+
+  // 2) Parse URL for place name and coordinates
+  const info = parseGoogleMapsUrl(finalUrl);
+  if(!info.name){
+    info.name = extractPlaceNameFromShareText(raw);
+  }
+
+  // 3) Reverse-geocode coordinates via OpenStreetMap Nominatim
+  let geo = null;
+  if(info.lat !== null && info.lng !== null){
+    try{
+      const gr = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&accept-language=en&lat=${info.lat}&lon=${info.lng}`, {
+        headers: { 'User-Agent': 'PocketWinnie/4.6' }
+      });
+      if(gr.ok) geo = await gr.json();
+    }catch(e){}
+  }
+
+  // 4) Resolve place name, country, city
+  const name = info.name || (geo && (geo.name || (geo.address && (geo.address.amenity || geo.address.restaurant || geo.address.cafe || geo.address.shop)))) || '';
+
+  let countryName = 'Malaysia';
+  let countryCode = 'MY';
+  let flag = '🇲🇾';
+  let currency = 'MYR';
+  let city = '';
+
+  if(geo && geo.address){
+    const a = geo.address;
+    const code = String(a.country_code || '').toUpperCase();
+    const known = RESTAURANT_COUNTRIES.find(c => c.code === code);
+    if(known){
+      countryName = known.name;
+      countryCode = known.code;
+      flag = known.flag;
+      currency = known.currency;
+    } else if(a.country){
+      countryName = a.country;
+      countryCode = code || 'XX';
+      flag = restCodeToFlag(code);
+      currency = 'USD';
+    }
+    city = a.city || a.town || a.village || a.municipality || a.suburb || a.city_district || a.state_district || a.state || '';
+  } else if(name){
+    const detected = detectCountryFromText(name);
+    if(detected){
+      countryName = detected.name;
+      countryCode = detected.code;
+      flag = detected.flag;
+      currency = detected.currency;
+    }
+  }
+
+  return {
+    ok: true,
+    name,
+    country: countryName,
+    countryCode,
+    flag,
+    currency,
+    city,
+    lat: info.lat,
+    lng: info.lng,
+    mapUrl: finalUrl
+  };
+}
+window.capturePlaceFromGoogleMaps = capturePlaceFromGoogleMaps;
+
+let _restMapLastUrl = '';
+let _restMapTimer = null;
+
+// Called on keystroke / paste in the full modal map-link field
+function onRestMapInput(val){
+  clearTimeout(_restMapTimer);
+  _restMapTimer = setTimeout(() => autoFillFromMapsLink(val, false), 450);
+}
+window.onRestMapInput = onRestMapInput;
+
+async function autoFillFromMapsLink(raw, force){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const statusEl = el('rest-map-status');
+  const setStatus = (msg, color) => { if(statusEl){ statusEl.textContent = msg; statusEl.style.color = color || 'var(--muted)'; } };
+
+  const url = extractMapsUrl(raw);
+  if(!url){
+    if(raw && String(raw).trim()) setStatus(isZh ? '⚠️ 未检测到 Google 地图链接' : '⚠️ No Google Maps link detected', '#ef4444');
+    else setStatus('');
+    return;
+  }
+  if(!force && url === _restMapLastUrl) return;
+  _restMapLastUrl = url;
+  setStatus(isZh ? '⏳ 正在提取地点信息…' : '⏳ Auto-capturing place info…');
+
+  const res = await capturePlaceFromGoogleMaps(raw);
+  if(!res.ok){
+    setStatus(isZh ? '⚠️ 无法解析该链接' : '⚠️ Could not parse this link', '#ef4444');
+    return;
+  }
+
+  const nameInp = el('rest-name-inp');
+  if(nameInp && res.name && (force || !nameInp.value.trim())) nameInp.value = res.name;
+  if(el('rest-lat-inp')) el('rest-lat-inp').value = res.lat !== null ? res.lat : '';
+  if(el('rest-lng-inp')) el('rest-lng-inp').value = res.lng !== null ? res.lng : '';
+
+  const sel = el('rest-country-sel');
+  if(sel && res.country){
+    if(RESTAURANT_COUNTRIES.some(c => c.name === res.country)){
+      sel.value = res.country;
+      onRestCountryChange(res.country);
+    } else {
+      sel.value = 'Other';
+      onRestCountryChange('Other');
+      if(el('rest-custom-country-inp')) el('rest-custom-country-inp').value = res.country;
+      if(el('rest-custom-flag-inp')) el('rest-custom-flag-inp').value = res.flag;
+    }
+  }
+  const cityInp = el('rest-city-inp');
+  if(cityInp && res.city && (force || !cityInp.value.trim())) cityInp.value = res.city;
+
+  const parts = [res.name, res.city, res.flag + ' ' + res.country].filter(Boolean).join(' · ');
+  const quickSaveBtn = `<button type="button" class="chip" onclick="saveRestaurantRecord()" style="margin-left:6px;background:#10b981;color:#fff;font-weight:800;font-size:10.5px;padding:2px 8px;border-radius:6px;cursor:pointer">💾 ${isZh ? '直接保存' : 'Save Now'}</button>`;
+  if(statusEl){
+    statusEl.innerHTML = `<span style="color:#10b981">${isZh ? '✅ 已自动捕获：' : '✅ Auto-captured: '} ${esc(parts || 'OK')}</span>${quickSaveBtn}`;
+  }
+}
+window.autoFillFromMapsLink = autoFillFromMapsLink;
+
+// Instant 1-Step Wishlist Add: Auto-captures everything from URL and saves immediately!
+async function quickAddWishlistFromUrl(raw, source){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  let statusEl = null;
+  let inputEl = null;
+
+  if(source === 'modal'){
+    statusEl = el('quick-wishlist-status');
+    inputEl = el('quick-wishlist-url-inp');
+  } else if(source === 'page'){
+    statusEl = el('passport-quick-map-status-page');
+    inputEl = el('passport-quick-map-url-page');
+  } else if(source === 'popup'){
+    statusEl = el('passport-quick-map-status-popup');
+    inputEl = el('passport-quick-map-url-popup');
+  }
+
+  const setStatus = (msg, color) => {
+    if(statusEl){
+      statusEl.textContent = msg;
+      statusEl.style.color = color || 'var(--muted)';
+    }
+  };
+
+  if(!raw || !String(raw).trim()){
+    setStatus(isZh ? '⚠️ 请粘贴 Google 地图链接' : '⚠️ Please paste a Google Maps link', '#ef4444');
+    return;
+  }
+
+  setStatus(isZh ? '⏳ 正在提取地点信息并保存到想吃清单…' : '⏳ Auto-capturing place info & saving to wishlist…', 'var(--amber)');
+
+  try{
+    const res = await capturePlaceFromGoogleMaps(raw);
+    if(!res.ok){
+      setStatus(isZh ? '⚠️ 未识别到有效的 Google 地图链接，请检查后再试' : '⚠️ No valid Google Maps link found, please check and try again', '#ef4444');
+      return;
+    }
+
+    const placeName = res.name || (res.city ? `${res.city} ${isZh ? '精选餐厅' : 'Restaurant'}` : (isZh ? '想吃餐厅' : 'Wishlist Restaurant'));
+
+    const newRecord = {
+      id: 'rest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      name: placeName,
+      country: res.country || 'Malaysia',
+      countryCode: res.countryCode || 'MY',
+      flag: res.flag || '🇲🇾',
+      city: res.city || '',
+      status: 'pending', // Wishlist!
+      date: today(),
+      rating: 5,
+      currency: res.currency || 'MYR',
+      amountOriginal: 0,
+      amountMYR: 0,
+      notes: '',
+      items: [],
+      totalCalories: 0,
+      totalProtein: 0,
+      mapUrl: res.mapUrl || '',
+      lat: res.lat,
+      lng: res.lng,
+      createdAt: new Date().toISOString()
+    };
+
+    if(!S.restaurantRecords) S.restaurantRecords = [];
+    S.restaurantRecords.push(newRecord);
+    save();
+
+    if(inputEl) inputEl.value = '';
+    setStatus((isZh ? '🎉 已成功加入想吃清单：' : '🎉 Added to Wishlist: ') + `${newRecord.flag} ${newRecord.name}`, '#10b981');
+
+    renderPassportPage();
+    renderRestaurantPassport();
+    renderRestaurantPassportWidget();
+    renderAll();
+
+    toast(isZh ? `🎉 成功加入想吃清单：${newRecord.flag} ${newRecord.name}！` : `🎉 Added to Wishlist: ${newRecord.flag} ${newRecord.name}!`);
+
+    if(source === 'modal'){
+      setTimeout(() => closeModal('quick-wishlist-modal'), 700);
+    }
+  }catch(err){
+    console.error('Quick add wishlist error:', err);
+    setStatus(isZh ? '⚠️ 提取失败，请重试' : '⚠️ Failed to auto-capture, please try again', '#ef4444');
+  }
+}
+window.quickAddWishlistFromUrl = quickAddWishlistFromUrl;
+
+function openQuickWishlistModal(){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const inp = el('quick-wishlist-url-inp');
+  const title = el('quick-wishlist-modal-title');
+  const sub = el('quick-wishlist-modal-sub');
+  const lbl = el('quick-wishlist-lbl');
+  const btn = el('quick-wishlist-submit-btn');
+  const status = el('quick-wishlist-status');
+
+  if(inp) inp.value = '';
+  if(status) status.textContent = '';
+  if(title) title.textContent = isZh ? '📌 添加到想吃清单' : '📌 Add to Wishlist';
+  if(sub) sub.textContent = isZh 
+    ? '直接粘贴 Google 地图链接 — 店名、城市、国家与定位自动秒捕获，无需手动填写！' 
+    : 'Paste any Google Maps link — place name, city, country & pin location will be auto-captured with zero typing!';
+  if(lbl) lbl.textContent = isZh ? '📍 Google 地图链接或分享内容' : '📍 Google Maps Link or Share Text';
+  if(btn) btn.textContent = isZh ? '⚡ 自动捕获并保存' : '⚡ Auto-Capture & Save';
+
+  openModal('quick-wishlist-modal');
+  setTimeout(() => { if(inp) inp.focus(); }, 100);
+
+  if(navigator.clipboard && navigator.clipboard.readText){
+    navigator.clipboard.readText().then(clip => {
+      if(clip && extractMapsUrl(clip) && inp && !inp.value){
+        inp.value = clip;
+        if(status){
+          status.textContent = isZh ? '📋 已从剪贴板读取地图链接，点击即可保存' : '📋 Pasted from clipboard, tap save to add';
+          status.style.color = 'var(--cyan)';
+        }
+      }
+    }).catch(()=>{});
+  }
+}
+window.openQuickWishlistModal = openQuickWishlistModal;
+
+function onQuickWishlistInput(val){
+  const status = el('quick-wishlist-status');
+  if(status && val && extractMapsUrl(val)){
+    const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+    status.textContent = isZh ? '✨ 地图链接有效，点击按钮或回车立即自动捕获！' : '✨ Link detected, click button or press Enter to auto-save!';
+    status.style.color = 'var(--amber)';
+  }
+}
+window.onQuickWishlistInput = onQuickWishlistInput;
+
+function submitQuickWishlistModal(){
+  const inp = el('quick-wishlist-url-inp');
+  const val = inp ? inp.value.trim() : '';
+  quickAddWishlistFromUrl(val, 'modal');
+}
+window.submitQuickWishlistModal = submitQuickWishlistModal;
+
+function handleInlineWishlistPaste(source){
+  const inp = el(`passport-quick-map-url-${source}`);
+  if(inp && inp.value.trim()){
+    quickAddWishlistFromUrl(inp.value.trim(), source);
+  }
+}
+window.handleInlineWishlistPaste = handleInlineWishlistPaste;
+
+function submitInlineWishlistQuickAdd(source){
+  const inp = el(`passport-quick-map-url-${source}`);
+  if(inp){
+    quickAddWishlistFromUrl(inp.value.trim(), source);
+  }
+}
+window.submitInlineWishlistQuickAdd = submitInlineWishlistQuickAdd;
+
+// One-tap: read clipboard → fill input → auto-add
+async function pasteAndAutoAdd(source){
+  const inp = el(`passport-quick-map-url-${source}`);
+  if(!inp) return;
+  const statusEl = el(`passport-quick-map-status-${source}`);
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  try {
+    const text = await navigator.clipboard.readText();
+    if(text && text.trim()){
+      inp.value = text.trim();
+      quickAddWishlistFromUrl(text.trim(), source);
+    } else {
+      if(statusEl) statusEl.textContent = isZh ? '⚠️ 剪贴板是空的，请先复制 Google 地图链接！' : '⚠️ Clipboard is empty — copy a Google Maps link first!';
+    }
+  } catch(e) {
+    // Clipboard API blocked — fallback: just submit what's in the input
+    if(inp.value.trim()){
+      quickAddWishlistFromUrl(inp.value.trim(), source);
+    } else {
+      if(statusEl) statusEl.textContent = isZh ? '⚠️ 无法读取剪贴板，请手动粘贴链接到输入框' : '⚠️ Cannot read clipboard — please paste the link manually into the field';
+    }
+  }
+}
+window.pasteAndAutoAdd = pasteAndAutoAdd;
 
 function autoDetectCountryFromRestName(name){
   if(!name) return;
@@ -16322,9 +16953,22 @@ function recalcRestDishTotals(){
 }
 window.recalcRestDishTotals = recalcRestDishTotals;
 
-function saveRestaurantRecord(){
+async function saveRestaurantRecord(){
   const editId = el('rest-edit-id') ? el('rest-edit-id').value : '';
-  const name = el('rest-name-inp') ? el('rest-name-inp').value.trim() : '';
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  let name = el('rest-name-inp') ? el('rest-name-inp').value.trim() : '';
+  const mapInpVal = el('rest-map-inp') ? el('rest-map-inp').value.trim() : '';
+  if(!name && mapInpVal && extractMapsUrl(mapInpVal)){
+    const res = await capturePlaceFromGoogleMaps(mapInpVal);
+    if(res && res.ok){
+      name = res.name || (res.city ? `${res.city} ${isZh ? '精选餐厅' : 'Restaurant'}` : (isZh ? '想吃餐厅' : 'Wishlist Restaurant'));
+      if(el('rest-name-inp')) el('rest-name-inp').value = name;
+      if(el('rest-lat-inp')) el('rest-lat-inp').value = res.lat !== null ? res.lat : '';
+      if(el('rest-lng-inp')) el('rest-lng-inp').value = res.lng !== null ? res.lng : '';
+      if(res.country && el('rest-country-sel')){ el('rest-country-sel').value = res.country; onRestCountryChange(res.country); }
+      if(res.city && el('rest-city-inp')) el('rest-city-inp').value = res.city;
+    }
+  }
   if(!name){
     toast('⚠️ Please enter restaurant name');
     return;
@@ -16354,6 +16998,11 @@ function saveRestaurantRecord(){
   const amountMYR = convertAmountToMYR(amountOriginal, currency);
   const notes = el('rest-notes-inp') ? el('rest-notes-inp').value.trim() : '';
   const syncTx = el('rest-sync-tx-chk') ? el('rest-sync-tx-chk').checked : false;
+  const mapUrl = extractMapsUrl(el('rest-map-inp') ? el('rest-map-inp').value : '') || '';
+  const mapLatRaw = el('rest-lat-inp') ? parseFloat(el('rest-lat-inp').value) : NaN;
+  const mapLngRaw = el('rest-lng-inp') ? parseFloat(el('rest-lng-inp').value) : NaN;
+  const mapLat = isFinite(mapLatRaw) ? mapLatRaw : null;
+  const mapLng = isFinite(mapLngRaw) ? mapLngRaw : null;
 
   // Extract dishes
   const container = el('rest-dishes-container');
@@ -16389,6 +17038,9 @@ function saveRestaurantRecord(){
     if(idx >= 0){
       S.restaurantRecords[idx] = {
         ...S.restaurantRecords[idx],
+        mapUrl,
+        lat: mapLat,
+        lng: mapLng,
         name,
         country,
         countryCode,
@@ -16425,6 +17077,9 @@ function saveRestaurantRecord(){
       items,
       totalCalories,
       totalProtein,
+      mapUrl,
+      lat: mapLat,
+      lng: mapLng,
       createdAt: new Date().toISOString()
     };
     S.restaurantRecords.push(newRecord);
@@ -16459,8 +17114,12 @@ function saveRestaurantRecord(){
   renderPassportPage();
   renderAll();
 
-  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-  toast(isZh ? `🎉 成功记录 ${flag} ${name}！` : `🎉 Saved ${flag} ${name}!`);
+
+  if(status === 'pending'){
+    toast(isZh ? `📌 已成功加入想吃清单：${flag} ${name}！` : `📌 Added to Wishlist: ${flag} ${name}!`);
+  } else {
+    toast(isZh ? `🎉 成功记录 ${flag} ${name}！` : `🎉 Saved ${flag} ${name}!`);
+  }
 }
 window.saveRestaurantRecord = saveRestaurantRecord;
 
@@ -16512,6 +17171,91 @@ function markRestaurantVisited(id){
   toast(isZh ? `🎉 恭喜打卡探店成功：${record.name}！` : `🎉 Checked in: ${record.name}!`);
 }
 window.markRestaurantVisited = markRestaurantVisited;
+
+// Receipt-based check-in: upload receipt photo → AI extracts amount → auto check-in
+async function receiptCheckIn(id, fileInput){
+  const record = (S.restaurantRecords || []).find(r => r.id === id);
+  if(!record) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const file = fileInput && fileInput.files && fileInput.files[0];
+  if(!file) return;
+
+  toast(isZh ? '📸 正在扫描收据...' : '📸 Scanning receipt...');
+
+  try {
+    // Read file as base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    let amount = 0;
+
+    // Try AI scan if Gemini API key is available
+    if(typeof analyzeReceiptWithGemini === 'function' && S.geminiApiKey){
+      try {
+        const result = await analyzeReceiptWithGemini(base64);
+        if(result && result.amount > 0){
+          amount = result.amount;
+        }
+      } catch(e){
+        console.warn('AI receipt scan failed, falling back to manual:', e);
+      }
+    }
+
+    // If AI didn't extract amount, prompt user
+    if(amount <= 0){
+      const promptAmt = prompt(
+        isZh
+          ? `📸 收据已上传：【${record.name}】\n请输入本次消费金额 (${record.currency || 'MYR'})：`
+          : `📸 Receipt uploaded: [${record.name}]\nEnter total bill amount (${record.currency || 'MYR'}):`,
+        ''
+      );
+      if(promptAmt === null){ fileInput.value = ''; return; }
+      amount = parseFloat(promptAmt) || 0;
+    }
+
+    // Mark as visited
+    record.status = 'visited';
+    record.date = today();
+    record.amountOriginal = amount;
+    record.amountMYR = convertAmountToMYR(amount, record.currency || 'MYR');
+
+    // Log transaction if amount > 0
+    if(record.amountMYR > 0){
+      const defaultAcc = (S.accounts && S.accounts.length) ? S.accounts[0].id : '';
+      const items = record.items || [];
+      const noteItems = items.map(it => `${it.name}${it.calories > 0 ? ` [${it.calories}kcal]` : ''}${it.protein > 0 ? ` [${it.protein}g protein]` : ''}`).join(', ');
+      const newTx = {
+        id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        type: 'expense',
+        amount: record.amountMYR,
+        category: 'food',
+        subCategory: 'dining_out',
+        accId: defaultAcc,
+        date: today(),
+        desc: record.name,
+        note: `${record.flag || ''} ${record.country || ''}${record.city ? ' (' + record.city + ')' : ''} · 📸 Receipt check-in${noteItems ? ' · [Items: ' + noteItems + ']' : ''}`
+      };
+      if(!S.transactions) S.transactions = [];
+      S.transactions.push(newTx);
+    }
+
+    save();
+    renderRestaurantPassport();
+    renderRestaurantPassportWidget();
+    renderPassportPage();
+    renderAll();
+    toast(isZh ? `🎉 📸 收据打卡成功：${record.name}！` : `🎉 📸 Receipt check-in: ${record.name}!`);
+  } catch(e){
+    console.error('receiptCheckIn error:', e);
+    toast(isZh ? '❌ 收据处理失败，请重试' : '❌ Receipt processing failed, please try again');
+  }
+  fileInput.value = '';
+}
+window.receiptCheckIn = receiptCheckIn;
 
 function deleteRestaurantRecord(id){
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
