@@ -3417,7 +3417,7 @@
         <button type="button" class="modal-close-btn" onclick="closeModal('quick-wishlist-modal')">✕</button>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.4" id="quick-wishlist-modal-sub">
-        Paste any Google Maps link — restaurant name, city, country & pin location will be auto-captured with zero typing!
+        Paste any Google Maps link or share text — store name, cuisine, real rating, address, opening hours & must-try dish recommendations will be auto-captured with zero typing!
       </div>
       <div class="form-row" style="margin-bottom:10px">
         <label class="form-label" id="quick-wishlist-lbl">📍 Google Maps Link or Share Text</label>
@@ -3526,6 +3526,24 @@
               </div>
             </div>
 
+            <!-- Cuisine & Phone -->
+            <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div>
+                <label class="form-label">Cuisine / Category (美食分类)</label>
+                <input type="text" id="rest-cuisine-inp" class="form-input" placeholder="e.g. Fine Dining, Hot Pot, Cafe, Japanese"/>
+              </div>
+              <div>
+                <label class="form-label">Phone / Contact (电话号码)</label>
+                <input type="text" id="rest-phone-inp" class="form-input" placeholder="e.g. 011-2420 2450"/>
+              </div>
+            </div>
+
+            <!-- Full Street Address -->
+            <div class="form-row" style="margin-bottom:8px">
+              <label class="form-label">Street Address (详细地址)</label>
+              <input type="text" id="rest-address-inp" class="form-input" placeholder="e.g. 77, Jalan Chung Thye Phin, 30250 Ipoh, Perak"/>
+            </div>
+
             <!-- Custom Country Name if "Other" -->
             <div id="rest-custom-country-row" class="form-row hidden">
               <label class="form-label">Custom Country Name & Flag</label>
@@ -3598,10 +3616,10 @@
           </div>
         </div>
 
-        <!-- Notes / Highlights (Visited only) -->
-        <div id="rest-notes-row" class="form-row rest-visited-only">
-          <label class="form-label">Notes & Signature Dishes (必点招牌 / 备忘)</label>
-          <textarea id="rest-notes-inp" class="form-input" rows="2" placeholder="e.g. Signature braised pork loin, secret chilli sauce, long queue after 6pm"></textarea>
+        <!-- Notes / Highlights / Must-Try Recommendations (Always available) -->
+        <div id="rest-notes-row" class="form-row">
+          <label class="form-label">Notes & Must-Try Dishes (必点招牌推荐 / 备忘)</label>
+          <textarea id="rest-notes-inp" class="form-input" rows="3" placeholder="e.g. Signature braised pork loin, secret chilli sauce, long queue after 6pm"></textarea>
         </div>
 
         <!-- Optional: Also log as an expense transaction (Visited only) -->

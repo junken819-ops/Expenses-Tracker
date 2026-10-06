@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-10-05T08:49:22.957Z
+   Last build: 2026-10-06T10:25:51.413Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -15516,19 +15516,22 @@ let passportExpandedCards = {}; // { [recordId]: boolean }
 function togglePassportViewMode(){
   passportViewMode = (passportViewMode === 'compact' ? 'detailed' : 'compact');
   renderPassportPage();
+  renderRestaurantPassport();
 }
 window.togglePassportViewMode = togglePassportViewMode;
 
 function togglePassportCountryCollapse(country){
   passportCollapsedCountries[country] = !passportCollapsedCountries[country];
   renderPassportPage();
+  renderRestaurantPassport();
 }
 window.togglePassportCountryCollapse = togglePassportCountryCollapse;
 
 function togglePassportCardExpand(id, e){
-  if(e && e.target && e.target.closest('button, a, input, select')) return;
+  if(e && e.target && e.target.closest('button, a, input, select, label')) return;
   passportExpandedCards[id] = !passportExpandedCards[id];
   renderPassportPage();
+  renderRestaurantPassport();
 }
 window.togglePassportCardExpand = togglePassportCardExpand;
 
@@ -15653,6 +15656,138 @@ function rollForwardPendingWishlist(){
   return changed;
 }
 window.rollForwardPendingWishlist = rollForwardPendingWishlist;
+
+function renderPassportCardHTML(r, isZh){
+  const isPending = (r.status === 'pending');
+  const isExpanded = (passportViewMode === 'detailed') || !!passportExpandedCards[r.id];
+  const items = r.items || [];
+  const stars = r.rating ? '⭐'.repeat(r.rating) : '';
+  const priceDisplay = r.amountOriginal > 0 
+    ? (r.currency !== 'MYR' ? `${r.currency} ${r.amountOriginal} ≈ ${fmt(r.amountMYR)}` : fmt(r.amountMYR))
+    : (isPending ? (isZh ? '待安排' : 'Wishlist') : 'RM 0');
+
+  const ratingBadge = (r.ratingNum) 
+    ? `<span style="display:inline-flex;align-items:center;gap:2px;font-weight:700;color:#f59e0b;background:rgba(245,158,11,0.12);padding:1px 6px;border-radius:6px;font-size:10px" title="${esc(String(r.reviewsCount || ''))} Google Reviews">⭐ ${r.ratingNum}${r.reviewsCount ? ` <span style="font-weight:500;color:var(--muted);font-size:9px">(${esc(String(r.reviewsCount))})</span>` : ''}</span>`
+    : (stars ? `<span>${stars}</span>` : '');
+
+  const cuisineBadge = r.cuisine 
+    ? `<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:rgba(99,102,241,0.12);color:var(--primary,#6366f1)">🍽️ ${esc(r.cuisine)}</span>` 
+    : '';
+
+  const openStatusBadge = r.openStatus 
+    ? `<span style="font-size:9.5px;font-weight:600;padding:1px 6px;border-radius:6px;background:rgba(16,185,129,0.12);color:#10b981;white-space:nowrap">🕒 ${esc(r.openStatus)}</span>` 
+    : '';
+
+  const hasRecos = (r.recommendations && r.recommendations.length > 0) || !!r.recommendationText;
+
+  return `
+    <div class="pp-item ${isExpanded ? 'expanded' : ''}" onclick="togglePassportCardExpand('${r.id}', event)">
+      <div class="pp-item-main">
+        <div class="pp-item-name">
+          <span>${esc(r.name)}</span>
+          <span class="pp-item-badge ${isPending ? 'pending' : 'visited'}">
+            ${isPending ? (isZh ? '📌 待探店' : '📌 Wishlist') : (isZh ? '✅ 已打卡' : '✅ Visited')}
+          </span>
+        </div>
+        <div class="pp-item-price" style="${isPending ? 'color:var(--amber)' : ''}">
+          ${priceDisplay}
+        </div>
+      </div>
+
+      <div class="pp-item-sub">
+        <div class="pp-item-meta">
+          ${r.city ? `<span>📍 ${esc(r.city)}</span>` : ''}
+          ${cuisineBadge}
+          ${ratingBadge}
+          ${openStatusBadge}
+          ${(isPending && r.originalDate) ? `<span style="color:var(--amber);font-weight:700" title="${isZh ? '加入想吃日期：' + r.originalDate : 'Added: ' + r.originalDate}">🔄 ${isZh ? '跨月顺延' : 'Rolled forward'}</span>` : (r.date && !isPending ? `<span>📅 ${fmtDate(r.date)}</span>` : '')}
+          ${r.totalCalories > 0 ? `<span style="color:#10b981;font-weight:700">🔥 ${r.totalCalories} kcal</span>` : ''}
+          ${r.totalProtein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩 ${r.totalProtein}g</span>` : ''}
+        </div>
+        <span class="pp-item-expand-arrow">▼</span>
+      </div>
+
+      ${r.address ? `
+        <div style="font-size:10.5px;color:var(--muted);margin:4px 0 2px;display:flex;align-items:flex-start;gap:4px;line-height:1.35;overflow:hidden;text-overflow:ellipsis">
+          <span style="flex-shrink:0">🏠</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.address)}</span>
+        </div>
+      ` : ''}
+
+      ${hasRecos ? `
+        <!-- Must-Try Recommendations & Highlights Box -->
+        <div class="pp-reco-box" style="margin:7px 0 3px;padding:7px 9px;border-radius:8px;background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(234,88,12,0.05));border:1px dashed rgba(245,158,11,0.3);font-size:11px">
+          <div style="font-weight:800;color:var(--amber,#f59e0b);margin-bottom:3px;display:flex;align-items:center;justify-content:space-between">
+            <span style="display:flex;align-items:center;gap:4px">✨ <span>${isZh ? '必吃招牌推荐与特色亮点' : 'Must-Try Recommendations & Highlights'}</span></span>
+            ${r.cuisine ? `<span style="font-size:9.5px;font-weight:600;color:var(--muted)">${esc(r.cuisine)}</span>` : ''}
+          </div>
+          ${r.recommendationText ? `<div style="font-size:10.5px;color:var(--text);line-height:1.4;margin-bottom:5px">${esc(r.recommendationText)}</div>` : ''}
+          ${(r.recommendations && r.recommendations.length > 0) ? `
+            <div style="display:flex;flex-wrap:wrap;gap:4px">
+              ${r.recommendations.map(rec => `
+                <span style="font-size:10px;padding:2px 7px;border-radius:6px;background:rgba(245,158,11,0.16);color:var(--text);font-weight:600;border:1px solid rgba(245,158,11,0.25);display:inline-flex;align-items:center;gap:3px">
+                  🍴 ${esc(rec)}
+                </span>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
+
+      ${isPending ? `
+      <!-- Quick action buttons outside drawer for easy access -->
+      <div onclick="event.stopPropagation()" style="display:flex;gap:6px;padding:6px 0 2px;flex-wrap:wrap">
+        <button type="button" onclick="markRestaurantVisited('${r.id}')" style="flex:1;min-width:90px;padding:6px 10px;border-radius:8px;border:none;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px">
+          ✅ ${isZh ? '打卡记账' : 'Check-in'}
+        </button>
+        <label onclick="event.stopPropagation()" style="flex:1;min-width:85px;padding:6px 10px;border-radius:8px;border:1.5px dashed rgba(245,158,11,.5);background:rgba(245,158,11,.08);color:var(--amber,#f59e0b);font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;text-align:center">
+          📸 ${isZh ? '收据打卡' : 'Receipt'}
+          <input type="file" accept="image/*" capture="environment" onchange="receiptCheckIn('${r.id}', this)" style="display:none"/>
+        </label>
+        ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<a href="${esc(r.mapUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="padding:6px 10px;border-radius:8px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.08);color:#3b82f6;font-size:11.5px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px">📍 ${isZh ? '导航' : 'Map'}</a>` : ''}
+        ${r.phone ? `<a href="tel:${esc(r.phone.replace(/[^0-9+]/g,''))}" onclick="event.stopPropagation()" style="padding:6px 10px;border-radius:8px;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.08);color:#10b981;font-size:11.5px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px">📞 ${isZh ? '拨打' : 'Call'}</a>` : ''}
+        ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<button type="button" onclick="enrichExistingWishlistRecord('${r.id}')" title="${isZh ? '从Google地图重新同步最新信息与招牌推荐' : 'Sync latest info & recommendations from Google Maps'}" style="padding:6px 9px;border-radius:8px;border:1px solid rgba(139,92,246,.3);background:rgba(139,92,246,.08);color:#8b5cf6;font-size:11.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px">🔄 ${isZh ? '同步' : 'Sync'}</button>` : ''}
+      </div>
+      ` : ''}
+
+      <!-- Collapsible Drawer (Details, Dishes, Actions) -->
+      <div class="pp-item-drawer" onclick="event.stopPropagation()">
+        ${items.length > 0 ? `
+          <div class="pp-item-dishes">
+            ${items.map(it => `
+              <span class="pp-dish-chip">
+                ${it.qty > 1 ? `<strong style="color:var(--cyan)">${it.qty}x</strong> ` : ''}<span>${esc(it.name)}</span>
+                ${it.calories > 0 ? `<span style="color:#10b981;font-weight:700">🔥${it.calories * (it.qty||1)}</span>` : ''}
+                ${it.protein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩${it.protein * (it.qty||1)}g</span>` : ''}
+              </span>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${r.notes ? `
+          <div class="pp-item-notes">
+            📝 ${esc(r.notes)}
+          </div>
+        ` : ''}
+
+        ${r.phone && !isPending ? `
+          <div style="font-size:10.5px;color:var(--muted);margin-bottom:6px">📞 <strong>${esc(r.phone)}</strong></div>
+        ` : ''}
+
+        <div class="pp-item-actions">
+          ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<a href="${esc(r.mapUrl)}" target="_blank" rel="noopener noreferrer" class="ghost-btn" style="font-size:10px;padding:3px 8px;border-radius:6px;text-decoration:none;color:#3b82f6;border-color:rgba(59,130,246,.35)">📍 ${isZh ? '地图' : 'Map'}</a>` : ''}
+          ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<button type="button" class="ghost-btn" onclick="enrichExistingWishlistRecord('${r.id}')" title="${isZh ? '重新同步最新信息与招牌' : 'Sync latest info'}" style="font-size:10px;padding:3px 8px;border-radius:6px;color:#8b5cf6;border-color:rgba(139,92,246,.35)">🔄 ${isZh ? '同步' : 'Sync'}</button>` : ''}
+          <button type="button" class="ghost-btn" onclick="openAddRestaurantModal('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px">
+            ✏️ ${isZh ? '编辑' : 'Edit'}
+          </button>
+          <button type="button" class="ghost-btn" onclick="deleteRestaurantRecord('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px;color:var(--red);border-color:rgba(239,68,68,.3)">
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+window.renderPassportCardHTML = renderPassportCardHTML;
 
 function renderPassportPage(){
   rollForwardPendingWishlist();
@@ -15910,87 +16045,7 @@ function renderPassportPage(){
 
         <!-- Restaurant List in this Country -->
         <div class="pp-group-list">
-          ${sortedRestList.map(r => {
-            const isPending = (r.status === 'pending');
-            const isExpanded = (passportViewMode === 'detailed') || !!passportExpandedCards[r.id];
-            const items = r.items || [];
-            const stars = r.rating ? '⭐'.repeat(r.rating) : '';
-            const priceDisplay = r.amountOriginal > 0 
-              ? (r.currency !== 'MYR' ? `${r.currency} ${r.amountOriginal} ≈ ${fmt(r.amountMYR)}` : fmt(r.amountMYR))
-              : (isPending ? (isZh ? '待安排' : 'Wishlist') : 'RM 0');
-
-            return `
-              <div class="pp-item ${isExpanded ? 'expanded' : ''}" onclick="togglePassportCardExpand('${r.id}', event)">
-                <div class="pp-item-main">
-                  <div class="pp-item-name">
-                    <span>${esc(r.name)}</span>
-                    <span class="pp-item-badge ${isPending ? 'pending' : 'visited'}">
-                      ${isPending ? (isZh ? '📌 待探店' : '📌 Wishlist') : (isZh ? '✅ 已打卡' : '✅ Visited')}
-                    </span>
-                  </div>
-                  <div class="pp-item-price" style="${isPending ? 'color:var(--amber)' : ''}">
-                    ${priceDisplay}
-                  </div>
-                </div>
-
-                <div class="pp-item-sub">
-                  <div class="pp-item-meta">
-                    ${r.city ? `<span>📍 ${esc(r.city)}</span>` : ''}
-                    ${(isPending && r.originalDate) ? `<span style="color:var(--amber);font-weight:700" title="${isZh ? '加入想吃日期：' + r.originalDate : 'Added: ' + r.originalDate}">🔄 ${isZh ? '跨月顺延' : 'Rolled forward'}</span>` : (r.date ? `<span>📅 ${fmtDate(r.date)}</span>` : '')}
-                    ${stars ? `<span>${stars}</span>` : ''}
-                    ${r.totalCalories > 0 ? `<span style="color:#10b981;font-weight:700">🔥 ${r.totalCalories} kcal</span>` : ''}
-                    ${r.totalProtein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩 ${r.totalProtein}g</span>` : ''}
-                  </div>
-                  <span class="pp-item-expand-arrow">▼</span>
-                </div>
-
-                ${isPending ? `
-                <!-- Quick action buttons outside drawer for easy access -->
-                <div onclick="event.stopPropagation()" style="display:flex;gap:6px;padding:6px 0 2px;flex-wrap:wrap">
-                  <button type="button" onclick="markRestaurantVisited('${r.id}')" style="flex:1;padding:6px 10px;border-radius:8px;border:none;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px">
-                    ✅ ${isZh ? '打卡记账' : 'Check-in & Log'}
-                  </button>
-                  <label onclick="event.stopPropagation()" style="flex:1;padding:6px 10px;border-radius:8px;border:1.5px dashed rgba(245,158,11,.5);background:rgba(245,158,11,.08);color:var(--amber,#f59e0b);font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;text-align:center">
-                    📸 ${isZh ? '收据打卡' : 'Receipt'}
-                    <input type="file" accept="image/*" capture="environment" onchange="receiptCheckIn('${r.id}', this)" style="display:none"/>
-                  </label>
-                  ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<a href="${esc(r.mapUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="padding:6px 10px;border-radius:8px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.08);color:#3b82f6;font-size:11.5px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px">📍 ${isZh ? '导航' : 'Map'}</a>` : ''}
-                </div>
-                ` : ''}
-
-                <!-- Collapsible Drawer (Details, Dishes, Actions) -->
-                <div class="pp-item-drawer" onclick="event.stopPropagation()">
-                  ${items.length > 0 ? `
-                    <div class="pp-item-dishes">
-                      ${items.map(it => `
-                        <span class="pp-dish-chip">
-                          ${it.qty > 1 ? `<strong style="color:var(--cyan)">${it.qty}x</strong> ` : ''}<span>${esc(it.name)}</span>
-                          ${it.calories > 0 ? `<span style="color:#10b981;font-weight:700">🔥${it.calories * (it.qty||1)}</span>` : ''}
-                          ${it.protein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩${it.protein * (it.qty||1)}g</span>` : ''}
-                        </span>
-                      `).join('')}
-                    </div>
-                  ` : ''}
-
-                  ${r.notes ? `
-                    <div class="pp-item-notes">
-                      📝 ${esc(r.notes)}
-                    </div>
-                  ` : ''}
-
-                  <div class="pp-item-actions">
-                    ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<a href="${esc(r.mapUrl)}" target="_blank" rel="noopener noreferrer" class="ghost-btn" style="font-size:10px;padding:3px 8px;border-radius:6px;text-decoration:none;color:#3b82f6;border-color:rgba(59,130,246,.35)">📍 ${isZh ? '地图' : 'Map'}</a>` : ''}
-                    <button type="button" class="ghost-btn" onclick="openAddRestaurantModal('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px">
-                      ✏️ ${isZh ? '编辑' : 'Edit'}
-                    </button>
-                    <button type="button" class="ghost-btn" onclick="deleteRestaurantRecord('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px;color:var(--red);border-color:rgba(239,68,68,.3)">
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('')}
+          ${sortedRestList.map(r => renderPassportCardHTML(r, isZh)).join('')}
         </div>
       </div>
     `;
@@ -16176,87 +16231,7 @@ function renderRestaurantPassport(){
 
         <!-- Restaurant Cards in this Country -->
         <div class="pp-group-list">
-          ${filteredRecords.map(r => {
-            const isPending = (r.status === 'pending');
-            const isExpanded = (passportViewMode === 'detailed') || !!passportExpandedCards[r.id];
-            const items = r.items || [];
-            const stars = r.rating ? '⭐'.repeat(r.rating) : '';
-            const priceDisplay = r.amountOriginal > 0 
-              ? (r.currency !== 'MYR' ? `${r.currency} ${r.amountOriginal} ≈ ${fmt(r.amountMYR)}` : fmt(r.amountMYR))
-              : (isPending ? (isZh ? '待安排' : 'Wishlist') : 'RM 0');
-
-            return `
-              <div class="pp-item ${isExpanded ? 'expanded' : ''}" onclick="togglePassportCardExpand('${r.id}', event)">
-                <div class="pp-item-main">
-                  <div class="pp-item-name">
-                    <span>${esc(r.name)}</span>
-                    <span class="pp-item-badge ${isPending ? 'pending' : 'visited'}">
-                      ${isPending ? (isZh ? '📌 待探店' : '📌 Wishlist') : (isZh ? '✅ 已打卡' : '✅ Visited')}
-                    </span>
-                  </div>
-                  <div class="pp-item-price" style="${isPending ? 'color:var(--amber)' : ''}">
-                    ${priceDisplay}
-                  </div>
-                </div>
-
-                <div class="pp-item-sub">
-                  <div class="pp-item-meta">
-                    ${r.city ? `<span>📍 ${esc(r.city)}</span>` : ''}
-                    ${(isPending && r.originalDate) ? `<span style="color:var(--amber);font-weight:700" title="${isZh ? '加入想吃日期：' + r.originalDate : 'Added: ' + r.originalDate}">🔄 ${isZh ? '跨月顺延' : 'Rolled forward'}</span>` : (r.date ? `<span>📅 ${fmtDate(r.date)}</span>` : '')}
-                    ${stars ? `<span>${stars}</span>` : ''}
-                    ${r.totalCalories > 0 ? `<span style="color:#10b981;font-weight:700">🔥 ${r.totalCalories} kcal</span>` : ''}
-                    ${r.totalProtein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩 ${r.totalProtein}g</span>` : ''}
-                  </div>
-                  <span class="pp-item-expand-arrow">▼</span>
-                </div>
-
-                ${isPending ? `
-                <!-- Quick action buttons outside drawer for easy access -->
-                <div onclick="event.stopPropagation()" style="display:flex;gap:6px;padding:6px 0 2px;flex-wrap:wrap">
-                  <button type="button" onclick="markRestaurantVisited('${r.id}')" style="flex:1;padding:6px 10px;border-radius:8px;border:none;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px">
-                    ✅ ${isZh ? '打卡记账' : 'Check-in & Log'}
-                  </button>
-                  <label onclick="event.stopPropagation()" style="flex:1;padding:6px 10px;border-radius:8px;border:1.5px dashed rgba(245,158,11,.5);background:rgba(245,158,11,.08);color:var(--amber,#f59e0b);font-size:11.5px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;text-align:center">
-                    📸 ${isZh ? '收据打卡' : 'Receipt'}
-                    <input type="file" accept="image/*" capture="environment" onchange="receiptCheckIn('${r.id}', this)" style="display:none"/>
-                  </label>
-                  ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<a href="${esc(r.mapUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="padding:6px 10px;border-radius:8px;border:1px solid rgba(59,130,246,.3);background:rgba(59,130,246,.08);color:#3b82f6;font-size:11.5px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:4px">📍 ${isZh ? '导航' : 'Map'}</a>` : ''}
-                </div>
-                ` : ''}
-
-                <!-- Collapsible Drawer -->
-                <div class="pp-item-drawer" onclick="event.stopPropagation()">
-                  ${items.length > 0 ? `
-                    <div class="pp-item-dishes">
-                      ${items.map(it => `
-                        <span class="pp-dish-chip">
-                          ${it.qty > 1 ? `<strong style="color:var(--cyan)">${it.qty}x</strong> ` : ''}<span>${esc(it.name)}</span>
-                          ${it.calories > 0 ? `<span style="color:#10b981;font-weight:700">🔥${it.calories * (it.qty||1)}</span>` : ''}
-                          ${it.protein > 0 ? `<span style="color:var(--cyan);font-weight:700">🥩${it.protein * (it.qty||1)}g</span>` : ''}
-                        </span>
-                      `).join('')}
-                    </div>
-                  ` : ''}
-
-                  ${r.notes ? `
-                    <div class="pp-item-notes">
-                      📝 ${esc(r.notes)}
-                    </div>
-                  ` : ''}
-
-                  <div class="pp-item-actions">
-                    ${(r.mapUrl && /^https?:\/\//i.test(r.mapUrl)) ? `<a href="${esc(r.mapUrl)}" target="_blank" rel="noopener noreferrer" class="ghost-btn" style="font-size:10px;padding:3px 8px;border-radius:6px;text-decoration:none;color:#3b82f6;border-color:rgba(59,130,246,.35)">📍 ${isZh ? '地图' : 'Map'}</a>` : ''}
-                    <button type="button" class="ghost-btn" onclick="openAddRestaurantModal('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px">
-                      ✏️ ${isZh ? '编辑' : 'Edit'}
-                    </button>
-                    <button type="button" class="ghost-btn" onclick="deleteRestaurantRecord('${r.id}')" style="font-size:10px;padding:3px 8px;border-radius:6px;color:var(--red);border-color:rgba(239,68,68,.3)">
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('')}
+          ${filteredRecords.map(r => renderPassportCardHTML(r, isZh)).join('')}
         </div>
       </div>
     `;
@@ -16288,6 +16263,7 @@ function openAddRestaurantModal(editId, defaultCountry, defaultStatus){
   if(el('rest-lng-inp')) el('rest-lng-inp').value = '';
   if(el('rest-map-status')) el('rest-map-status').textContent = '';
   _restMapLastUrl = '';
+  _lastCapturedPlaceData = null;
 
   if(editId){
     const record = (S.restaurantRecords || []).find(r => r.id === editId);
@@ -16301,6 +16277,9 @@ function openAddRestaurantModal(editId, defaultCountry, defaultStatus){
         onRestCountryChange(record.country || 'Malaysia');
       }
       if(el('rest-city-inp')) el('rest-city-inp').value = record.city || '';
+      if(el('rest-cuisine-inp')) el('rest-cuisine-inp').value = record.cuisine || '';
+      if(el('rest-address-inp')) el('rest-address-inp').value = record.address || '';
+      if(el('rest-phone-inp')) el('rest-phone-inp').value = record.phone || '';
       if(el('rest-date-inp')) el('rest-date-inp').value = record.date || '';
       if(el('rest-rating-sel')) el('rest-rating-sel').value = record.rating || 5;
       if(el('rest-curr-sel')) el('rest-curr-sel').value = record.currency || 'MYR';
@@ -16331,6 +16310,15 @@ function openAddRestaurantModal(editId, defaultCountry, defaultStatus){
   if(idInp) idInp.value = '';
   if(titleEl) titleEl.textContent = isZh ? '🍽️ 添加跨国探店记录' : '🍽️ Add Restaurant Record';
   setRestStatus(defaultStatus || 'visited');
+  if(el('rest-name-inp')) el('rest-name-inp').value = '';
+  if(el('rest-cuisine-inp')) el('rest-cuisine-inp').value = '';
+  if(el('rest-address-inp')) el('rest-address-inp').value = '';
+  if(el('rest-phone-inp')) el('rest-phone-inp').value = '';
+  if(el('rest-notes-inp')) el('rest-notes-inp').value = '';
+  if(el('rest-map-inp')) el('rest-map-inp').value = '';
+  if(el('rest-lat-inp')) el('rest-lat-inp').value = '';
+  if(el('rest-lng-inp')) el('rest-lng-inp').value = '';
+  if(el('rest-map-status')) el('rest-map-status').textContent = '';
   if(el('rest-date-inp')) el('rest-date-inp').value = today();
   if(el('rest-rating-sel')) el('rest-rating-sel').value = 5;
 
@@ -16469,27 +16457,153 @@ function extractMapsUrl(text){
 }
 window.extractMapsUrl = extractMapsUrl;
 
-// Extract place name from share message if mobile user copied share text
-function extractPlaceNameFromShareText(rawText) {
-  if (!rawText) return '';
+// Extract place name, real rating, review count, cuisine, and address from share text
+function parseMapsShareText(rawText) {
+  const result = { name: '', rating: null, reviewsCount: null, reviewsCountText: '', cuisine: '', address: '' };
+  if (!rawText) return result;
+
   const lines = String(rawText).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  for (const line of lines) {
-    let cleaned = line
-      .replace(/https?:\/\/[^\s<>"']+/gi, '')
-      .replace(/^(check out|take a look at|look at|shared from Google Maps:?|Google Maps:?|在\s*(?:Google\s*地图|Google\s*Maps)\s*(?:上)?(?:查看|看)?[:：\s]*)\s*/i, '')
-      .replace(/\s*(on Google Maps|at Google Maps|Google Maps|在\s*(?:Google\s*地图|Google\s*Maps)|Google\s*地图)\s*[:：]?\s*$/i, '')
-      .replace(/[:：\-–—\s]+$/, '')
-      .replace(/^【|】$/g, '')
-      .replace(/^"|"$/g, '')
-      .replace(/^'|'$/g, '')
-      .trim();
-    if (cleaned && cleaned.length >= 2 && cleaned.length <= 80 && !/^\d+[\s,.\d]*$/.test(cleaned)) {
-      return cleaned;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (/https?:\/\//i.test(line)) continue;
+
+    // Check for rating and review count, e.g. "4.7 ★ (763) · Fine dining restaurant"
+    const starMatch = line.match(/(\d+\.\d+)\s*(?:★|⭐|stars?)/i) || line.match(/(?:★|⭐)\s*(\d+\.\d+)/);
+    if (starMatch && !result.rating) {
+      result.rating = parseFloat(starMatch[1]);
+      const revMatch = line.match(/\(([\d,]+)\s*(?:reviews?|评价|則評論)?\)/i);
+      if (revMatch) {
+        result.reviewsCount = parseInt(revMatch[1].replace(/,/g, ''), 10);
+        result.reviewsCountText = `${revMatch[1]} reviews`;
+      }
+      const cuisineMatch = line.match(/·\s*([^·\r\n\d]+)/);
+      if (cuisineMatch) {
+        result.cuisine = cuisineMatch[1].trim();
+      }
+      continue;
+    }
+
+    // Check for address pattern
+    if (/jalan|street|st\.|road|rd\.|avenue|ave\.|lane|lorong|taman|building|plaza|mall|floor|block|perak|selangor|kuala lumpur|penang|johor|\b\d{5}\b/i.test(line)) {
+      if (!result.address) {
+        result.address = line;
+        continue;
+      }
+    }
+
+    // Name extraction from clean lines
+    if (!result.name) {
+      let cleaned = line
+        .replace(/https?:\/\/[^\s<>"']+/gi, '')
+        .replace(/^(check out|take a look at|look at|shared from Google Maps:?|Google Maps:?|在\s*(?:Google\s*地图|Google\s*Maps)\s*(?:上)?(?:查看|看)?[:：\s]*)\s*/i, '')
+        .replace(/\s*(on Google Maps|at Google Maps|Google Maps|在\s*(?:Google\s*地图|Google\s*Maps)|Google\s*地图)\s*[:：]?\s*$/i, '')
+        .replace(/[:：\-–—\s]+$/, '')
+        .replace(/^【|】$/g, '')
+        .replace(/^"|"$/g, '')
+        .replace(/^'|'$/g, '')
+        .trim();
+      if (cleaned && cleaned.length >= 2 && cleaned.length <= 80 && !/^\d+[\s,.\d]*$/.test(cleaned) && !/^[★⭐\d\s().·]+$/.test(cleaned)) {
+        result.name = cleaned;
+      }
     }
   }
-  return '';
+
+  return result;
+}
+window.parseMapsShareText = parseMapsShareText;
+
+function extractPlaceNameFromShareText(rawText) {
+  const parsed = parseMapsShareText(rawText);
+  return parsed.name || '';
 }
 window.extractPlaceNameFromShareText = extractPlaceNameFromShareText;
+
+// Smart Cuisine & Must-Try Dish Recommendation Engine
+function generateDiningRecommendations(name, categories, city) {
+  const cats = (categories || []).map(c => String(c).toLowerCase()).join(' ');
+  const n = String(name || '').toLowerCase();
+  const text = cats + ' ' + n;
+
+  if (/steamboat|hot\s*pot|haidilao|火锅|shabu|sukiyaki/i.test(text)) {
+    return {
+      cuisine: 'Hot Pot & Steamboat',
+      signature: 'Signature slow-simmered soup broth, premium sliced beef/pork, seafood platter & handmade fish/meat balls.',
+      items: ['Signature Soup Base', 'Fresh Meat Platter', 'Handmade Meatballs', 'Seafood Platter', 'Fried Tofu Skin']
+    };
+  }
+  if (/fine\s*dining|italian|french|steakhouse|bistro|wine|steak|european/i.test(text)) {
+    return {
+      cuisine: 'Fine Dining & Western',
+      signature: 'Chef tasting multi-course menu, artisanal pasta, premium ribeye/tenderloin steak & signature wine pairing.',
+      items: ['Chef Tasting Menu', 'Handmade Pasta', 'Premium Steak', 'Signature Dessert', 'Wine Pairing']
+    };
+  }
+  if (/ramen|sushi|japanese|izakaya|udon|donburi|tempura|yakiniku|日料|居酒屋/i.test(text)) {
+    return {
+      cuisine: 'Japanese Cuisine',
+      signature: 'Rich tonkotsu ramen broth, fresh sashimi slices, assorted nigiri sushi & crispy chicken karaage.',
+      items: ['Special Tonkotsu Ramen', 'Salmon Sashimi', 'Aburi Sushi Platter', 'Chicken Karaage', 'Gyoza']
+    };
+  }
+  if (/cafe|coffee|bakery|pastry|dessert|tea|brunch|waffle|cheesecake|croissant|咖啡|蛋糕/i.test(text)) {
+    return {
+      cuisine: 'Cafe & Bakery',
+      signature: 'Specialty hand-drip coffee, artisanal brunch plate, signature burnt cheesecake & matcha latte.',
+      items: ['Specialty Hand-Drip Coffee', 'Artisan Brunch Plate', 'Burnt Cheesecake', 'Matcha Latte', 'Butter Croissant']
+    };
+  }
+  if (/korean|bbq|kimchi|tteokbokki|samgyeopsal|chimaek|韩式|烤肉/i.test(text)) {
+    return {
+      cuisine: 'Korean Cuisine',
+      signature: 'Crispy soy garlic fried chicken, sizzling Korean BBQ pork belly, kimchi stew & seafood pancake.',
+      items: ['Korean Fried Chicken', 'Pork Belly BBQ', 'Kimchi Jjigae', 'Seafood Pancake', 'Tteokbokki']
+    };
+  }
+  if (/thai|tom\s*yum|mookata|pad\s*thai|som\s*tum|泰式|冬阴功/i.test(text)) {
+    return {
+      cuisine: 'Thai Cuisine',
+      signature: 'Aromatic seafood Tom Yum Goong, green curry chicken, pad thai noodles & sweet mango sticky rice.',
+      items: ['Seafood Tom Yum', 'Green Curry Chicken', 'Pad Thai', 'Mango Sticky Rice', 'Thai Milk Tea']
+    };
+  }
+  if (/dim\s*sum|chinese|cantonese|sichuan|roast|noodle|pork|chilli|点心|粤菜|川菜|烧腊/i.test(text)) {
+    return {
+      cuisine: 'Chinese & Heritage',
+      signature: 'Steamed siew mai & har gao dim sum, crispy roasted pork, wok-hei fried noodles & herbal soup.',
+      items: ['Steamed Dim Sum Platter', 'Signature Roast Pork / Duck', 'Wok-Hei Fried Noodles', 'Double-Boiled Herbal Soup']
+    };
+  }
+  if (/kopitiam|nasi\s*lemak|mamak|curry|roti|satay|laksa|hawker|white\s*coffee|茶餐室/i.test(text)) {
+    return {
+      cuisine: 'Malaysian Heritage Food',
+      signature: 'Fragrant nasi lemak with spiced fried chicken, traditional Ipoh white coffee, kaya toast & curry mee.',
+      items: ['Nasi Lemak Ayam Goreng', 'Traditional White Coffee', 'Kaya Butter Toast', 'Curry Mee', 'Roti Canai']
+    };
+  }
+  if (/burger|fast\s*food|pizza|fried\s*chicken|fries|taco|mexican/i.test(text)) {
+    return {
+      cuisine: 'Burgers & Comfort Food',
+      signature: 'Juicy handcrafted smash burger, loaded cheese fries, woodfired pizza & artisanal milkshakes.',
+      items: ['Handcrafted Smash Burger', 'Loaded Cheese Fries', 'Woodfired Pizza', 'Crispy Chicken Tenders']
+    };
+  }
+  if (/bar|pub|cocktail|beer|brewery|lounge|tapas/i.test(text)) {
+    return {
+      cuisine: 'Bar & Lounge',
+      signature: 'Craft cocktails, artisanal draft beers, truffle fries & sharing tapas board.',
+      items: ['Signature Cocktail', 'Craft Beer Pint', 'Truffle Fries', 'Tapas Sharing Board']
+    };
+  }
+
+  const primaryCat = categories && categories[0] ? categories[0] : 'Restaurant Specialties';
+  return {
+    cuisine: primaryCat,
+    signature: `House specialty dishes, chef recommendations, and popular customer favorites at ${name || 'this restaurant'}.`,
+    items: ['House Specialty', 'Chef Recommendation', 'Signature Drink', 'Popular Side Dish']
+  };
+}
+window.generateDiningRecommendations = generateDiningRecommendations;
 
 // Pull place name + coordinates out of an expanded Google Maps URL
 function parseGoogleMapsUrl(urlStr){
@@ -16509,12 +16623,12 @@ function parseGoogleMapsUrl(urlStr){
   try{
     const u = new URL(urlStr);
     let nm = '';
-    const pm = u.pathname.match(/\/maps\/(?:place|search)\/([^/]+)/);
+    const pm = u.pathname.match(/\/maps\/(?:place|search)\/([^/@]+)/);
     if(pm) nm = pm[1];
     else nm = u.searchParams.get('q') || u.searchParams.get('query') || '';
     nm = nm.replace(/\+/g, ' ');
     try{ nm = decodeURIComponent(nm); }catch(e){}
-    nm = nm.trim();
+    nm = nm.split(',')[0].trim();
     if(nm && !/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(nm)) out.name = nm;
   }catch(e){}
   return out;
@@ -16528,48 +16642,87 @@ function restCodeToFlag(code){
 }
 window.restCodeToFlag = restCodeToFlag;
 
-// Complete zero-manual-input extraction pipeline
+// Complete zero-manual-input extraction pipeline: captures name, real rating,
+// review count, cuisine category, address, phone, hours, coordinates & recommendations
 async function capturePlaceFromGoogleMaps(raw){
   const url = extractMapsUrl(raw);
   if(!url){
     return { ok: false, error: 'no_url' };
   }
 
-  // 1) Expand short links via local backend
-  let finalUrl = url;
-  if(MAPS_SHORT_HOST_RE.test(new URL(url).hostname)){
-    try{
-      const r = await fetch('/api/resolve-map?url=' + encodeURIComponent(url));
+  // Parse share sheet text metadata first (mobile user often pastes text + URL)
+  const shareMeta = parseMapsShareText(raw);
+
+  let backendData = null;
+  // 1) Expand short link & fetch rich place details via local backend
+  try{
+    const r = await fetch('/api/resolve-map?url=' + encodeURIComponent(url));
+    if(r.ok){
       const j = await r.json();
-      if(j && j.url) finalUrl = j.url;
-    }catch(e){}
-  }
+      if(j && (j.name || j.url)){
+        backendData = j;
+      }
+    }
+  }catch(e){}
+
+  let finalUrl = (backendData && (backendData.finalUrl || backendData.url)) || url;
 
   // 2) Parse URL for place name and coordinates
-  const info = parseGoogleMapsUrl(finalUrl);
-  if(!info.name){
-    info.name = extractPlaceNameFromShareText(raw);
+  const urlInfo = parseGoogleMapsUrl(finalUrl);
+
+  // Name resolution priority: backend details > share text > URL pathname
+  let name = (backendData && backendData.name && backendData.name !== 'Wishlist Place') 
+    ? backendData.name 
+    : (shareMeta.name || urlInfo.name || '');
+
+  // Rating & review count
+  let rating = (backendData && backendData.rating) || shareMeta.rating || null;
+  let reviewsCount = (backendData && backendData.reviewsCount) || shareMeta.reviewsCount || null;
+  let reviewsCountText = (backendData && backendData.reviewsCountText) || shareMeta.reviewsCountText || (reviewsCount ? `${reviewsCount} reviews` : '');
+
+  // Categories & cuisine
+  let categories = (backendData && backendData.categories && backendData.categories.length > 0)
+    ? backendData.categories
+    : (shareMeta.cuisine ? [shareMeta.cuisine] : []);
+  let cuisine = (backendData && backendData.cuisine) || shareMeta.cuisine || '';
+
+  // Address, phone, openStatus
+  let address = (backendData && backendData.address) || shareMeta.address || '';
+  let phone = (backendData && backendData.phone) || '';
+  let openStatus = (backendData && backendData.openStatus) || '';
+  if(typeof openStatus === 'string' && /suggest an edit|claim this|add hours|own this|add website|add phone|add missing/i.test(openStatus)){
+    openStatus = '';
   }
 
-  // 3) Reverse-geocode coordinates via OpenStreetMap Nominatim
+  // Coordinates
+  let lat = (backendData && backendData.lat !== undefined && backendData.lat !== null) ? backendData.lat : urlInfo.lat;
+  let lng = (backendData && backendData.lng !== undefined && backendData.lng !== null) ? backendData.lng : urlInfo.lng;
+
+  // 3) Reverse-geocode coordinates via OpenStreetMap Nominatim if address or city is missing
   let geo = null;
-  if(info.lat !== null && info.lng !== null){
+  if(lat !== null && lng !== null && (!address || !name)){
     try{
-      const gr = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&accept-language=en&lat=${info.lat}&lon=${info.lng}`, {
+      const gr = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&accept-language=en&lat=${lat}&lon=${lng}`, {
         headers: { 'User-Agent': 'PocketWinnie/4.6' }
       });
       if(gr.ok) geo = await gr.json();
     }catch(e){}
   }
 
-  // 4) Resolve place name, country, city
-  const name = info.name || (geo && (geo.name || (geo.address && (geo.address.amenity || geo.address.restaurant || geo.address.cafe || geo.address.shop)))) || '';
+  if(!name){
+    name = (geo && (geo.name || (geo.address && (geo.address.amenity || geo.address.restaurant || geo.address.cafe || geo.address.shop)))) || '';
+  }
+  if(!address && geo && geo.display_name){
+    address = geo.display_name;
+  }
 
+  // Country & City resolution
   let countryName = 'Malaysia';
-  let countryCode = 'MY';
+  let countryCode = (backendData && backendData.countryCode) || 'MY';
   let flag = '🇲🇾';
   let currency = 'MYR';
-  let city = '';
+  let city = (backendData && backendData.city) || '';
+  let state = (backendData && backendData.state) || '';
 
   if(geo && geo.address){
     const a = geo.address;
@@ -16586,33 +16739,88 @@ async function capturePlaceFromGoogleMaps(raw){
       flag = restCodeToFlag(code);
       currency = 'USD';
     }
-    city = a.city || a.town || a.village || a.municipality || a.suburb || a.city_district || a.state_district || a.state || '';
-  } else if(name){
-    const detected = detectCountryFromText(name);
-    if(detected){
-      countryName = detected.name;
-      countryCode = detected.code;
-      flag = detected.flag;
-      currency = detected.currency;
+    if(!city) city = a.city || a.town || a.village || a.municipality || a.suburb || a.city_district || a.state_district || a.state || '';
+    if(!state) state = a.state || '';
+  } else {
+    const known = RESTAURANT_COUNTRIES.find(c => c.code === countryCode);
+    if(known){
+      countryName = known.name;
+      flag = known.flag;
+      currency = known.currency;
+    } else if(name){
+      const detected = detectCountryFromText(name);
+      if(detected){
+        countryName = detected.name;
+        countryCode = detected.code;
+        flag = detected.flag;
+        currency = detected.currency;
+      }
     }
   }
 
+  // Recommendations & signature highlights
+  let recommendations = (backendData && backendData.recommendations) || [];
+  let recommendationText = (backendData && backendData.recommendationText) || '';
+
+  if(!recommendationText || recommendations.length === 0){
+    const localReco = generateDiningRecommendations(name, categories, city);
+    cuisine = cuisine || localReco.cuisine;
+    recommendations = localReco.items;
+    recommendationText = localReco.signature;
+  }
+
+  // Formatted notes combining signature highlights, address & hours
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const notesLines = [];
+  if(recommendationText) notesLines.push(`💡 ${recommendationText}`);
+  if(recommendations && recommendations.length > 0) notesLines.push(`✨ ${isZh ? '必点招牌' : 'Must-Try'}: ${recommendations.join(', ')}`);
+  if(address) notesLines.push(`🏠 ${address}`);
+  if(openStatus) notesLines.push(`🕒 ${openStatus}`);
+  if(phone) notesLines.push(`📞 ${phone}`);
+  const notes = notesLines.join('\n');
+
+  // Pre-generate dishes from recommendations
+  const items = (recommendations || []).map(rName => ({
+    name: rName,
+    qty: 1,
+    price: 0,
+    calories: (typeof estimateCaloriesFromName === 'function' ? estimateCaloriesFromName(rName) : 0),
+    protein: 0
+  }));
+
   return {
     ok: true,
-    name,
+    name: name || (city ? `${city} ${cuisine || (isZh ? '精选餐厅' : 'Restaurant')}` : (countryName ? `${countryName} ${cuisine || (isZh ? '精选餐厅' : 'Restaurant')}` : (isZh ? '想吃餐厅' : 'Wishlist Restaurant'))),
+    rating,
+    ratingNum: rating,
+    reviewsCount,
+    reviewsCountText,
+    categories,
+    cuisine,
+    address,
+    city,
+    state,
     country: countryName,
     countryCode,
     flag,
     currency,
-    city,
-    lat: info.lat,
-    lng: info.lng,
+    phone,
+    openStatus,
+    priceLevel: (backendData && backendData.priceLevel) || '',
+    website: (backendData && backendData.website) || '',
+    recommendations,
+    recommendationText,
+    notes,
+    items,
+    lat,
+    lng,
     mapUrl: finalUrl
   };
 }
 window.capturePlaceFromGoogleMaps = capturePlaceFromGoogleMaps;
 
 let _restMapLastUrl = '';
+let _lastCapturedPlaceData = null;
 let _restMapTimer = null;
 
 // Called on keystroke / paste in the full modal map-link field
@@ -16635,13 +16843,14 @@ async function autoFillFromMapsLink(raw, force){
   }
   if(!force && url === _restMapLastUrl) return;
   _restMapLastUrl = url;
-  setStatus(isZh ? '⏳ 正在提取地点信息…' : '⏳ Auto-capturing place info…');
+  setStatus(isZh ? '⏳ 正在提取地点信息与招牌推荐…' : '⏳ Auto-capturing place info & recommendations…');
 
   const res = await capturePlaceFromGoogleMaps(raw);
   if(!res.ok){
     setStatus(isZh ? '⚠️ 无法解析该链接' : '⚠️ Could not parse this link', '#ef4444');
     return;
   }
+  _lastCapturedPlaceData = res;
 
   const nameInp = el('rest-name-inp');
   if(nameInp && res.name && (force || !nameInp.value.trim())) nameInp.value = res.name;
@@ -16663,7 +16872,44 @@ async function autoFillFromMapsLink(raw, force){
   const cityInp = el('rest-city-inp');
   if(cityInp && res.city && (force || !cityInp.value.trim())) cityInp.value = res.city;
 
-  const parts = [res.name, res.city, res.flag + ' ' + res.country].filter(Boolean).join(' · ');
+  if(el('rest-cuisine-inp') && res.cuisine && (force || !el('rest-cuisine-inp').value.trim())){
+    el('rest-cuisine-inp').value = res.cuisine;
+  }
+  if(el('rest-address-inp') && res.address && (force || !el('rest-address-inp').value.trim())){
+    el('rest-address-inp').value = res.address;
+  }
+  if(el('rest-phone-inp') && res.phone && (force || !el('rest-phone-inp').value.trim())){
+    el('rest-phone-inp').value = res.phone;
+  }
+  if(el('rest-notes-inp') && res.notes && (force || !el('rest-notes-inp').value.trim())){
+    el('rest-notes-inp').value = res.notes;
+  }
+  if(el('rest-rating-sel') && res.rating){
+    el('rest-rating-sel').value = Math.max(1, Math.min(5, Math.round(res.rating)));
+  }
+
+  // Pre-fill dishes if empty
+  const dishContainer = el('rest-dishes-container');
+  if(dishContainer && res.items && res.items.length > 0){
+    const existingRows = dishContainer.querySelectorAll('.rest-dish-row');
+    const firstRowName = existingRows[0] ? existingRows[0].querySelector('.rest-dish-name')?.value.trim() : '';
+    if(existingRows.length <= 1 && !firstRowName){
+      dishContainer.innerHTML = '';
+      res.items.forEach(it => {
+        addRestFoodItemRow(it.name, '', it.calories, 0);
+      });
+      recalcRestDishTotals();
+    }
+  }
+
+  const parts = [
+    res.name,
+    res.cuisine,
+    res.rating ? `⭐ ${res.rating}` : '',
+    res.city,
+    res.flag + ' ' + res.country
+  ].filter(Boolean).join(' · ');
+
   const quickSaveBtn = `<button type="button" class="chip" onclick="saveRestaurantRecord()" style="margin-left:6px;background:#10b981;color:#fff;font-weight:800;font-size:10.5px;padding:2px 8px;border-radius:6px;cursor:pointer">💾 ${isZh ? '直接保存' : 'Save Now'}</button>`;
   if(statusEl){
     statusEl.innerHTML = `<span style="color:#10b981">${isZh ? '✅ 已自动捕获：' : '✅ Auto-captured: '} ${esc(parts || 'OK')}</span>${quickSaveBtn}`;
@@ -16671,7 +16917,8 @@ async function autoFillFromMapsLink(raw, force){
 }
 window.autoFillFromMapsLink = autoFillFromMapsLink;
 
-// Instant 1-Step Wishlist Add: Auto-captures everything from URL and saves immediately!
+// Instant 1-Step Wishlist Add: Auto-captures store name, real rating, cuisine,
+// address, hours, and culinary recommendations and saves immediately!
 async function quickAddWishlistFromUrl(raw, source){
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   let statusEl = null;
@@ -16700,7 +16947,7 @@ async function quickAddWishlistFromUrl(raw, source){
     return;
   }
 
-  setStatus(isZh ? '⏳ 正在提取地点信息并保存到想吃清单…' : '⏳ Auto-capturing place info & saving to wishlist…', 'var(--amber)');
+  setStatus(isZh ? '⏳ 正在自动识别店名、评分、地址与必点招牌推荐…' : '⏳ Auto-capturing place, rating, address & dish recommendations…', 'var(--amber)');
 
   try{
     const res = await capturePlaceFromGoogleMaps(raw);
@@ -16709,25 +16956,37 @@ async function quickAddWishlistFromUrl(raw, source){
       return;
     }
 
-    const placeName = res.name || (res.city ? `${res.city} ${isZh ? '精选餐厅' : 'Restaurant'}` : (isZh ? '想吃餐厅' : 'Wishlist Restaurant'));
-
     const newRecord = {
       id: 'rest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-      name: placeName,
+      name: res.name,
       country: res.country || 'Malaysia',
       countryCode: res.countryCode || 'MY',
       flag: res.flag || '🇲🇾',
       city: res.city || '',
+      state: res.state || '',
       status: 'pending', // Wishlist!
       date: today(),
-      rating: 5,
+      rating: res.rating ? Math.round(res.rating) : 5,
+      ratingNum: res.ratingNum || res.rating || null,
+      reviewsCount: res.reviewsCount || null,
+      reviewsCountText: res.reviewsCountText || '',
+      categories: res.categories || [],
+      cuisine: res.cuisine || '',
+      address: res.address || '',
+      phone: res.phone || '',
+      openStatus: res.openStatus || '',
+      openHours: res.openHours || [],
+      priceLevel: res.priceLevel || '',
+      website: res.website || '',
+      recommendations: res.recommendations || [],
+      recommendationText: res.recommendationText || '',
       currency: res.currency || 'MYR',
       amountOriginal: 0,
       amountMYR: 0,
-      notes: '',
-      items: [],
-      totalCalories: 0,
-      totalProtein: 0,
+      notes: res.notes || '',
+      items: res.items || [],
+      totalCalories: (res.items || []).reduce((acc, it) => acc + (it.calories || 0), 0),
+      totalProtein: (res.items || []).reduce((acc, it) => acc + (it.protein || 0), 0),
       mapUrl: res.mapUrl || '',
       lat: res.lat,
       lng: res.lng,
@@ -16739,17 +16998,21 @@ async function quickAddWishlistFromUrl(raw, source){
     save();
 
     if(inputEl) inputEl.value = '';
-    setStatus((isZh ? '🎉 已成功加入想吃清单：' : '🎉 Added to Wishlist: ') + `${newRecord.flag} ${newRecord.name}`, '#10b981');
+    const ratingTag = newRecord.ratingNum ? ` ⭐${newRecord.ratingNum}` : '';
+    const cuisineTag = newRecord.cuisine ? ` · ${newRecord.cuisine}` : '';
+    setStatus((isZh ? '🎉 已成功加入想吃清单：' : '🎉 Added to Wishlist: ') + `${newRecord.flag} ${newRecord.name}${ratingTag}${cuisineTag}`, '#10b981');
 
     renderPassportPage();
     renderRestaurantPassport();
     renderRestaurantPassportWidget();
     renderAll();
 
-    toast(isZh ? `🎉 成功加入想吃清单：${newRecord.flag} ${newRecord.name}！` : `🎉 Added to Wishlist: ${newRecord.flag} ${newRecord.name}!`);
+    toast(isZh 
+      ? `🎉 成功加入想吃清单：${newRecord.flag} ${newRecord.name}！已自动识别评分、地址与必点推荐！` 
+      : `🎉 Added to Wishlist: ${newRecord.flag} ${newRecord.name}! Captured rating, address & dish recommendations!`);
 
     if(source === 'modal'){
-      setTimeout(() => closeModal('quick-wishlist-modal'), 700);
+      setTimeout(() => closeModal('quick-wishlist-modal'), 750);
     }
   }catch(err){
     console.error('Quick add wishlist error:', err);
@@ -16757,6 +17020,58 @@ async function quickAddWishlistFromUrl(raw, source){
   }
 }
 window.quickAddWishlistFromUrl = quickAddWishlistFromUrl;
+
+// 1-Tap Refresh / Sync details and recommendations for any existing wishlist item
+async function enrichExistingWishlistRecord(id){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  if(!S.restaurantRecords) return;
+  const r = S.restaurantRecords.find(x => x.id === id);
+  if(!r || !r.mapUrl){
+    toast(isZh ? '⚠️ 该记录没有 Google 地图链接' : '⚠️ No Google Maps link found for this place');
+    return;
+  }
+  toast(isZh ? '⏳ 正在从 Google 地图刷新最新信息与招牌推荐…' : '⏳ Refreshing details & recommendations from Google Maps…');
+  try{
+    const res = await capturePlaceFromGoogleMaps(r.mapUrl);
+    if(!res.ok){
+      toast(isZh ? '⚠️ 无法从地图获取最新信息' : '⚠️ Could not fetch latest info from map');
+      return;
+    }
+    if(res.name && res.name !== 'Wishlist Restaurant' && (!r.name || r.name.startsWith('Wishlist') || r.name.startsWith('想吃'))){
+      r.name = res.name;
+    }
+    if(res.rating){
+      r.rating = Math.round(res.rating);
+      r.ratingNum = res.rating;
+    }
+    if(res.reviewsCount) r.reviewsCount = res.reviewsCount;
+    if(res.reviewsCountText) r.reviewsCountText = res.reviewsCountText;
+    if(res.cuisine) r.cuisine = res.cuisine;
+    if(res.categories && res.categories.length > 0) r.categories = res.categories;
+    if(res.address) r.address = res.address;
+    if(res.city && !r.city) r.city = res.city;
+    if(res.state && !r.state) r.state = res.state;
+    if(res.phone) r.phone = res.phone;
+    if(res.openStatus) r.openStatus = res.openStatus;
+    if(res.openHours && res.openHours.length > 0) r.openHours = res.openHours;
+    if(res.recommendations && res.recommendations.length > 0) r.recommendations = res.recommendations;
+    if(res.recommendationText) r.recommendationText = res.recommendationText;
+    if(res.lat !== null && res.lat !== undefined) r.lat = res.lat;
+    if(res.lng !== null && res.lng !== undefined) r.lng = res.lng;
+    if(res.notes && (!r.notes || r.notes.trim() === '')) r.notes = res.notes;
+    if(res.items && res.items.length > 0 && (!r.items || r.items.length === 0)) r.items = res.items;
+
+    save();
+    renderPassportPage();
+    renderRestaurantPassport();
+    renderRestaurantPassportWidget();
+    renderAll();
+    toast(isZh ? `✅ 已成功更新 ${r.name} 的信息与招牌推荐！` : `✅ Updated ${r.name} with latest details & recommendations!`);
+  }catch(e){
+    toast(isZh ? '⚠️ 刷新失败，请稍后重试' : '⚠️ Failed to refresh, please try again');
+  }
+}
+window.enrichExistingWishlistRecord = enrichExistingWishlistRecord;
 
 function openQuickWishlistModal(){
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
@@ -16991,6 +17306,9 @@ async function saveRestaurantRecord(){
   }
 
   const city = el('rest-city-inp') ? el('rest-city-inp').value.trim() : '';
+  const cuisine = el('rest-cuisine-inp') ? el('rest-cuisine-inp').value.trim() : '';
+  const address = el('rest-address-inp') ? el('rest-address-inp').value.trim() : '';
+  const phone = el('rest-phone-inp') ? el('rest-phone-inp').value.trim() : '';
   const date = el('rest-date-inp') ? el('rest-date-inp').value : today();
   const rating = el('rest-rating-sel') ? parseInt(el('rest-rating-sel').value) || 5 : 5;
   const currency = el('rest-curr-sel') ? el('rest-curr-sel').value : 'MYR';
@@ -17036,8 +17354,10 @@ async function saveRestaurantRecord(){
   if(editId){
     const idx = S.restaurantRecords.findIndex(r => r.id === editId);
     if(idx >= 0){
+      const existing = S.restaurantRecords[idx] || {};
+      const extraData = _lastCapturedPlaceData || {};
       S.restaurantRecords[idx] = {
-        ...S.restaurantRecords[idx],
+        ...existing,
         mapUrl,
         lat: mapLat,
         lng: mapLng,
@@ -17046,6 +17366,9 @@ async function saveRestaurantRecord(){
         countryCode,
         flag,
         city,
+        cuisine,
+        address,
+        phone,
         status,
         date,
         rating,
@@ -17055,11 +17378,17 @@ async function saveRestaurantRecord(){
         notes,
         items,
         totalCalories,
-        totalProtein
+        totalProtein,
+        ratingNum: extraData.rating !== undefined ? extraData.rating : (existing.ratingNum || null),
+        reviewsCount: extraData.reviewsCount !== undefined ? extraData.reviewsCount : (existing.reviewsCount || null),
+        openStatus: extraData.openStatus !== undefined ? extraData.openStatus : (existing.openStatus || null),
+        recommendations: (extraData.recommendations && extraData.recommendations.length > 0) ? extraData.recommendations : (existing.recommendations || []),
+        recommendationText: extraData.recommendationText !== undefined ? extraData.recommendationText : (existing.recommendationText || '')
       };
     }
   } else {
     recordId = 'rest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    const extraData = _lastCapturedPlaceData || {};
     const newRecord = {
       id: recordId,
       name,
@@ -17067,6 +17396,9 @@ async function saveRestaurantRecord(){
       countryCode,
       flag,
       city,
+      cuisine,
+      address,
+      phone,
       status,
       date,
       rating,
@@ -17080,10 +17412,16 @@ async function saveRestaurantRecord(){
       mapUrl,
       lat: mapLat,
       lng: mapLng,
+      ratingNum: extraData.rating || null,
+      reviewsCount: extraData.reviewsCount || null,
+      openStatus: extraData.openStatus || null,
+      recommendations: extraData.recommendations || [],
+      recommendationText: extraData.recommendationText || '',
       createdAt: new Date().toISOString()
     };
     S.restaurantRecords.push(newRecord);
   }
+  _lastCapturedPlaceData = null;
 
   // Optionally sync as an expense transaction in Pocket Winnie
   if(syncTx && status === 'visited' && amountMYR > 0){
