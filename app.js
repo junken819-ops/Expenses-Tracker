@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-10-06T10:25:51.413Z
+   Last build: 2026-10-08T08:55:37.042Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -16546,7 +16546,7 @@ function generateDiningRecommendations(name, categories, city) {
       items: ['Special Tonkotsu Ramen', 'Salmon Sashimi', 'Aburi Sushi Platter', 'Chicken Karaage', 'Gyoza']
     };
   }
-  if (/cafe|coffee|bakery|pastry|dessert|tea|brunch|waffle|cheesecake|croissant|咖啡|蛋糕/i.test(text)) {
+  if (/cafe|coffee|bakery|pastry|dessert|tea|brunch|waffle|cheesecake|croissant|keke|bakes|patisserie|gelato|boba|toast|咖啡|蛋糕/i.test(text)) {
     return {
       cuisine: 'Cafe & Bakery',
       signature: 'Specialty hand-drip coffee, artisanal brunch plate, signature burnt cheesecake & matcha latte.',
@@ -16628,8 +16628,13 @@ function parseGoogleMapsUrl(urlStr){
     else nm = u.searchParams.get('q') || u.searchParams.get('query') || '';
     nm = nm.replace(/\+/g, ' ');
     try{ nm = decodeURIComponent(nm); }catch(e){}
-    nm = nm.split(',')[0].trim();
-    if(nm && !/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(nm)) out.name = nm;
+    const parts = nm.split(',').map(s => s.trim()).filter(Boolean);
+    if(parts.length > 0 && !/^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/.test(parts[0])){
+      out.name = parts[0];
+      if(parts.length > 1){
+        out.address = parts.slice(1).join(', ');
+      }
+    }
   }catch(e){}
   return out;
 }
@@ -16641,6 +16646,66 @@ function restCodeToFlag(code){
   return String.fromCodePoint(...[...code].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
 }
 window.restCodeToFlag = restCodeToFlag;
+
+// Parse rich OpenGraph/place metadata returned by CORS-friendly Microlink
+function parseMicrolinkPlace(data){
+  if(!data) return null;
+  const title = String(data.title || data.publisher || '').trim();
+  const desc = String(data.description || '').trim();
+
+  let name = '';
+  let address = '';
+  let city = '';
+  let state = '';
+  let country = 'Malaysia';
+  let rating = null;
+  let cuisine = '';
+
+  if(title && !/^Google Maps/i.test(title)){
+    const parts = title.split('·').map(s => s.trim()).filter(Boolean);
+    if(parts.length >= 2){
+      name = parts[0];
+      address = parts.slice(1).join(', ');
+    } else {
+      name = title;
+    }
+  }
+
+  // Parse address for known cities & states
+  if(address){
+    const addrLow = address.toLowerCase();
+    if(addrLow.includes('ipoh')) { city = 'Ipoh'; state = 'Perak'; }
+    else if(addrLow.includes('kuala lumpur') || addrLow.includes('kl')) { city = 'Kuala Lumpur'; state = 'Kuala Lumpur'; }
+    else if(addrLow.includes('petaling jaya') || addrLow.includes('pj') || addrLow.includes('subang') || addrLow.includes('shah alam')) { city = 'Petaling Jaya'; state = 'Selangor'; }
+    else if(addrLow.includes('george town') || addrLow.includes('penang')) { city = 'Penang'; state = 'Penang'; }
+    else if(addrLow.includes('johor bahru') || addrLow.includes('jb')) { city = 'Johor Bahru'; state = 'Johor'; }
+    else if(addrLow.includes('melaka') || addrLow.includes('malacca')) { city = 'Melaka'; state = 'Melaka'; }
+    else if(addrLow.includes('kuching')) { city = 'Kuching'; state = 'Sarawak'; }
+    else if(addrLow.includes('kota kinabalu')) { city = 'Kota Kinabalu'; state = 'Sabah'; }
+    else if(addrLow.includes('singapore')) { city = 'Singapore'; country = 'Singapore'; }
+    else if(addrLow.includes('bangkok')) { city = 'Bangkok'; country = 'Thailand'; }
+    else if(addrLow.includes('tokyo')) { city = 'Tokyo'; country = 'Japan'; }
+  }
+
+  // Parse description for rating & cuisine
+  if(desc){
+    const descParts = desc.split('·').map(s => s.trim()).filter(Boolean);
+    for(const part of descParts){
+      if(/^[★⭐]+$/.test(part)){
+        rating = (part.match(/[★⭐]/g) || []).length;
+      } else if(/(\d+(?:\.\d+)?)\s*[★⭐]/.test(part)){
+        const m = part.match(/(\d+(?:\.\d+)?)\s*[★⭐]/);
+        if(m) rating = parseFloat(m[1]);
+      } else if(!cuisine && !/review|direction|map|local business|find local/i.test(part)){
+        cuisine = part;
+      }
+    }
+  }
+
+  if(!name) return null;
+  return { name, address, city, state, country, rating, cuisine };
+}
+window.parseMicrolinkPlace = parseMicrolinkPlace;
 
 // Complete zero-manual-input extraction pipeline: captures name, real rating,
 // review count, cuisine category, address, phone, hours, coordinates & recommendations
@@ -16664,6 +16729,34 @@ async function capturePlaceFromGoogleMaps(raw){
       }
     }
   }catch(e){}
+
+  // 1b) Cloud / Static hosting fallback (e.g. GitHub Pages, Netlify static, PWA mobile)
+  // When local backend is not available, fetch via CORS-enabled Microlink API
+  if(!backendData || !backendData.name || backendData.name === 'Wishlist Place'){
+    try{
+      const microRes = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(url));
+      if(microRes.ok){
+        const microJson = await microRes.json();
+        if(microJson && microJson.data){
+          const parsed = parseMicrolinkPlace(microJson.data);
+          if(parsed && parsed.name){
+            backendData = {
+              ok: true,
+              name: parsed.name,
+              address: parsed.address,
+              city: parsed.city,
+              state: parsed.state,
+              country: parsed.country,
+              rating: parsed.rating,
+              cuisine: parsed.cuisine,
+              finalUrl: microJson.data.url || url,
+              imageUrl: microJson.data.image ? microJson.data.image.url : null
+            };
+          }
+        }
+      }
+    }catch(e){}
+  }
 
   let finalUrl = (backendData && (backendData.finalUrl || backendData.url)) || url;
 
