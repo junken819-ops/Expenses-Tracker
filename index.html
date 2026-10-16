@@ -2079,10 +2079,46 @@
           <button type="button" id="gemini-key-toggle-btn" onclick="toggleGeminiKeyVisibility()" style="position:absolute;right:8px;background:none;border:none;cursor:pointer;font-size:16px;padding:4px" title="Show/Hide Key">👁️</button>
         </div>
       </div>
+
+      <!-- 🔍 Search & Select Default AI Model -->
+      <div class="form-row" style="margin-top:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <label class="form-label" style="margin-bottom:0;font-weight:700">AI Model (默认使用模型)</label>
+          <span id="gemini-current-default-tag" style="font-size:11px;font-weight:800;color:var(--cyan);background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.35);padding:2px 8px;border-radius:8px">
+            ⭐ Default: gemini-2.0-flash
+          </span>
+        </div>
+
+        <!-- Search Models Button -->
+        <button type="button" id="gemini-search-models-btn" class="primary-btn" onclick="searchAndListWorkingGeminiModels()" style="width:100%;margin-bottom:8px;background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;padding:10px 14px;font-size:12.5px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px">
+          <span>🔍 Search Available AI Models & Set Default</span>
+        </button>
+
+        <!-- Search Status / Spinner -->
+        <div id="gemini-search-status" class="hidden" style="font-size:11.5px;margin-bottom:8px;padding:8px 10px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);line-height:1.4"></div>
+
+        <!-- Discovered Models List Container -->
+        <div id="gemini-models-list" style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;padding-right:2px;margin-bottom:8px">
+          <!-- Populated dynamically with working models & "Set as Default" buttons -->
+        </div>
+
+        <!-- Custom Model input toggle -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+          <button type="button" class="see-all" onclick="toggleGeminiCustomModelInput()" style="font-size:11px;color:var(--cyan);font-weight:700;background:none;border:none;cursor:pointer;padding:0">
+            ✏️ Or Type Custom Model Name ▾
+          </button>
+          <span style="font-size:10px;color:var(--muted)">Auto-fails over if model retired</span>
+        </div>
+        <div id="gemini-custom-model-wrap" class="hidden" style="margin-top:6px;display:flex;gap:6px">
+          <input type="text" id="gemini-custom-model-inp" class="form-input" placeholder="e.g. gemini-2.5-flash" style="margin-bottom:0;font-size:11.5px;flex:1"/>
+          <button type="button" class="primary-btn" onclick="applyCustomGeminiModel()" style="padding:6px 12px;font-size:11px;font-weight:800;margin-bottom:0;width:auto">Set Default</button>
+        </div>
+      </div>
+
       <div id="gemini-test-status" class="hidden" style="margin-top:10px;margin-bottom:12px"></div>
       <div style="display:flex;gap:8px;margin-top:14px">
-        <button type="button" class="primary-btn" onclick="saveGeminiKey()" style="flex:1">💾 Save Key</button>
-        <button type="button" class="ghost-btn" onclick="testGeminiKeyConnection()" style="flex:1">⚡ Test Connection</button>
+        <button type="button" class="primary-btn" onclick="saveGeminiKey()" style="flex:1">💾 Save Settings</button>
+        <button type="button" class="ghost-btn" onclick="testGeminiKeyConnection()" style="flex:1">⚡ Quick Ping Test</button>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button type="button" class="ghost-btn" style="flex:1" onclick="clearGeminiKey()">🗑️ Clear Key</button>

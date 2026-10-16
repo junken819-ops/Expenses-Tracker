@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-10-08T08:55:37.042Z
+   Last build: 2026-10-16T04:21:47.319Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -1232,7 +1232,10 @@ const STATE = {
     cycleLength: 28,
     history: []
   },
-  geminiApiKey: ''
+  geminiApiKey: '',
+  geminiModel: 'auto',
+  geminiActiveModel: 'gemini-2.0-flash',
+  geminiDiscoveredModels: []
 };
 
 // ── S: GLOBAL BACKWARD-COMPATIBLE STATE ALIAS ──
@@ -2212,6 +2215,10 @@ function closeModal(id){
   if(m) m.classList.add('hidden');
   const locChip = el('loc-suggest-chip');
   if(locChip) locChip.style.display = 'none';
+  if(id === 'universal-upload-modal'){
+    stopAiScanAnimation();
+    if(typeof cancelUniversalScan === 'function') cancelUniversalScan();
+  }
   if(id === 'tx-modal' && el('tx-from-upload-bar')){
     el('tx-from-upload-bar').classList.add('hidden');
   }
@@ -6165,13 +6172,17 @@ async function handlePhoto(inp){
 
 /* ── Module: services/gemini.js ── */
 /**
- * Google Gemini Vision AI Receipt Analyzer
+ * Google Gemini Vision AI Receipt Analyzer & Self-Healing Model Engine
  * Modularized from Pocket Winnie Core
  */
 
 // ── 🤖 GOOGLE GEMINI VISION AI RECEIPT ANALYZER ───────
-// Google retires and renames Gemini models regularly.  Do not rely on one
-// hard-coded model: ask the API which models this particular key can use.
+// Google frequently retires, renames, and releases Gemini models.
+// Features:
+// 1. One-click "Search Available AI Models" to discover & test live models.
+// 2. One-click "Set as Default" for any discovered model.
+// 3. Dynamic scoring & self-healing auto-failover if Google ever retires a model.
+
 const GEMINI_MODEL_FALLBACKS = [
   'gemini-2.0-flash',
   'gemini-2.0-flash-lite',
@@ -6181,7 +6192,18 @@ const GEMINI_MODEL_FALLBACKS = [
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite'
 ];
+
+const MODEL_INFO_MAP = {
+  'auto': { title: 'Auto-Detect Working Model', desc: 'Automatically selects fastest active model', tag: '⚡ Recommended' },
+  'gemini-2.0-flash': { title: 'Gemini 2.0 Flash', desc: 'Ultra-fast multimodal vision & OCR', tag: '🚀 Fastest' },
+  'gemini-2.0-flash-lite': { title: 'Gemini 2.0 Flash-Lite', desc: 'Lightweight & higher rate limits', tag: '⚡ High Quota' },
+  'gemini-1.5-flash': { title: 'Gemini 1.5 Flash', desc: 'Reliable long-context vision fallback', tag: '🛡️ Stable' },
+  'gemini-1.5-pro': { title: 'Gemini 1.5 Pro', desc: 'Complex reasoning & dense invoices', tag: '🧠 Pro' },
+  'gemini-2.5-flash': { title: 'Gemini 2.5 Flash', desc: 'Next-generation multimodal model', tag: '✨ Next-Gen' }
+};
+
 const geminiModelCache = new Map();
+const geminiDeprecatedModels = new Set();
 
 function geminiModelScore(name){
   const model = String(name || '').toLowerCase();
@@ -6191,25 +6213,32 @@ function geminiModelScore(name){
   if(model.includes('pro')) score += 12;
   if(model.includes('preview')) score -= 6;
   if(model.includes('exp') || model.includes('experimental')) score -= 10;
-  if(/image|tts|live|transcribe|embedding|robotics|audio/.test(model)) score -= 80;
+  if(/image|tts|live|transcribe|embedding|robotics|audio|medlm/.test(model)) score -= 80;
   const version = model.match(/gemini-(\d+)(?:\.(\d+))?/);
-  if(version) score += Number(version[1]) * 10 + Number(version[2] || 0);
+  if(version) score += Number(version[1]) * 15 + Number(version[2] || 0) * 5;
   return score;
 }
 
-async function getGeminiModelCandidates(apiKey){
+async function getGeminiModelCandidates(apiKey, forceRefresh = false){
   const key = String(apiKey || '').trim();
   if(!key || key.length < 8) return GEMINI_MODEL_FALLBACKS;
 
   const now = Date.now();
   const cached = geminiModelCache.get(key);
-  if(cached && cached.expiresAt > now) return cached.models;
+  if(!forceRefresh && cached && cached.expiresAt > now) {
+    return filterDeprecatedModels(cached.models);
+  }
 
   let discovered = [];
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=${encodeURIComponent(key)}`, {
-      headers: { 'x-goog-api-key': key }
+      headers: { 'x-goog-api-key': key },
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
+
     if(res.ok){
       const body = await res.json();
       discovered = (body.models || [])
@@ -6218,43 +6247,103 @@ async function getGeminiModelCandidates(apiKey){
           return Array.isArray(actions) && actions.includes('generateContent');
         })
         .map(model => String(model.name || '').replace(/^models\//, ''))
-        .filter(name => /^gemini-/i.test(name));
+        .filter(name => /^gemini-/i.test(name) && !geminiDeprecatedModels.has(name));
     }
   } catch(err){
-    console.warn('Could not refresh Gemini model list; using safe fallbacks.', err);
+    console.warn('Could not query Gemini model list; using safe ranked fallbacks.', err);
   }
 
-  // Prefer capable Flash models, but retain every discovered compatible model
-  // as a fallback. This lets a newly released model work without an app update.
-  const models = [...new Set([...discovered.sort((a,b) => geminiModelScore(b) - geminiModelScore(a)), ...GEMINI_MODEL_FALLBACKS])];
-  geminiModelCache.set(key, { models, expiresAt: now + (discovered.length ? 60 * 60 * 1000 : 5 * 60 * 1000) });
-  return models;
+  const rankedDiscovered = discovered.sort((a,b) => geminiModelScore(b) - geminiModelScore(a));
+  let combined = [...new Set([...rankedDiscovered, ...GEMINI_MODEL_FALLBACKS])];
+  combined = filterDeprecatedModels(combined);
+
+  // If user set a specific default model in Settings, place that model at the top
+  const userChosen = (typeof S !== 'undefined' && S) ? (S.geminiModel || 'auto') : 'auto';
+  if(userChosen && userChosen !== 'auto'){
+    combined = [userChosen, ...combined.filter(m => m !== userChosen)];
+  }
+
+  geminiModelCache.set(key, { models: combined, expiresAt: now + (discovered.length ? 60 * 60 * 1000 : 5 * 60 * 1000) });
+  if(typeof S !== 'undefined' && S && discovered.length > 0){
+    S.geminiDiscoveredModels = rankedDiscovered.slice(0, 15);
+  }
+
+  return combined;
 }
 
-async function generateGeminiContent(apiKey, payload){
+function filterDeprecatedModels(modelsList){
+  return (modelsList || []).filter(name => !geminiDeprecatedModels.has(name));
+}
+
+function markGeminiModelDeprecated(modelName, reason = ''){
+  if(!modelName) return;
+  geminiDeprecatedModels.add(modelName);
+  console.warn(`🛡️ Blacklisted retired Gemini model "${modelName}". Reason: ${reason}`);
+  for(const [k, v] of geminiModelCache.entries()){
+    v.models = filterDeprecatedModels(v.models);
+  }
+}
+
+async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal = null){
   const key = String(apiKey || '').trim();
   if(!key || key.length < 8){
     return { data: null, model: null, lastError: 'API key not configured' };
   }
+
   const models = await getGeminiModelCandidates(key);
+  const candidateModels = models.slice(0, 3);
   let lastError = '';
-  for(const modelName of models){
+
+  for(const modelName of candidateModels){
+    if(signal && signal.aborted) break;
+
+    const fetchController = new AbortController();
+    const timeoutId = setTimeout(() => fetchController.abort(), timeoutMs);
+    const onParentAbort = () => fetchController.abort();
+    if(signal) signal.addEventListener('abort', onParentAbort, { once: true });
+
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(key)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: fetchController.signal
       });
-      if(res.ok) return { data: await res.json(), model: modelName, lastError: '' };
+      clearTimeout(timeoutId);
+      if(signal) signal.removeEventListener('abort', onParentAbort);
+
+      if(res.ok){
+        if(typeof S !== 'undefined' && S && S.geminiActiveModel !== modelName){
+          S.geminiActiveModel = modelName;
+          save();
+          updateGeminiStatusUI();
+        }
+        return { data: await res.json(), model: modelName, lastError: '' };
+      }
+
       const errBody = await res.json().catch(() => ({}));
       lastError = errBody?.error?.message || `HTTP ${res.status}`;
-      // Only stop for an authentication failure. A 400/404 can simply mean a
-      // model changed capabilities, in which case another discovered model may work.
-      if(res.status === 401 || res.status === 403 || /api.?key.*(invalid|not valid)|invalid.*api.?key/i.test(lastError)) break;
+
+      const isRetired = res.status === 404 ||
+                        /not found|deprecated|retired|not supported|is not supported for api/i.test(lastError);
+      if(isRetired){
+        markGeminiModelDeprecated(modelName, lastError);
+        console.warn(`🔄 Google retired "${modelName}". Auto-falling back to next candidate model...`);
+        continue;
+      }
+
+      if(res.status === 401 || res.status === 403 || res.status === 429 ||
+         /api.?key.*(invalid|not valid)|invalid.*api.?key|resource_exhausted|quota/i.test(lastError)){
+        break;
+      }
     } catch(err){
+      clearTimeout(timeoutId);
+      if(signal) signal.removeEventListener('abort', onParentAbort);
       lastError = err?.message || String(err);
+      if(signal && signal.aborted) break;
     }
   }
+
   return { data: null, model: null, lastError };
 }
 
@@ -6273,6 +6362,140 @@ function toggleGeminiKeyVisibility(){
 
 let geminiCallerModal = null;
 
+// ── 🔍 USER FLOW: SEARCH MODELS & SET DEFAULT ───────────
+
+async function searchAndListWorkingGeminiModels(){
+  const key = (el('gemini-key-inp')?.value || S.geminiApiKey || '').trim();
+  const statusEl = el('gemini-search-status');
+  const btn = el('gemini-search-models-btn');
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+
+  if(!key || key.length < 8){
+    toast(isZh ? '⚠️ 请先输入 API Key 再进行搜索' : '⚠️ Please enter an API key first');
+    return;
+  }
+
+  if(btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span>⚡ ${isZh ? '正在从 Google 检索并验证模型…' : 'Querying Google AI & testing models…'}</span>`;
+  }
+  if(statusEl){
+    statusEl.classList.remove('hidden');
+    statusEl.innerHTML = `<div style="color:var(--amber);font-weight:700">⚡ ${isZh ? '正在连接 Google AI 获取最新可用模型列表…' : 'Connecting to Google AI to query live vision models for your account…'}</div>`;
+  }
+
+  try {
+    const candidates = await getGeminiModelCandidates(key, true);
+    renderGeminiModelsList(candidates);
+
+    if(statusEl){
+      statusEl.innerHTML = `
+        <div style="color:var(--green);font-weight:800;margin-bottom:2px">
+          ✅ ${isZh ? `成功检索到 ${candidates.length} 个可用模型！` : `Discovered ${candidates.length} active models from Google!`}
+        </div>
+        <div style="color:var(--text);font-size:11px">
+          ${isZh ? '点击下方任意模型的“⭐ 设为默认”即可生效。' : 'Tap "⭐ Set Default" below on the model you want to use.'}
+        </div>
+      `;
+    }
+    toast(isZh ? `✅ 找到 ${candidates.length} 个可用模型！` : `✅ Found ${candidates.length} working models!`);
+  } catch(err){
+    if(statusEl){
+      statusEl.innerHTML = `<div style="color:var(--red);font-weight:700">❌ ${isZh ? '搜索失败: ' : 'Search failed: '}${esc(err.message || String(err))}</div>`;
+    }
+    toast(isZh ? '❌ 模型检索失败，请检查网络或密钥' : '❌ Failed to query Google models');
+  } finally {
+    if(btn){
+      btn.disabled = false;
+      btn.innerHTML = `<span>🔍 ${isZh ? '重新搜索 Google 可用模型' : 'Search Available AI Models & Set Default'}</span>`;
+    }
+  }
+}
+
+function setDefaultGeminiModel(modelName){
+  if(!modelName) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  S.geminiModel = modelName;
+  S.geminiActiveModel = (modelName === 'auto') ? 'gemini-2.0-flash' : modelName;
+  save();
+  updateGeminiStatusUI();
+
+  // Re-render list to update default badge
+  const list = (typeof S !== 'undefined' && S && S.geminiDiscoveredModels && S.geminiDiscoveredModels.length)
+    ? S.geminiDiscoveredModels
+    : GEMINI_MODEL_FALLBACKS;
+  renderGeminiModelsList(list);
+
+  const currentDefaultTag = el('gemini-current-default-tag');
+  if(currentDefaultTag){
+    currentDefaultTag.textContent = modelName === 'auto' ? '⭐ Default: Auto-Detect' : `⭐ Default: ${modelName}`;
+  }
+
+  toast(isZh ? `✅ 已将默认 AI 模型设为: ${modelName}` : `✅ Default AI model set to: ${modelName}`);
+}
+
+function renderGeminiModelsList(modelsList = []){
+  const container = el('gemini-models-list');
+  if(!container) return;
+
+  const currentModel = (typeof S !== 'undefined' && S && S.geminiModel) ? S.geminiModel : 'auto';
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+
+  // Build list of models to display: Auto-Detect first, then models
+  const uniqueModels = ['auto', ...new Set([...(modelsList || []), ...GEMINI_MODEL_FALLBACKS])].filter(m => !geminiDeprecatedModels.has(m));
+
+  container.innerHTML = uniqueModels.map(m => {
+    const isDefault = (m === currentModel);
+    const info = MODEL_INFO_MAP[m] || {
+      title: m,
+      desc: 'Multimodal Vision & Generation',
+      tag: '✨ Live Model'
+    };
+
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg2);border:1.5px solid ${isDefault ? 'var(--green)' : 'var(--border)'};border-radius:10px;padding:8px 10px;${isDefault ? 'background:rgba(16,185,129,.07);' : ''}">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <strong style="font-size:12px;color:var(--text)">${esc(info.title)}</strong>
+            <span style="font-size:10px;font-weight:700;color:var(--cyan);background:rgba(6,182,212,.15);padding:1px 6px;border-radius:6px">${info.tag}</span>
+            ${isDefault ? `<span style="font-size:10px;font-weight:800;color:var(--green);background:rgba(16,185,129,.2);padding:1px 6px;border-radius:6px">★ ${isZh ? '当前默认' : 'Default'}</span>` : ''}
+          </div>
+          <div style="font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">
+            ${esc(info.desc)} ${m !== 'auto' ? `· <code style="font-size:10px">${m}</code>` : ''}
+          </div>
+        </div>
+        <div style="flex-shrink:0">
+          ${isDefault ? `
+            <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:var(--green);padding:4px 9px;border-radius:8px;background:rgba(16,185,129,.18);border:1px solid var(--green)">
+              ✓ ${isZh ? '使用中' : 'In Use'}
+            </span>
+          ` : `
+            <button type="button" class="ghost-btn" onclick="setDefaultGeminiModel('${esc(m)}')" style="font-size:11px;padding:5px 10px;margin-bottom:0;width:auto;border-color:var(--cyan);color:var(--cyan);font-weight:700" title="Set ${m} as default model">
+              ⭐ ${isZh ? '设为默认' : 'Set Default'}
+            </button>
+          `}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleGeminiCustomModelInput(){
+  const wrap = el('gemini-custom-model-wrap');
+  if(wrap) wrap.classList.toggle('hidden');
+}
+
+function applyCustomGeminiModel(){
+  const inp = el('gemini-custom-model-inp');
+  const val = (inp?.value || '').trim();
+  if(!val){
+    toast('⚠️ Please type a model name (e.g. gemini-2.0-flash)');
+    return;
+  }
+  setDefaultGeminiModel(val);
+  if(el('gemini-custom-model-wrap')) el('gemini-custom-model-wrap').classList.add('hidden');
+}
+
 function openGeminiModal(){
   if(el('universal-upload-modal') && !el('universal-upload-modal').classList.contains('hidden')){
     geminiCallerModal = 'universal-upload-modal';
@@ -6281,9 +6504,26 @@ function openGeminiModal(){
   } else {
     geminiCallerModal = null;
   }
+
   if(el('gemini-key-inp')) el('gemini-key-inp').value = S.geminiApiKey || '';
   const statusBox = el('gemini-test-status');
   if(statusBox) statusBox.classList.add('hidden');
+  const searchStatus = el('gemini-search-status');
+  if(searchStatus) searchStatus.classList.add('hidden');
+
+  // Update default tag
+  const currentModel = (typeof S !== 'undefined' && S && S.geminiModel) ? S.geminiModel : 'auto';
+  const currentDefaultTag = el('gemini-current-default-tag');
+  if(currentDefaultTag){
+    currentDefaultTag.textContent = currentModel === 'auto' ? '⭐ Default: Auto-Detect' : `⭐ Default: ${currentModel}`;
+  }
+
+  // Pre-render list from known/fallback models
+  const initialList = (typeof S !== 'undefined' && S && S.geminiDiscoveredModels && S.geminiDiscoveredModels.length)
+    ? S.geminiDiscoveredModels
+    : GEMINI_MODEL_FALLBACKS;
+  renderGeminiModelsList(initialList);
+
   openModal('gemini-modal');
 }
 
@@ -6312,11 +6552,10 @@ async function testGeminiKeyConnection(){
   }
 
   if(statusBox){
-    statusBox.innerHTML = `<div style="color:var(--amber);font-size:12px;font-weight:700">⚡ ${isZh ? '正在连接 Google AI 进行测试…' : 'Connecting to Google AI…'}</div>`;
+    statusBox.innerHTML = `<div style="color:var(--amber);font-size:12px;font-weight:700">⚡ ${isZh ? '正在连接 Google AI 测试当前默认模型…' : 'Testing connection with active model…'}</div>`;
     statusBox.classList.remove('hidden');
   }
 
-  geminiModelCache.delete(key);
   const probe = await generateGeminiContent(key, {
     contents: [{ parts: [{ text: 'Respond with OK' }] }]
   });
@@ -6325,13 +6564,21 @@ async function testGeminiKeyConnection(){
 
   if(verifiedModel){
     S.geminiApiKey = key;
+    S.geminiActiveModel = verifiedModel;
     save();
     updateGeminiStatusUI();
 
     if(statusBox){
-      statusBox.innerHTML = `<div style="color:var(--green);font-size:12.5px;font-weight:800">✅ ${isZh ? `连接成功！(已激活 ${verifiedModel})` : `Connection Successful! (Active: ${verifiedModel})`}</div>`;
+      statusBox.innerHTML = `
+        <div style="color:var(--green);font-size:12.5px;font-weight:800;margin-bottom:2px">
+          ✅ ${isZh ? '连接成功！' : 'Connection Successful!'}
+        </div>
+        <div style="font-size:11px;color:var(--text)">
+          Active Model: <strong style="color:var(--cyan)">${verifiedModel}</strong> · Ready for receipt OCR
+        </div>
+      `;
     }
-    toast(isZh ? '✅ Google Gemini API Key 验证并保存成功！' : '✅ Google Gemini API Key Verified & Saved!');
+    toast(isZh ? `✅ Google Gemini 连接成功！(${verifiedModel})` : `✅ Google Gemini Connected! Active: ${verifiedModel}`);
   } else {
     if(statusBox){
       statusBox.innerHTML = `<div style="color:var(--red);font-size:12px;font-weight:700">❌ ${isZh ? '验证失败: ' : 'Verification Failed: '}${esc(lastErrorMsg || 'Unknown Error')}</div>`;
@@ -6343,13 +6590,16 @@ async function testGeminiKeyConnection(){
 function saveGeminiKey(){
   let key = (el('gemini-key-inp')?.value || '').trim();
   key = key.replace(/^["']|["']$/g, '').trim();
+
   S.geminiApiKey = key;
   save();
   updateGeminiStatusUI();
   closeModal('gemini-modal');
+
   const isZh = (S.lang === 'zh');
+  const currentModel = S.geminiModel || 'auto';
   if(key){
-    toast(isZh ? '🤖 Google AI (Gemini Vision) API Key 已保存！' : '🤖 Google AI (Gemini Vision) connected successfully!');
+    toast(isZh ? `🤖 Google AI 已保存！默认模型: ${currentModel}` : `🤖 Google AI saved! Default: ${currentModel}`);
   } else {
     toast(isZh ? 'Google AI key 已清除。' : 'Google AI key cleared.');
   }
@@ -6367,6 +6617,7 @@ function saveGeminiKey(){
 
 function clearGeminiKey(){
   S.geminiApiKey = '';
+  S.geminiModel = 'auto';
   if(el('gemini-key-inp')) el('gemini-key-inp').value = '';
   save();
   updateGeminiStatusUI();
@@ -6384,18 +6635,20 @@ function clearGeminiKey(){
 function updateGeminiStatusUI(){
   const hasKey = Boolean(S.geminiApiKey && S.geminiApiKey.length > 7);
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const activeModel = (typeof S !== 'undefined' && S && S.geminiActiveModel) ? S.geminiActiveModel : 'gemini-2.0-flash';
+  const defaultSetting = (typeof S !== 'undefined' && S && S.geminiModel) ? S.geminiModel : 'auto';
 
   // Profile settings badge
   const svalBadge = el('gemini-status-badge');
   if(svalBadge){
-    svalBadge.textContent = hasKey ? (isZh ? '已配置 ✓ ›' : 'Configured ✓ ›') : (isZh ? '未配置 ›' : 'Not Configured ›');
+    svalBadge.textContent = hasKey ? (isZh ? `已配置 (${defaultSetting}) ›` : `Active (${defaultSetting}) ›`) : (isZh ? '未配置 ›' : 'Not Configured ›');
     svalBadge.style.color = hasKey ? 'var(--green)' : 'var(--amber)';
   }
 
   // More/Studio settings row
   const sval = el('sval-gemini');
   if(sval){
-    sval.textContent = hasKey ? (isZh ? '已连接 ⚡ ›' : 'Connected ⚡ ›') : (isZh ? '点击配置 ⚡ ›' : 'Setup ⚡ ›');
+    sval.textContent = hasKey ? (isZh ? `已连接 ⚡ (${defaultSetting}) ›` : `Connected ⚡ (${defaultSetting}) ›`) : (isZh ? '点击配置 ⚡ ›' : 'Setup ⚡ ›');
     sval.style.color = hasKey ? 'var(--green)' : 'var(--amber)';
   }
 
@@ -6415,7 +6668,7 @@ function updateGeminiStatusUI(){
     if(hasKey){
       const masked = S.geminiApiKey.slice(0, 4) + '••••' + S.geminiApiKey.slice(-4);
       if(uniIcon) uniIcon.textContent = '🤖';
-      uniTxt.innerHTML = `<span style="color:var(--green)">${isZh ? 'Google AI 就绪' : 'Google AI Ready'}</span> <span style="font-size:10px;color:var(--muted)">(${masked})</span>`;
+      uniTxt.innerHTML = `<span style="color:var(--green)">${isZh ? 'Google AI 就绪' : 'Google AI Ready'}</span> <span style="font-size:10px;color:var(--muted)">(${defaultSetting} · ${masked})</span>`;
       uniBanner.style.borderColor = 'var(--green)';
       uniBanner.style.background = 'rgba(16,185,129,.08)';
     } else {
@@ -6447,12 +6700,7 @@ async function reScanReceiptWithGemini(){
     stopAiScanAnimation();
     if(result && (result.merchant || result.amount > 0 || (result.items && result.items.length > 0))){
       uniParsedData = result;
-      
-      // Enrich items with calorie estimates
-      if(uniParsedData.items && uniParsedData.items.length > 0){
-        await enrichItemsWithCalories(uniParsedData.items);
-      }
-      
+
       if(badgeWrap) badgeWrap.classList.remove('hidden');
       if(actionBtns) actionBtns.classList.remove('hidden');
 
@@ -6465,8 +6713,19 @@ async function reScanReceiptWithGemini(){
 
       renderUniversalPreview();
       toast(isZh ? '🤖 AI 识别小票成功！' : '🤖 AI analyzed receipt successfully!');
+
+      if(uniParsedData.items && uniParsedData.items.length > 0){
+        enrichItemsWithCalories(uniParsedData.items).then(() => {
+          renderUniPreviewItemsList();
+        }).catch(() => {});
+      }
+    } else {
+      toast(isZh ? '⚠️ 重新识别失败，请检查密钥或照片' : '⚠️ Re-scan failed. Please check key or image.');
     }
   } catch(e){
+    stopAiScanAnimation();
+    toast(isZh ? '⚠️ 识别过程出错' : '⚠️ Error during re-scan');
+  } finally {
     stopAiScanAnimation();
   }
 }
@@ -6485,7 +6744,21 @@ let uniParsedData = null;
 let uniImageDataUrl = null;
 let isEditingFromUpload = false;
 
+let uniScanAbortController = null;
+let isUniversalScanning = false;
+
+function cancelUniversalScan(){
+  if(uniScanAbortController){
+    try { uniScanAbortController.abort(); } catch(e){}
+    uniScanAbortController = null;
+  }
+  isUniversalScanning = false;
+  stopAiScanAnimation();
+}
+
 function handleUniversalUploadBack(){
+  cancelUniversalScan();
+
   if(uniParsedData || uniImageDataUrl){
     uniParsedData = null;
     uniImageDataUrl = null;
@@ -6520,6 +6793,7 @@ function openUniversalUpload(preferredMode = 'auto', customDate = '', forceNew =
 
   // If we already have parsed receipt data and user didn't ask for a forced re-scan, show it!
   if(!forceNew && uniParsedData){
+    stopAiScanAnimation();
     renderUniversalPreview();
     openModal('universal-upload-modal');
     if(el('uni-action-btns')) el('uni-action-btns').classList.remove('hidden');
@@ -6534,6 +6808,7 @@ function openUniversalUpload(preferredMode = 'auto', customDate = '', forceNew =
     return;
   }
 
+  cancelUniversalScan();
   uniParsedData = null;
   uniImageDataUrl = null;
 
@@ -6555,9 +6830,10 @@ function openUniversalUpload(preferredMode = 'auto', customDate = '', forceNew =
 
   openModal('universal-upload-modal');
 
-  // Trigger file picker after a tiny delay for immediate convenience
+  // Trigger file picker after a tiny delay for immediate convenience only if modal is active
   setTimeout(() => {
-    if(!uniImageDataUrl && el('uni-file-inp')){
+    const modal = el('universal-upload-modal');
+    if(modal && !modal.classList.contains('hidden') && !uniImageDataUrl && !isUniversalScanning && el('uni-file-inp')){
       el('uni-file-inp').click();
     }
   }, 250);
@@ -6858,29 +7134,42 @@ function handleTxDescAutoDetect(){
 }
 
 async function handleUniversalFile(inputOrFile){
+  if(isUniversalScanning) return;
 
   let file = null;
   if(inputOrFile instanceof File) file = inputOrFile;
   else if(inputOrFile?.files?.[0]) file = inputOrFile.files[0];
   if(!file) return;
 
+  isUniversalScanning = true;
+  if(uniScanAbortController){
+    try { uniScanAbortController.abort(); } catch(e){}
+  }
+  uniScanAbortController = new AbortController();
+  const currentScanSignal = uniScanAbortController.signal;
+
   const placeholder = el('uni-upload-placeholder');
   const imgPrev = el('uni-img-preview');
   const badgeWrap = el('uni-detected-badge-wrap');
   const actionBtns = el('uni-action-btns');
+  const hBack = el('uni-header-back-btn');
 
   if(placeholder) placeholder.classList.add('hidden');
+  if(hBack) hBack.classList.remove('hidden');
   startAiScanAnimation('universal');
 
   try {
-    const rawDataUrl = await new Promise(res => {
+    const rawDataUrl = await new Promise((res, rej) => {
       const reader = new FileReader();
       reader.onload = ev => res(ev.target.result);
+      reader.onerror = err => rej(err);
       reader.readAsDataURL(file);
     });
 
+    if(currentScanSignal.aborted) return;
+
     const compressed = await compressReceiptForStorage(rawDataUrl);
-    uniImageDataUrl = null;
+    uniImageDataUrl = compressed;
     photoData = null;
 
     if(imgPrev){
@@ -6888,17 +7177,16 @@ async function handleUniversalFile(inputOrFile){
       imgPrev.classList.remove('hidden');
     }
 
-    const result = await analyzeUnifiedUploadWithGemini(compressed);
+    if(currentScanSignal.aborted) return;
+
+    const result = await analyzeUnifiedUploadWithGemini(compressed, currentScanSignal);
+    if(currentScanSignal.aborted) return;
+
     stopAiScanAnimation();
 
     if(result && (result.merchant || result.amount > 0 || (result.items && result.items.length > 0))){
       uniParsedData = result;
-      
-      // Enrich items with calorie estimates
-      if(uniParsedData.items && uniParsedData.items.length > 0){
-        await enrichItemsWithCalories(uniParsedData.items);
-      }
-      
+
       if(badgeWrap) badgeWrap.classList.remove('hidden');
       if(actionBtns) actionBtns.classList.remove('hidden');
 
@@ -6910,8 +7198,17 @@ async function handleUniversalFile(inputOrFile){
       }
 
       renderUniversalPreview();
-      const isZh = (S.lang === 'zh');
+      const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
       toast(isZh ? '🤖 AI 识别小票成功！' : '🤖 AI analyzed receipt successfully!');
+
+      // Enrich items with calorie estimates asynchronously without blocking initial render
+      if(uniParsedData.items && uniParsedData.items.length > 0){
+        enrichItemsWithCalories(uniParsedData.items).then(() => {
+          if(!currentScanSignal.aborted && uniParsedData === result){
+            renderUniPreviewItemsList();
+          }
+        }).catch(() => {});
+      }
     } else {
       uniParsedData = {
         detectedType: 'receipt',
@@ -6925,21 +7222,25 @@ async function handleUniversalFile(inputOrFile){
       if(actionBtns) actionBtns.classList.remove('hidden');
       if(badgeWrap) badgeWrap.classList.add('hidden');
       renderUniversalPreview();
-      const isZh = (S.lang === 'zh');
+      const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
       if(S.geminiApiKey && S.geminiApiKey.length > 7){
         toast(isZh ? '⚠️ 未能自动提取数据，您可以手动填写' : '⚠️ Could not extract data. You can enter details manually.');
       }
     }
   } catch(err){
+    if(currentScanSignal.aborted) return;
     console.warn('Universal upload notice:', err);
     stopAiScanAnimation();
-    const isZh = (S.lang === 'zh');
+    const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
     toast(isZh ? '⚠️ 扫描遇到问题，请手动输入明细' : '⚠️ Could not complete AI scan. You can enter details manually.');
     renderUniversalPreview();
+  } finally {
+    isUniversalScanning = false;
+    stopAiScanAnimation();
   }
 }
 
-async function analyzeUnifiedUploadWithGemini(base64DataUrl){
+async function analyzeUnifiedUploadWithGemini(base64DataUrl, signal = null){
   let apiKey = (S.geminiApiKey || '').trim();
   apiKey = apiKey.replace(/^["']|["']$/g, '').trim();
   const isZh = (S.lang === 'zh');
@@ -7036,7 +7337,7 @@ CRITICAL RULES:
     }]
   };
 
-  const generation = await generateGeminiContent(apiKey, payload);
+  const generation = await generateGeminiContent(apiKey, payload, 25000, signal);
   const geminiRes = generation.data;
   const lastErrorMsg = generation.lastError;
   if(generation.model) console.log(`✅ Gemini OCR successfully processed receipt using model: ${generation.model}`);
