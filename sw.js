@@ -1,7 +1,7 @@
 // sw.js â€” Pocket Winnie Service Worker
 // Provides offline caching for the PWA
 
-const CACHE_NAME = 'pocket-winnie-v14';
+const CACHE_NAME = 'pocket-winnie-v15';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -72,28 +72,21 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // For same-origin assets, use cache-first with background refresh
+  // For same-origin assets, use network-first with cache fallback so GitHub updates take effect immediately
   event.respondWith(
-    caches.match(request, { ignoreSearch: true }).then(cached => {
-      if (cached) {
-        // Update cache in background for next load
-        fetch(request)
-          .then(response => putInCache(request, response))
-          .catch(() => {});
-        return cached;
-      }
-      return fetch(request)
-        .then(response => {
-          putInCache(request, response);
-          return response;
-        })
-        .catch(() => {
-          // Offline and not cached: fall back to the app shell for page loads
+    fetch(request)
+      .then(response => {
+        putInCache(request, response);
+        return response;
+      })
+      .catch(() => {
+        return caches.match(request, { ignoreSearch: true }).then(cached => {
+          if (cached) return cached;
           if (request.mode === 'navigate') {
             return caches.match('./index.html');
           }
           return Response.error();
         });
-    })
+      })
   );
 });

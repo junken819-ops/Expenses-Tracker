@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-10-16T04:21:47.319Z
+   Last build: 2026-10-17T11:52:36.360Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -6223,20 +6223,23 @@ async function getGeminiModelCandidates(apiKey, forceRefresh = false){
   const key = String(apiKey || '').trim();
   if(!key || key.length < 8) return GEMINI_MODEL_FALLBACKS;
 
+  
+
+  // Fast path: if not forced refresh and we already have a chosen model or fallbacks, return instantly!
   const now = Date.now();
   const cached = geminiModelCache.get(key);
   if(!forceRefresh && cached && cached.expiresAt > now) {
     return filterDeprecatedModels(cached.models);
+  }
+  if(!forceRefresh && userChosen && userChosen !== 'auto' && !geminiDeprecatedModels.has(userChosen)){
+    return [userChosen, ...filterDeprecatedModels(GEMINI_MODEL_FALLBACKS.filter(m => m !== userChosen))];
   }
 
   let discovered = [];
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 6000);
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=${encodeURIComponent(key)}`, {
-      headers: { 'x-goog-api-key': key },
-      signal: controller.signal
-    });
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=${encodeURIComponent(key)}`, { signal: controller.signal });
     clearTimeout(timeoutId);
 
     if(res.ok){
@@ -6305,7 +6308,7 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(key)}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         signal: fetchController.signal
       });
