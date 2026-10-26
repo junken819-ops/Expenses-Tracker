@@ -180,7 +180,11 @@ function build() {
   if (fs.existsSync(HTML_FILE)) {
     const html = fs.readFileSync(HTML_FILE, 'utf8');
     const regex = /on[a-z]+\s*=\s*"([^"]+)"/gi;
-    const standardBuiltins = new Set(['parseInt', 'preventDefault', 'getElementById', 'click', 'add', 'max', 'Eggs']);
+    const standardBuiltins = new Set([
+      'parseInt', 'parseFloat', 'preventDefault', 'stopPropagation', 'getElementById',
+      'click', 'add', 'max', 'min', 'Eggs', 'if', 'for', 'while', 'switch', 'catch',
+      'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'alert', 'confirm', 'prompt'
+    ]);
     const calledFunctions = new Set();
     let match;
     while ((match = regex.exec(html)) !== null) {
@@ -189,8 +193,10 @@ function build() {
       }
     }
 
+    // Check against both bundled app.js and inline <script> blocks in index.html
+    const allCode = bundleCode + '\n' + html;
     for (const fn of calledFunctions) {
-      const isDefined = new RegExp('(?:function\\s+' + fn + '\\s*\\(|window\\.' + fn + '\\s*=|(?:let|const|var)\\s+' + fn + '\\s*=)').test(bundleCode);
+      const isDefined = new RegExp('(?:function\\s+' + fn + '\\s*\\(|window\\.' + fn + '\\s*=|(?:let|const|var)\\s+' + fn + '\\s*=)').test(allCode);
       if (!isDefined) {
         console.warn(`⚠️ Warning: HTML references undefined function: ${fn}`);
         missingCount++;

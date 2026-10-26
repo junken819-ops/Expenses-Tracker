@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-10-17T11:52:36.360Z
+   Last build: 2026-10-26T03:42:53.417Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -1656,20 +1656,39 @@ async function verifyReceiptCategoryWithGemini(receipt, apiKey){
 
 function extractJsonFromText(rawText){
   if(!rawText || typeof rawText !== 'string') return null;
-  const clean = rawText.trim();
-  try { return JSON.parse(clean); } catch(e){}
-  const jsonBlock = clean.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  if(jsonBlock){
-    try { return JSON.parse(jsonBlock[1].trim()); } catch(e){}
+
+  // -- Strip common Gemini wrappers (```json ... ``` fences) --
+  let clean = rawText.trim();
+  clean = clean.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+
+  // -- Lenient parse: also strips trailing commas (common Gemini output quirk) --
+  function lenientParse(str){
+    try { return JSON.parse(str); } catch(e){}
+    try { return JSON.parse(str.replace(/,\s*([}\]])/g, '$1')); } catch(e){ return null; }
   }
+
+  // 1. Try the whole cleaned string first
+  const direct = lenientParse(clean);
+  if(direct) return direct;
+
+  // 2. Extract first { ... } block (handles preamble/explanation before the JSON)
   const firstBrace = clean.indexOf('{');
-  const lastBrace = clean.lastIndexOf('}');
+  const lastBrace  = clean.lastIndexOf('}');
   if(firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace){
-    try { return JSON.parse(clean.substring(firstBrace, lastBrace + 1)); } catch(e){}
+    const extracted = lenientParse(clean.substring(firstBrace, lastBrace + 1));
+    if(extracted) return extracted;
   }
+
+  // 3. Try a ```json ... ``` block that survived the initial strip
+  const jsonBlock = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if(jsonBlock){
+    const blockExtracted = lenientParse(jsonBlock[1].trim());
+    if(blockExtracted) return blockExtracted;
+  }
+
+  console.warn('extractJsonFromText: could not parse Gemini response. First 200 chars:', rawText.substring(0, 200));
   return null;
 }
-
 function uid(prefix = ''){
   if(typeof crypto !== 'undefined' && crypto.randomUUID){
     return (prefix ? prefix + '_' : '') + crypto.randomUUID();
@@ -6294,7 +6313,7 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
   }
 
   const models = await getGeminiModelCandidates(key);
-  const candidateModels = models.slice(0, 3);
+  const candidateModels = models.slice(0, 5); // Try up to 5 models to survive rate-limit & deprecation cascades
   let lastError = '';
 
   for(const modelName of candidateModels){
@@ -7182,7 +7201,7 @@ async function handleUniversalFile(inputOrFile){
 
     if(currentScanSignal.aborted) return;
 
-    const result = await analyzeUnifiedUploadWithGemini(compressed, currentScanSignal);
+    const result = await analyzeUnifiedUploadWithRetry(compressed, currentScanSignal, 2);
     if(currentScanSignal.aborted) return;
 
     stopAiScanAnimation();
@@ -7264,67 +7283,53 @@ async function analyzeUnifiedUploadWithGemini(base64DataUrl, signal = null){
   const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
   const base64Data = base64DataUrl.replace(/^data:[^;]+;base64,/, '').trim();
 
-  const prompt = `You are an expert Malaysian receipt, SST, dining bill, e-wallet, and cash OCR parser.
-Analyze this Malaysian store receipt, restaurant dining bill, supermarket invoice, or retail slip.
-Extract ALL information accurately into a single raw JSON object matching this schema:
+  // ── OCR-focused prompt ────────────────────────────────────────────────────
+  // Kept intentionally small: fewer fields = fewer hallucinations and schema
+  // drift. Category / subCategory / tags are resolved locally by
+  // smartAutoDetectCategoryAndPayment() after parsing, then verified by a
+  // lightweight text-only Gemini call in verifyReceiptCategoryWithGemini().
+  const prompt = `You are an expert OCR engine for Malaysian receipts, dining bills, invoices, and e-wallet screenshots.
+Extract the following fields from the image and return ONLY a raw JSON object — no markdown, no backticks, no extra text.
+
+Required schema:
 {
   "detectedType": "receipt",
-  "merchant": "Exact Restaurant or Store Name",
+  "merchant": "Exact store or restaurant name as printed",
   "currency": "MYR",
-  "originalAmount": 84.45,
-  "amount": 84.45,
-  "subtotal": 72.80,
-  "category": "food",
-  "subCategory": "food_restaurant",
-  "tags": ["noodles", "pork", "lunch"],
+  "originalAmount": 0.00,
+  "amount": 0.00,
+  "subtotal": 0.00,
   "date": "YYYY-MM-DD",
   "time": "HH:MM",
   "paymentMethod": "Cash",
-  "location": "Mall / Street / Area",
+  "location": "",
   "items": [
-    { "name": "Item or Dish Name", "price": 19.80, "qty": 1, "subCategory": "food_restaurant", "tags": ["noodle"], "calories": 450, "protein": 22 }
+    { "name": "Item or dish name", "price": 0.00, "qty": 1, "calories": 0, "protein": 0 }
   ],
-  "itemsSummary": "Dish 1, Dish 2, Dish 3...",
-  "serviceChargePct": 10,
-  "serviceChargeAmount": 7.28,
-  "sstPct": 6,
-  "sstAmount": 4.37,
+  "serviceChargePct": 0,
+  "serviceChargeAmount": 0.00,
+  "sstPct": 0,
+  "sstAmount": 0.00,
   "roundingAmount": 0.00,
-  "taxesCollectedSummary": "SST (6%): RM 4.37 · Service Charge (10%): RM 7.28",
   "taxReliefCat": "",
   "taxReliefAmount": 0.00,
   "taxReliefReason": ""
 }
 
-CRITICAL RULES:
-1. "merchant": The official restaurant, cafe, supermarket, or shop brand name (e.g. "Tai Ho Jiak", "Lotus's", "Uniqlo", "Popular", "Watsons", "7-Eleven", "Donki").
-2. "currency": Detect the foreign or local currency code of the receipt: "MYR", "SGD", "THB", "JPY", "USD", "CNY", "TWD", "KRW", "EUR", "GBP", "AUD", "IDR", "VND", "PHP". Inspect currency symbols (S$, $, ฿, ¥, 円, €, £, NT$, ₩, Rp, ₫, ₱, RM) or country. Default to "MYR" for Malaysian receipts.
-3. "originalAmount" & "amount": The final total payable in the receipt's native currency as a floating number.
-4. "subtotal": The subtotal before taxes/service charge.
-5. "category": Choose the main category: "drinks" (coffee, boba, tea, juice, bar), "food" (restaurant, hawker, fast food, bakery), "groceries" (supermarket, convenience 7-11/FamilyMart, fresh produce), "period_care" (sanitary pads, tampon, cramp relief, Midol), "fuel" (Petronas, Shell, Caltex, BHP, Petron), "toll_parking" (Toll, RFID, Parking), "transport" (Grab, LRT/MRT, flights), "shopping" (clothing, electronics, Shopee, IKEA), "beauty" (skincare, haircut, salon, spa), "bills" (TNB electric, water, telco, wifi, Netflix), "rent_housing", "health" (pharmacy Watsons/Guardian, clinic, doctor, dental, vitamins), "entertainment" (cinema GSC/TGV, gaming, outings), "education" (books, tuition, courses), "pets" (pet food, vet), "donation", "other".
-6. "calories" & "protein": If it is a food or drink item in the items array, accurately estimate the calories (kcal) per item as an integer 'calories' property, and estimate the protein (in grams) as an integer 'protein' property (e.g. 25 for chicken/meat, 18 for fish/seafood, 6 for an egg, 14 for noodles, 0 for plain tea/water). If unknown or not a food/drink item, omit it or set it to 0.
-7. "subCategory": Accurately assign one of the 40+ granular sub-categories:
-   - Food: "food_restaurant", "food_cafe_coffee", "food_drinks_boba", "food_fastfood", "food_hawker_mamak", "food_dessert_snack", "food_delivery", "food_bar_alcohol"
-   - Groceries: "groc_fresh_produce", "groc_meat_seafood", "groc_dairy_eggs", "groc_pantry_staples", "groc_snacks_sweets", "groc_household_cleaning", "groc_personal_care"
-   - Shopping: "shop_clothing_apparel", "shop_shoes_footwear", "shop_electronics_tech", "shop_beauty_skincare", "shop_home_furniture", "shop_hardware_tools"
-   - Transport: "trans_petrol_fuel", "trans_toll_rfid", "trans_parking", "trans_ridehailing", "trans_public_transit", "trans_car_maintenance", "trans_flights_trips"
-   - Bills: "bill_electricity_water", "bill_mobile_telco", "bill_home_wifi", "bill_subscriptions", "bill_insurance"
-   - Health: "health_pharmacy_rx", "health_clinic_doctor", "health_dental_vision", "health_vitamins_supp", "health_gym_fitness"
-   - Education: "edu_books_reading", "edu_stationery_supplies", "edu_courses_tuition"
-   - Entertainment: "ent_movies_cinema", "ent_gaming_hobbies", "ent_events_concerts", "ent_sports_activities"
-   - Pets: "pet_food_supplies", "pet_vet_care"
-   - Kids: "kids_baby_essentials"
-   - Gifts: "gift_presents_angpao", "gift_charity_ngo"
-8. "tags": 3-5 relevant keyword tags (e.g. ["coffee", "breakfast", "starbucks"]).
-9. "date": The transaction date in "YYYY-MM-DD" format (convert "23/08/2026" or "23-08-2026" to "2026-08-23").
-10. "time": The transaction time in 24-hour "HH:MM" format (e.g. "13:45").
-11. "paymentMethod": Look for payment tender / method on the receipt (e.g. "Cash", "Credit Card", "Visa", "Mastercard", "Touch 'n Go eWallet", "GrabPay", "ShopeePay", "Maybank (MAE / QR)", "Debit Card", "Online Banking", or specific tender/card name printed). If not detected, specify "Cash".
-12. "items": Extract EVERY single individual item, dish, beverage, book, piece of clothing, or grocery product with its name, quantity, line price in RM, specific subCategory, and estimated calories.
-13. "sstAmount" & "sstPct": Extract Malaysian SST / Service Tax rate (6% or 8%) and exact SST tax amount.
-14. "serviceChargeAmount" & "serviceChargePct": Extract restaurant Service Tax (e.g. 10% or 5%) if present.
-15. "roundingAmount": Extract rounding adjustment (e.g. 0.00 or -0.02) if listed.
-16. "taxReliefCat": if purchase qualifies for Malaysian LHDN tax relief (e.g. lifestyle for books/reading materials, computer/phone, sports equipment; medical for pharmacy/clinic; childcare), tag it and set taxReliefAmount.
-17. Output ONLY pure raw JSON without markdown backticks.`;
+RULES:
+1. "merchant": The brand/store name printed on the receipt (e.g. "Lotus's", "McDonald's", "Watsons", "7-Eleven").
+2. "currency": Detect from symbols — RM/MYR, S$/SGD, $/USD, ¥/JPY, €/EUR, £/GBP, ฿/THB, NT$/TWD, ₩/KRW, Rp/IDR, ₫/VND, ₱/PHP. Default "MYR".
+3. "amount": The final grand total as a number. "originalAmount" = same value in native currency.
+4. "subtotal": Pre-tax subtotal. If not printed, leave 0.
+5. "date": Printed transaction date → YYYY-MM-DD. Convert "23/08/2026" → "2026-08-23".
+6. "time": Printed transaction time → 24-hour HH:MM. E.g. "1:45 PM" → "13:45".
+7. "paymentMethod": Payment tender printed (Cash, Credit Card, Visa, Mastercard, Touch 'n Go eWallet, GrabPay, ShopeePay, Maybank MAE, Debit Card, Online Banking). Default "Cash" if absent.
+8. "items": Every line item / dish / product with name, unit price, qty. Food/drink items: estimate calories (kcal integer) and protein (g integer); non-food set 0.
+9. "sstAmount" / "sstPct": Malaysian SST/Service Tax amount and rate (6% or 8%).
+10. "serviceChargeAmount" / "serviceChargePct": Restaurant service charge (e.g. 10%).
+11. "roundingAmount": Sen rounding (e.g. -0.02 or 0.00).
+12. "taxReliefCat": Malaysian LHDN tax relief category if applicable — "lifestyle" (books, sports, devices), "medical" (pharmacy, clinic), "childcare". Leave empty if not applicable.
+13. Output ONLY the raw JSON. Do NOT wrap in markdown fences or add any explanation.`;
 
   const payload = {
     contents: [{
@@ -7377,6 +7382,28 @@ CRITICAL RULES:
 
 // Backward compatible aliases
 async function analyzeReceiptWithGemini(base64DataUrl){ return analyzeUnifiedUploadWithGemini(base64DataUrl); }
+
+// -- Auto-retry wrapper: up to 2 attempts with exponential back-off ----------
+// Silently retries on transient network errors or empty Gemini responses
+// without requiring the user to manually tap Scan again.
+async function analyzeUnifiedUploadWithRetry(base64DataUrl, signal, maxAttempts){
+  maxAttempts = maxAttempts || 2;
+  for(var attempt = 1; attempt <= maxAttempts; attempt++){
+    if(signal && signal.aborted) return null;
+    var result = await analyzeUnifiedUploadWithGemini(base64DataUrl, signal);
+    if(result && (result.merchant || result.amount > 0 || (result.items && result.items.length > 0))){
+      return result;
+    }
+    if(signal && signal.aborted) return null;
+    if(attempt < maxAttempts){
+      var delayMs = 1500 * attempt;
+      var isZh2 = (typeof S !== 'undefined' && S && S.lang === 'zh');
+      toast(isZh2 ? ('⚠️ 正在重试扫描… (第 ' + (attempt + 1) + ' 次)') : ('⚠️ Retrying scan… (attempt ' + (attempt + 1) + ' of ' + maxAttempts + ')'));
+      await new Promise(function(r){ setTimeout(r, delayMs); });
+    }
+  }
+  return null;
+}
 async function startSplitterReceiptAI(){
   openUniversalUpload('splitter');
 }
@@ -8432,7 +8459,7 @@ function compressReceiptForStorage(dataUrl){
     if(!dataUrl || !dataUrl.startsWith('data:image')) return resolve(dataUrl);
     const img = new Image();
     img.onload = () => {
-      const maxDim = 1800; // Crisp resolution for AI OCR and receipt reading
+      const maxDim = 2000; // Higher res for sharper OCR on dense receipts
       let w = img.width, h = img.height;
       if(w > maxDim || h > maxDim){
         if(w > h){
@@ -8448,13 +8475,33 @@ function compressReceiptForStorage(dataUrl){
       canvas.height = h;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.82));
+
+      // -- Contrast + brightness boost for faded thermal receipts ----------------
+      // Thermal paper fades quickly and dim lighting causes underexposed shots.
+      // A mild contrast lift significantly improves Gemini OCR accuracy.
+      try {
+        const imageData = ctx.getImageData(0, 0, w, h);
+        const d = imageData.data;
+        const contrast   = 1.20;  // 1.0 = unchanged; 1.2 = noticeable punch
+        const brightness = 8;     // subtle lift for dark captures (0–20 range)
+        const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
+        for(let i = 0; i < d.length; i += 4){
+          d[i]     = Math.min(255, Math.max(0, factor * (d[i]     - 128) + 128 + brightness));
+          d[i + 1] = Math.min(255, Math.max(0, factor * (d[i + 1] - 128) + 128 + brightness));
+          d[i + 2] = Math.min(255, Math.max(0, factor * (d[i + 2] - 128) + 128 + brightness));
+        }
+        ctx.putImageData(imageData, 0, 0);
+      } catch(enhanceErr){
+        // Cross-origin or canvas security restriction — proceed with original pixels
+        console.warn('Receipt image enhancement skipped:', enhanceErr.message);
+      }
+
+      resolve(canvas.toDataURL('image/jpeg', 0.88)); // Higher quality for dense OCR text
     };
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
   });
 }
-
 function detectGPSLocation(){
   if(!navigator.geolocation){
     toast('⚠️ GPS not supported on this browser');
