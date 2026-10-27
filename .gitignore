@@ -1,0 +1,29 @@
+# Backup and temporary files
+*.backup.js
+app.backup.js
+*.bak
+*.tmp*
+src_backup/
+
+# User local data and storage backups
+user_data.json
+user_data.json.bak
+user_data.json.tmp.*
+Sample of error/
+*Backup*.json
+
+# Environment and secrets
+.env
+.env.local
+*.key
+*.pem
+
+# Dependencies and logs
+node_modules/
+npm-debug.log*
+
+# Dev-only
+qa-receipt.svg
+
+# Temporary agent scratch files
+scratch/
