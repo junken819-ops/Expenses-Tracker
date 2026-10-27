@@ -389,7 +389,7 @@ input[type=number] {
   background: none;
   border: none;
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
   padding: 3px 0 0;
@@ -857,10 +857,11 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .hdr-left .hdr-sub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
   font-weight: 600;
-  margin-top: 2px;
+  margin-top: 3px;
+  line-height: 1.4;
 }
 
 .sec-hdr {
@@ -871,24 +872,24 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .sec-hdr h2 {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .see-all {
   background: none;
   border: none;
   color: var(--purple2);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .date-group {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--dim);
   font-weight: 700;
-  margin: 8px 0 4px;
+  margin: 10px 0 5px;
   text-transform: uppercase;
   letter-spacing: .5px;
 }
@@ -930,7 +931,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .bal-label {
-  font-size: 12.5px;
+  font-size: 13.5px;
   color: var(--muted);
   margin-bottom: 4px;
   font-weight: 700;
@@ -1016,14 +1017,14 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .bal-col-label {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--muted);
   font-weight: 700;
   margin-bottom: 2px;
 }
 
 .bal-col-val {
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 900;
   color: var(--text);
   white-space: nowrap;
@@ -1190,7 +1191,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 
 .acc-chip-name {
   font-weight: 700;
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1201,7 +1202,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 .acc-chip-bal {
   color: var(--text);
   font-weight: 900;
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: -.2px;
 }
 
@@ -1297,13 +1298,13 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .h-info .h-label {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .h-info .h-tip {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -1387,7 +1388,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .payday-hero-tag {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   color: var(--amber);
   text-transform: uppercase;
@@ -1398,14 +1399,14 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .payday-hero-edit-hint {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--muted);
-  opacity: .75;
+  opacity: .8;
 }
 
 .payday-hero-title {
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 800;
   color: var(--text);
   margin-bottom: 2px;
@@ -1415,7 +1416,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .payday-hero-sub {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
   font-weight: 600;
   margin-bottom: 6px;
@@ -1543,7 +1544,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .tx-desc {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -1552,7 +1553,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .tx-sub {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-top: 3px;
   display: flex;
@@ -1562,7 +1563,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .tx-amt {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   flex-shrink: 0;
   margin-left: 8px;
@@ -1580,9 +1581,9 @@ body:has(.fab-menu.on) .nav-fab svg {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  padding: 2px 7px;
+  padding: 2.5px 8px;
   border-radius: 12px;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 600;
   background: rgba(255,179,0,.12);
   color: var(--text);
@@ -1638,12 +1639,12 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .qp-name {
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 700;
 }
 
 .qp-amt {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--red);
   font-weight: 700;
 }
@@ -1663,7 +1664,7 @@ body:has(.fab-menu.on) .nav-fab svg {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 179, 0, 0.18);
   color: #e2d9cf;
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
@@ -1718,7 +1719,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .due-date {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
 }
 
@@ -1733,9 +1734,9 @@ body:has(.fab-menu.on) .nav-fab svg {
   border: none;
   border-radius: 9px;
   color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 7px 11px;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 13px;
   cursor: pointer;
 }
 
@@ -1800,9 +1801,9 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .ai-float-badge {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 800;
-  padding: 3px 9px;
+  padding: 4px 10px;
   border-radius: 12px;
   background: var(--amber);
   color: #4e342e;
@@ -1862,10 +1863,10 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .ai-swipe-hint {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--muted);
-  opacity: 0.8;
+  opacity: 0.85;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -1929,16 +1930,16 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .ai-float-title {
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 800;
   color: var(--text);
   margin-bottom: 2px;
 }
 
 .ai-float-desc {
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--muted);
-  line-height: 1.45;
+  line-height: 1.5;
   font-weight: 500;
 }
 
@@ -1953,8 +1954,8 @@ body:has(.fab-menu.on) .nav-fab svg {
   color: #4e342e;
   border: none;
   border-radius: 14px;
-  padding: 6px 14px;
-  font-size: 12px;
+  padding: 7px 15px;
+  font-size: 13px;
   font-weight: 800;
   cursor: pointer;
   display: inline-flex;
@@ -2030,9 +2031,9 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .bud-foot {
-  font-size: 11px;
+  font-size: 12.5px;
   margin-top: 6px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .del-btn {
@@ -2075,12 +2076,12 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .goal-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
 }
 
 .goal-eta {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -2096,7 +2097,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .goal-target {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
 }
 
@@ -2141,9 +2142,9 @@ body:has(.fab-menu.on) .nav-fab svg {
   border: none;
   border-radius: 9px;
   color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 7px 14px;
   cursor: pointer;
 }
 
@@ -2175,12 +2176,13 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .rem-name {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .rem-date {
-  font-size: 11px;
+  font-size: 12.5px;
+  color: var(--muted);
   margin-top: 2px;
 }
 
@@ -2201,9 +2203,9 @@ body:has(.fab-menu.on) .nav-fab svg {
   border: 1px solid rgba(16,185,129,.25);
   border-radius: 9px;
   color: var(--green);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 14px;
   cursor: pointer;
 }
 
@@ -2240,7 +2242,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .rec-sub {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -2275,8 +2277,9 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .ds-label {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
+  font-weight: 600;
 }
 
 .ds-val {
@@ -2305,9 +2308,9 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .debt-tag {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 20px;
   flex-shrink: 0;
 }
@@ -2327,20 +2330,21 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .debt-person {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .debt-note {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-top: 2px;
 }
 
 .debt-due {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--amber);
   margin-top: 2px;
+  font-weight: 600;
 }
 
 .debt-right {
@@ -2357,9 +2361,9 @@ body:has(.fab-menu.on) .nav-fab svg {
   border: 1px solid var(--border);
   border-radius: 9px;
   color: var(--text);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 6px 12px;
   cursor: pointer;
   margin-top: 4px;
   display: block;
@@ -2419,7 +2423,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .acc-card-type {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -2444,8 +2448,8 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .acc-quick-pill {
-  font-size: 11.5px;
-  padding: 4px 10px;
+  font-size: 13px;
+  padding: 5px 12px;
   border-radius: 12px;
   background: var(--bg3);
   border: 1px solid var(--border);
@@ -2501,7 +2505,7 @@ body:has(.fab-menu.on) .nav-fab svg {
   border-radius: 11px;
   background: transparent;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
   transition: all .18s ease;
@@ -2560,7 +2564,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .ana-stepper-title {
-  font-size: 13.5px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--text);
 }
@@ -2569,10 +2573,10 @@ body:has(.fab-menu.on) .nav-fab svg {
   background: rgba(255,179,0,.15);
   border: 1px solid var(--amber);
   color: var(--text);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   border-radius: 8px;
-  padding: 4px 8px;
+  padding: 5px 9px;
   cursor: pointer;
   outline: none;
 }
@@ -2631,7 +2635,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .ana-label {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--muted);
   display: flex;
@@ -2661,9 +2665,9 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .ana-sub-badge {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
-  padding: 2px 6px;
+  padding: 2.5px 7px;
   border-radius: 6px;
   margin-top: 2px;
   display: inline-block;
@@ -2694,7 +2698,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .ana-hl-lbl {
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--muted);
   font-weight: 700;
   display: flex;
@@ -2704,7 +2708,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .ana-hl-val {
-  font-size: 14.5px;
+  font-size: 15.5px;
   font-weight: 900;
   color: var(--text);
   white-space: nowrap;
@@ -2714,7 +2718,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .ana-hl-sub {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--dim);
   margin-top: 3px;
   white-space: nowrap;
@@ -2803,7 +2807,7 @@ body:has(.fab-menu.on) .nav-fab svg {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 12.5px;
   margin-bottom: 8px;
 }
 
@@ -2894,9 +2898,9 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .rep-delta {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 7px;
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 3px 8px;
   border-radius: 20px;
 }
 
@@ -2979,12 +2983,12 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .cal-today-btn {
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 10px;
   background: var(--card);
   border: 1px solid var(--border);
   color: var(--purple2);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -3008,12 +3012,13 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .cal-m-label {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
+  font-weight: 600;
 }
 
 .cal-m-val {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
 }
 
@@ -3033,7 +3038,7 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .cal-week-cell {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--dim);
   text-transform: uppercase;
@@ -3089,25 +3094,25 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .cal-day-num {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text);
 }
 
 .cal-day-spent {
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 10.5px;
+  font-weight: 800;
   color: var(--red);
-  line-height: 1;
+  line-height: 1.1;
   text-align: center;
   word-break: break-all;
 }
 
 .cal-day-inc {
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 10.5px;
+  font-weight: 800;
   color: var(--green);
-  line-height: 1;
+  line-height: 1.1;
   text-align: center;
 }
 
@@ -3541,7 +3546,16 @@ body:has(.fab-menu.on) .nav-fab svg {
 }
 
 .form-row {
-  margin-bottom: 14px;
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 750;
+  color: var(--text);
+  margin-bottom: 6px;
+  letter-spacing: .2px;
 }
 
 .form-input {
@@ -3549,10 +3563,10 @@ body:has(.fab-menu.on) .nav-fab svg {
   background: rgba(255, 255, 255, 0.035);
   border: 1.5px solid rgba(255, 179, 0, 0.18);
   border-radius: 14px;
-  padding: 11px 14px;
+  padding: 12px 14px;
   color: var(--text);
-  font-size: 14px;
-  min-height: 46px;
+  font-size: 15px;
+  min-height: 48px;
   font-family: inherit;
   outline: none;
   transition: all .18s ease;
@@ -4412,7 +4426,7 @@ option {
   background: var(--card);
   border: 1.5px solid var(--border);
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
   text-align: center;
@@ -4482,7 +4496,7 @@ option {
   border-radius: 12px;
   background: var(--bg2);
   border: 1px solid var(--border);
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text);
   cursor: pointer;
@@ -4511,9 +4525,9 @@ option {
 
 .pending-meal-badge {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 2.5px 8px;
   border-radius: 8px;
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 800;
   letter-spacing: .3px;
 }
@@ -4564,13 +4578,13 @@ option {
 }
 
 .payday-label {
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--text);
 }
 
 .payday-sub {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
 }
 
@@ -4678,7 +4692,7 @@ option {
 .curr-rate-badge {
   background: rgba(255,179,0,.18);
   color: #b45309;
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 12px;
@@ -4757,13 +4771,13 @@ option {
 }
 
 .tax-item-title {
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 800;
   color: var(--text);
 }
 
 .tax-item-cap {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -4790,7 +4804,7 @@ option {
 .tax-item-foot {
   display: flex;
   justify-content: space-between;
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--muted);
 }
@@ -4832,7 +4846,7 @@ option {
   right: 0;
   background: linear-gradient(transparent, rgba(0,0,0,0.85));
   padding: 4px 6px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 800;
   color: #fff;
   text-align: center;
@@ -4872,7 +4886,7 @@ option {
 .prof-sub {
   margin-top: 4px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.4;
 }
 
@@ -4915,7 +4929,7 @@ option {
   min-width: 0;
   flex: 1 1 auto;
   color: inherit;
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 750;
   line-height: 1.35;
 }
@@ -4925,7 +4939,7 @@ option {
   max-width: 48%;
   overflow: hidden;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1.35;
   text-align: right;
@@ -4935,8 +4949,8 @@ option {
 
 @media (max-width: 360px) {
   .set-row { padding: 10px 12px; gap: 8px; }
-  .set-label { font-size: 12px; }
-  .set-val { font-size: 10px; max-width: 44%; }
+  .set-label { font-size: 13.5px; }
+  .set-val { font-size: 12px; max-width: 44%; }
 }
 
 .more-sec {
@@ -4944,7 +4958,7 @@ option {
 }
 
 .more-sec-title {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 800;
   color: var(--muted);
   text-transform: uppercase;
@@ -5009,14 +5023,14 @@ option {
 }
 
 .more-row-title {
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 800;
   color: var(--text);
   margin-bottom: 2px;
 }
 
 .more-row-sub {
-  font-size: 11px;
+  font-size: 12.5px;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -5200,10 +5214,10 @@ option {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 7px 16px;
+  padding: 8px 18px;
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   font-family: inherit;
@@ -5228,7 +5242,7 @@ option {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r);
-  padding: 11px 14px;
+  padding: 12px 16px;
   margin-bottom: 14px;
 }
 
@@ -5237,7 +5251,7 @@ option {
   border: none;
   outline: none;
   color: var(--text);
-  font-size: 13px;
+  font-size: 14.5px;
   font-family: inherit;
   flex: 1;
 }
@@ -5266,7 +5280,7 @@ option {
 }
 
 .empty small {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--dim);
 }
 
@@ -5279,9 +5293,9 @@ option {
   border: 1px solid var(--border);
   backdrop-filter: blur(14px);
   color: var(--text);
-  font-size: 13px;
+  font-size: 14.5px;
   font-weight: 600;
-  padding: 12px 24px;
+  padding: 13px 26px;
   border-radius: 28px;
   z-index: 500;
   white-space: nowrap;
@@ -5472,7 +5486,7 @@ div[id*="feedback"],
     padding: 5px 0;
   }
   .top-shortcut-label {
-    font-size: 8px;
+    font-size: 10px;
   }
   .top-shortcut-icon {
     font-size: 14px;
@@ -5500,14 +5514,14 @@ div[id*="feedback"],
     border-radius: 8px;
   }
   .bal-col-val {
-    font-size: 11.5px;
+    font-size: 13px;
   }
   .bal-col-label {
-    font-size: 10px;
+    font-size: 11.5px;
   }
   .bal-action-btn {
     padding: 8px 6px;
-    font-size: 11.5px;
+    font-size: 12.5px;
     min-height: 40px;
   }
   .acc-row {
@@ -5525,10 +5539,10 @@ div[id*="feedback"],
     border-radius: 8px;
   }
   .acc-chip-name {
-    font-size: 11px;
+    font-size: 12px;
   }
   .acc-chip-bal {
-    font-size: 11.5px;
+    font-size: 13px;
   }
   .cal-days-grid {
     gap: 2px;
@@ -5538,11 +5552,11 @@ div[id*="feedback"],
     padding: 2px 1px;
   }
   .cal-day-num {
-    font-size: 11px;
+    font-size: 12px;
   }
   .cal-day-spent,
   .cal-day-inc {
-    font-size: 7.5px;
+    font-size: 9px;
   }
   .petrol-grid {
     gap: 4px;
@@ -5554,7 +5568,7 @@ div[id*="feedback"],
     font-size: 14px;
   }
   .nav-btn {
-    font-size: 9px;
+    font-size: 10.5px;
     gap: 2px;
   }
   .nav-icon {
@@ -5570,7 +5584,7 @@ div[id*="feedback"],
     font-size: 16px;
   }
   .more-row-title {
-    font-size: 12px;
+    font-size: 13.5px;
   }
 }
 
@@ -5587,7 +5601,7 @@ div[id*="feedback"],
     padding: 6px 1px;
   }
   .top-shortcut-label {
-    font-size: 8.5px;
+    font-size: 10.5px;
   }
   .top-shortcut-icon {
     font-size: 15px;
@@ -5596,11 +5610,11 @@ div[id*="feedback"],
     font-size: 27px;
   }
   .bal-col-val {
-    font-size: 12.5px;
+    font-size: 13.5px;
   }
   .bal-action-btn {
     padding: 9px 8px;
-    font-size: 12px;
+    font-size: 12.5px;
   }
   .more-row {
     padding: 10px 12px;
@@ -5611,10 +5625,10 @@ div[id*="feedback"],
     font-size: 17px;
   }
   .more-row-title {
-    font-size: 12.5px;
+    font-size: 13.5px;
   }
   .nav-btn {
-    font-size: 10px;
+    font-size: 11px;
   }
 }
 
@@ -5716,7 +5730,7 @@ div[id*="feedback"],
   padding-top: 8px;
   text-align: center;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   line-height: 1.35;
 }
@@ -5732,7 +5746,7 @@ div[id*="feedback"],
   background: #fde68a;
   border: 1px solid #b45309;
   color: #111827;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
@@ -5749,7 +5763,7 @@ div[id*="feedback"],
   background: #e0e7ff;
   border: 1px solid #4f46e5;
   color: #111827;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
@@ -5803,7 +5817,7 @@ div[id*="feedback"],
 }
 
 #page-transactions #tx-cal-container .cal-m-label {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--muted);
 }
@@ -5825,7 +5839,7 @@ div[id*="feedback"],
 }
 
 #page-transactions #tx-cal-container .cal-week-cell {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 900;
   color: var(--muted);
 }
@@ -5937,7 +5951,7 @@ div[id*="feedback"],
   gap: 10px;
 }
 .ive-bar-label {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   width: 60px;
   flex-shrink: 0;
@@ -5962,14 +5976,14 @@ div[id*="feedback"],
   min-width: 0;
 }
 .ive-bar-fill span {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 800;
   color: #fff;
   white-space: nowrap;
   text-shadow: 0 1px 2px rgba(0,0,0,.3);
 }
 .ive-bar-val {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   flex-shrink: 0;
   width: 85px;
@@ -5986,7 +6000,7 @@ div[id*="feedback"],
   border: 1px solid var(--border);
 }
 .ive-net-label {
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--muted);
 }
@@ -6047,13 +6061,13 @@ div[id*="feedback"],
   box-shadow: 0 0 0 2px var(--amber), 0 2px 8px rgba(255,179,0,.3);
 }
 .mtrend-amt {
-  font-size: 9px;
+  font-size: 10.5px;
   font-weight: 800;
   color: var(--muted);
   white-space: nowrap;
 }
 .mtrend-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--dim);
   white-space: nowrap;
