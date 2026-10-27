@@ -50,7 +50,8 @@ async function getGeminiModelCandidates(apiKey, forceRefresh = false){
   const key = String(apiKey || '').trim();
   if(!key || key.length < 8) return GEMINI_MODEL_FALLBACKS;
 
-  
+  // Read user's chosen model early so the fast-path check below can use it
+  const userChosen = (typeof S !== 'undefined' && S) ? (S.geminiModel || 'auto') : 'auto';
 
   // Fast path: if not forced refresh and we already have a chosen model or fallbacks, return instantly!
   const now = Date.now();
@@ -88,7 +89,6 @@ async function getGeminiModelCandidates(apiKey, forceRefresh = false){
   combined = filterDeprecatedModels(combined);
 
   // If user set a specific default model in Settings, place that model at the top
-  const userChosen = (typeof S !== 'undefined' && S) ? (S.geminiModel || 'auto') : 'auto';
   if(userChosen && userChosen !== 'auto'){
     combined = [userChosen, ...combined.filter(m => m !== userChosen)];
   }

@@ -6242,7 +6242,8 @@ async function getGeminiModelCandidates(apiKey, forceRefresh = false){
   const key = String(apiKey || '').trim();
   if(!key || key.length < 8) return GEMINI_MODEL_FALLBACKS;
 
-  
+  // Read user's chosen model early so the fast-path check below can use it
+  const userChosen = (typeof S !== 'undefined' && S) ? (S.geminiModel || 'auto') : 'auto';
 
   // Fast path: if not forced refresh and we already have a chosen model or fallbacks, return instantly!
   const now = Date.now();
@@ -6280,7 +6281,6 @@ async function getGeminiModelCandidates(apiKey, forceRefresh = false){
   combined = filterDeprecatedModels(combined);
 
   // If user set a specific default model in Settings, place that model at the top
-  const userChosen = (typeof S !== 'undefined' && S) ? (S.geminiModel || 'auto') : 'auto';
   if(userChosen && userChosen !== 'auto'){
     combined = [userChosen, ...combined.filter(m => m !== userChosen)];
   }
@@ -8479,18 +8479,11 @@ function compressReceiptForStorage(dataUrl){
       // -- Contrast + brightness boost for faded thermal receipts ----------------
       // Thermal paper fades quickly and dim lighting causes underexposed shots.
       // A mild contrast lift significantly improves Gemini OCR accuracy.
+      // Uses CSS canvas filter for reliable, color-safe enhancement.
       try {
-        const imageData = ctx.getImageData(0, 0, w, h);
-        const d = imageData.data;
-        const contrast   = 1.20;  // 1.0 = unchanged; 1.2 = noticeable punch
-        const brightness = 8;     // subtle lift for dark captures (0–20 range)
-        const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
-        for(let i = 0; i < d.length; i += 4){
-          d[i]     = Math.min(255, Math.max(0, factor * (d[i]     - 128) + 128 + brightness));
-          d[i + 1] = Math.min(255, Math.max(0, factor * (d[i + 1] - 128) + 128 + brightness));
-          d[i + 2] = Math.min(255, Math.max(0, factor * (d[i + 2] - 128) + 128 + brightness));
-        }
-        ctx.putImageData(imageData, 0, 0);
+        ctx.filter = 'contrast(1.15) brightness(1.06)';
+        ctx.drawImage(img, 0, 0, w, h);
+        ctx.filter = 'none';
       } catch(enhanceErr){
         // Cross-origin or canvas security restriction — proceed with original pixels
         console.warn('Receipt image enhancement skipped:', enhanceErr.message);

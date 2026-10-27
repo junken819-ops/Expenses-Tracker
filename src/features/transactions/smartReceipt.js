@@ -31,10 +31,9 @@ function compressReceiptForStorage(dataUrl){
       ctx.drawImage(img, 0, 0, w, h);
 
       // -- Contrast + brightness boost for faded thermal receipts ----------------
-      // Apply CSS filter for reliable enhancement (avoids manual pixel manipulation).
+      // Uses CSS canvas filter for reliable, color-safe enhancement.
       try {
-        // Use canvas filter for contrast and brightness.
-        ctx.filter = 'contrast(1.2) brightness(1.08)';
+        ctx.filter = 'contrast(1.15) brightness(1.06)';
         ctx.drawImage(img, 0, 0, w, h);
         ctx.filter = 'none';
       } catch (enhanceErr) {
