@@ -2157,12 +2157,6 @@
           <span>🤖 AI</span>
         </button>
       </div>
-      <div id="ocr-progress" class="ocr-progress-box hidden" style="margin-bottom:14px">
-        <div class="ai-scan-spinner"></div>
-        <div class="ai-scan-step-txt" id="ocr-progress-step">🤖 AI Reading Receipt<span class="ai-dots"></span></div>
-        <div class="ai-scan-sub-txt" id="ocr-progress-sub">Extracting amount, merchant & Malaysian category…</div>
-      </div>
-
       <!-- Amount -->
       <div class="amt-wrap">
         <span class="cur-sym" id="tx-cur">RM</span>
@@ -2301,13 +2295,11 @@
 
         <!-- AI Receipt Scan (Auto-fill) -->
         <div class="form-row" style="margin-bottom:0">
-          <label class="form-label" data-i18n="lbl_receipt_photo">📷 AI Receipt Scan (Auto-fill)</label>
+          <label class="form-label" data-i18n="lbl_receipt_photo">📷 AI Receipt Scan</label>
           <div class="photo-area" id="photo-area" style="position:relative;overflow:hidden" onclick="document.getElementById('photo-file').click()">
             <input type="file" id="photo-file" accept="image/*" style="display:none" onchange="handlePhoto(this)"/>
-            <div class="photo-placeholder" id="photo-ph" data-i18n="ph_receipt_photo">Tap or snap receipt to autofill (no photo stored)</div>
+            <div class="photo-placeholder" id="photo-ph" data-i18n="ph_receipt_photo">Tap or snap receipt — progress appears on Home (no photo stored)</div>
             <img id="photo-prev" class="photo-preview hidden" alt="Receipt"/>
-            <div id="tx-scan-laser" class="ai-scan-laser-line hidden"></div>
-            <div id="tx-scan-grid" class="ai-scan-grid-overlay hidden"></div>
           </div>
         </div>
       </div>
@@ -3162,22 +3154,11 @@
         
         <div id="uni-upload-placeholder">
           <div class="photo-icon" style="font-size:28px">📷</div>
-          <div class="photo-text" style="font-weight:700;font-size:13px">Tap to Upload Receipt / Invoice</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">Auto-extracts Merchant, Dishes, Amounts & Taxes</div>
+          <div class="photo-text" style="font-weight:700;font-size:13px">Choose Receipt / Invoice</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">It will appear on Home immediately with a live scan countdown</div>
         </div>
 
         <img id="uni-img-preview" class="photo-preview hidden" alt="Uploaded Document" style="max-height:200px;object-fit:contain;border-radius:12px;margin:0 auto;display:block"/>
-        
-        <!-- Overlays -->
-        <div id="uni-scan-laser" class="ai-scan-laser-line hidden"></div>
-        <div id="uni-scan-grid" class="ai-scan-grid-overlay hidden"></div>
-      </div>
-
-      <!-- Loading / Progress -->
-      <div id="uni-progress-box" class="ocr-progress-box hidden" style="margin-bottom:14px">
-        <div class="ai-scan-spinner"></div>
-        <div class="ai-scan-step-txt" id="uni-progress-step">🤖 AI Vision Scanning Document<span class="ai-dots"></span></div>
-        <div class="ai-scan-sub-txt" id="uni-progress-sub">Extracting merchant, totals, dishes & Malaysian tax rates</div>
       </div>
 
       <!-- Detected Badge -->

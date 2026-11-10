@@ -345,7 +345,7 @@ function getReceiptCategoryEvidence(receipt){
   return null;
 }
 
-async function verifyReceiptCategoryWithGemini(receipt, apiKey){
+async function verifyReceiptCategoryWithGemini(receipt, apiKey, options = {}){
   if(!receipt || !apiKey) return receipt;
   const proposedCategory = getReceiptCategoryId(receipt.category) || 'food';
   const local = getReceiptCategoryEvidence(receipt);
@@ -363,7 +363,10 @@ async function verifyReceiptCategoryWithGemini(receipt, apiKey){
       message: `${local.reason} → ${catInfo('expense', local.category).name}`
     };
   }
-  if(!needsSecondOpinion) return receipt;
+  // Receipt capture should never wait for a second AI call before displaying
+  // its result. The local merchant/item matcher remains deterministic and is
+  // sufficient for the fast path.
+  if(options.localOnly || !needsSecondOpinion) return receipt;
 
   const allowedCategories = getCategories('expense').map(cat => cat.id).join(', ');
   const verificationPrompt = `You are a strict receipt category verifier. Decide the purchase type from the merchant and item names, not from isolated ingredient words. Prepared dishes at a restaurant, hawker, cafe, or food court are "food"; raw goods from a supermarket or convenience store are "groceries". Return only JSON: {"category":"one allowed category","subCategory":"optional subcategory id","confidence":"high|medium|low"}. Allowed categories: ${allowedCategories}. Merchant: ${receipt.merchant || 'unknown'}. Items: ${formatItemsSummary(receipt) || 'none'}. Initial OCR category: ${proposedCategory}.`;

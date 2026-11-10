@@ -29,6 +29,10 @@ function removeNetlifyBadge(){
 // notification alerts evaluator, and third-party widget suppression.─
 function init(){
   load();
+  // A browser refresh cannot resume an in-memory Gemini request. Keep any
+  // visible pending receipt as an editable review record instead of leaving a
+  // permanent loading bar behind.
+  if(typeof recoverInterruptedReceiptScans === 'function') recoverInterruptedReceiptScans();
   applyTheme();
   applyAppBackground();
   applyLanguage();

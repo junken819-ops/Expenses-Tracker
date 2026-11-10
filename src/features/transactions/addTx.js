@@ -229,105 +229,21 @@ function saveTx(){
   }
 }
 
-let aiScanInterval = null;
-const AI_SCAN_MESSAGES = [
-  { step: '🤖 Connecting to Google Gemini Vision AI', sub: 'Uploading encrypted image to multimodal neural engine' },
-  { step: '🔍 Detecting Merchant, Store & Payee', sub: 'Recognizing brand logos and receipt headers' },
-  { step: '💵 Reading Total Amount, SST & Rounding', sub: 'Analyzing payable total, 6% SST & 5-sen BNM rounding' },
-  { step: '🛒 Extracting Itemized Dishes & Goods', sub: 'Categorizing expenses and formatting receipt items' },
-  { step: '🇲🇾 Verifying LHDN Tax Relief Eligibility', sub: 'Checking lifestyle, medical, sports & education claim categories' }
-];
-
-function startAiScanAnimation(context = 'universal'){
-  stopAiScanAnimation();
-  let stepIdx = 0;
-
-  if(context === 'universal'){
-    const progBox = el('uni-progress-box');
-    const laser = el('uni-scan-laser');
-    const grid = el('uni-scan-grid');
-    if(progBox) progBox.classList.remove('hidden');
-    if(laser) laser.classList.remove('hidden');
-    if(grid) grid.classList.remove('hidden');
-
-    const updateUniversalScanUI = () => {
-      const msg = AI_SCAN_MESSAGES[stepIdx % AI_SCAN_MESSAGES.length];
-      const stepEl = el('uni-progress-step');
-      const subEl = el('uni-progress-sub');
-      if(stepEl) stepEl.innerHTML = `${msg.step}<span class="ai-dots"></span>`;
-      if(subEl) subEl.textContent = msg.sub;
-      stepIdx++;
-    };
-    updateUniversalScanUI();
-    aiScanInterval = setInterval(updateUniversalScanUI, 900);
-  } else if(context === 'tx'){
-    const progBox = el('ocr-progress');
-    const laser = el('tx-scan-laser');
-    const grid = el('tx-scan-grid');
-    if(progBox) progBox.classList.remove('hidden');
-    if(laser) laser.classList.remove('hidden');
-    if(grid) grid.classList.remove('hidden');
-
-    const updateUI = () => {
-      const msg = AI_SCAN_MESSAGES[stepIdx % AI_SCAN_MESSAGES.length];
-      const stepEl = el('ocr-progress-step');
-      const subEl = el('ocr-progress-sub');
-      if(stepEl) stepEl.innerHTML = `${msg.step}<span class="ai-dots"></span>`;
-      if(subEl) subEl.textContent = msg.sub;
-      stepIdx++;
-    };
-    updateUI();
-    aiScanInterval = setInterval(updateUI, 900);
-  }
-}
-
-function stopAiScanAnimation(){
-  if(aiScanInterval){
-    clearInterval(aiScanInterval);
-    aiScanInterval = null;
-  }
-  ['uni-progress-box', 'uni-scan-laser', 'uni-scan-grid', 'ocr-progress', 'tx-scan-laser', 'tx-scan-grid', 'splitter-ocr-progress', 'xfr-ocr-progress'].forEach(id => {
-    const item = el(id);
-    if(item) item.classList.add('hidden');
-  });
-}
+// Receipt progress now belongs to the pending transaction card on Home. Keep
+// these compatibility hooks for callers that used the old modal animation.
+function startAiScanAnimation(){ }
+function stopAiScanAnimation(){ }
 
 async function handlePhoto(inp){
-  const file = inp.files[0]; if(!file) return;
-  const scanBtn = el('ocr-scan-btn');
-  if(scanBtn) scanBtn.style.display = 'none';
-
-  startAiScanAnimation('tx');
-
-  try {
-    const rawDataUrl = await new Promise(res => {
-      const reader = new FileReader();
-      reader.onload = ev => res(ev.target.result);
-      reader.readAsDataURL(file);
-    });
-
-    const compressed = await compressReceiptForStorage(rawDataUrl);
-    photoData = null; // Receipt image is processed in memory for OCR extraction only, never stored
-    toggleTxMoreDetails(true);
-
-    const result = await analyzeUnifiedUploadWithGemini(compressed);
-    if(result && (result.amount > 0 || result.merchant)){
-      // Enrich items with calorie estimates before applying
-      if(result.items && Array.isArray(result.items) && result.items.length > 0){
-        await enrichItemsWithCalories(result.items);
-      }
-      applyReceiptStructuredData(result, 'AI');
-      toast(`🤖 Auto-filled from receipt: ${result.merchant || 'Store'} · ${fmt(result.amount)}`);
-    } else {
-      toast('🔍 Receipt scanned! Please verify amount.');
-    }
-  } catch(err){
-    console.warn('Photo handle notice:', err);
-    toast('🔍 Receipt scanned!');
-  } finally {
-    photoData = null;
-    stopAiScanAnimation();
-    if(scanBtn) scanBtn.style.display = 'flex';
-  }
+  const file = inp?.files?.[0];
+  if(!file) return;
+  // Keep every receipt entry point consistent: the form closes, Home receives
+  // an editable pending transaction, and the scan never blocks behind a modal.
+  uniCurrentMode = 'expense';
+  uniCustomDate = '';
+  photoData = null;
+  if(inp) inp.value = '';
+  closeModal('tx-modal');
+  return handleUniversalFile(file);
 }
 

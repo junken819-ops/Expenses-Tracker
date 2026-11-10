@@ -4,6 +4,8 @@
  */
 
 // ── 🧠 SMART AI AUTO-DETECTION ENGINE (CATEGORIES & MALAYSIAN BANKS) ──
+let lastReceiptScanError = '';
+
 function smartAutoDetectCategoryAndPayment(text){
   if(!text || typeof text !== 'string') return null;
   const s = text.toLowerCase();
@@ -268,14 +270,123 @@ function handleTxDescAutoDetect(){
 }
 
 async function handleUniversalFile(inputOrFile){
-  if(isUniversalScanning) return;
-
   let file = null;
   if(inputOrFile instanceof File) file = inputOrFile;
   else if(inputOrFile?.files?.[0]) file = inputOrFile.files[0];
   if(!file) return;
 
+  if(isUniversalScanning){
+    const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+    toast(isZh ? '🧾 已有一张小票正在识别，请先完成、编辑或删除首页的记录' : '🧾 A receipt is already being read. Finish, edit, or remove it from Home first.');
+    return;
+  }
+
+  const hasGeminiKey = Boolean(S.geminiApiKey && String(S.geminiApiKey).trim().length > 7);
+  if(!hasGeminiKey){
+    const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+    toast(isZh ? '🔑 请先配置 Google Gemini API Key' : '🔑 Please configure your Google Gemini API Key first');
+    openGeminiModal();
+    return;
+  }
+
+  // A normal expense receipt becomes a visible transaction immediately. Meal
+  // Splitter keeps its existing in-modal review flow because it does not create
+  // a standalone expense until the split is confirmed.
+  if(uniCurrentMode === 'expense'){
+    return startBackgroundReceiptScan(file);
+  }
+  return scanUniversalFileInModal(file);
+}
+
+function hasUsableReceiptResult(result){
+  if(!result) return false;
+  const merchant = String(result.merchant || result.recipient || '').trim();
+  const items = Array.isArray(result.items) ? result.items : [];
+  return Number(result.amount) > 0 || items.length > 0 || (merchant && merchant.toLowerCase() !== 'receipt');
+}
+
+async function startBackgroundReceiptScan(file){
+  const job = createPendingReceiptScan();
+  const { tx, controller, signal } = job;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  lastReceiptScanError = '';
+
+  // The modal is intentionally closed before any file/network work. Home owns
+  // the visible progress bar and keeps the record editable while AI works.
+  closeModal('universal-upload-modal');
+  go('home');
+  toast(isZh ? '🧾 小票已加入首页，正在后台识别…' : '🧾 Receipt added to Home. Reading it in the background…');
+
+  try {
+    const rawDataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = event => resolve(event.target.result);
+      reader.onerror = error => reject(error);
+      reader.readAsDataURL(file);
+    });
+    if(signal.aborted){
+      if(didPendingReceiptScanTimeOut(tx.id, controller)){
+        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+      }
+      return;
+    }
+
+    const compressed = await compressReceiptForStorage(rawDataUrl);
+    if(signal.aborted){
+      if(didPendingReceiptScanTimeOut(tx.id, controller)){
+        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+      }
+      return;
+    }
+
+    const result = await analyzeUnifiedUploadWithRetry(compressed, signal, 1);
+    if(signal.aborted){
+      if(didPendingReceiptScanTimeOut(tx.id, controller)){
+        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+      }
+      return;
+    }
+
+    if(hasUsableReceiptResult(result)){
+      const applied = applyPendingReceiptScanResult(tx.id, result, controller);
+      if(!applied) return;
+
+      toast(isZh ? '✅ 小票识别完成！点击该记录可编辑或删除。' : '✅ Receipt ready. Tap the transaction to edit or delete it.');
+      return;
+    }
+
+    const timeout = /abort|timeout|timed out/i.test(lastReceiptScanError || '');
+    markPendingReceiptScanFailed(
+      tx.id,
+      timeout
+        ? (isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.')
+        : (isZh ? '未能提取小票内容。点击编辑以手动填写。' : 'We could not extract the receipt. Tap Edit to enter it manually.'),
+      controller
+    );
+  } catch(err){
+    if(signal.aborted){
+      if(didPendingReceiptScanTimeOut(tx.id, controller)){
+        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+      }
+      return;
+    }
+    console.warn('Background receipt scan failed:', err);
+    markPendingReceiptScanFailed(
+      tx.id,
+      isZh ? '扫描遇到问题。点击编辑以手动填写。' : 'The scan ran into a problem. Tap Edit to enter it manually.',
+      controller
+    );
+  } finally {
+    // The completion helpers clean up successful/failed jobs. This covers an
+    // aborted job whose transaction was edited or removed while the request ran.
+    finishPendingReceiptScanJob(tx.id, controller);
+  }
+}
+
+async function scanUniversalFileInModal(file){
+
   isUniversalScanning = true;
+  uniScanRunsInBackground = false;
   if(uniScanAbortController){
     try { uniScanAbortController.abort(); } catch(e){}
   }
@@ -313,12 +424,14 @@ async function handleUniversalFile(inputOrFile){
 
     if(currentScanSignal.aborted) return;
 
-    const result = await analyzeUnifiedUploadWithRetry(compressed, currentScanSignal, 2);
+    // A receipt is an interactive action, not a background batch. One bounded
+    // attempt is faster and clearer than silently repeating a slow request.
+    const result = await analyzeUnifiedUploadWithRetry(compressed, currentScanSignal, 1);
     if(currentScanSignal.aborted) return;
 
     stopAiScanAnimation();
 
-    if(result && (result.merchant || result.amount > 0 || (result.items && result.items.length > 0))){
+    if(hasUsableReceiptResult(result)){
       uniParsedData = result;
 
       if(badgeWrap) badgeWrap.classList.remove('hidden');
@@ -358,7 +471,10 @@ async function handleUniversalFile(inputOrFile){
       renderUniversalPreview();
       const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
       if(S.geminiApiKey && S.geminiApiKey.length > 7){
-        toast(isZh ? '⚠️ 未能自动提取数据，您可以手动填写' : '⚠️ Could not extract data. You can enter details manually.');
+        const didTimeout = /abort|timeout|timed out/i.test(lastReceiptScanError || '');
+        toast(didTimeout
+          ? (isZh ? '⏱️ 扫描超过 15 秒，已为您保留图片，可手动填写' : '⏱️ Scan stopped after 15 seconds. Your image is kept for manual entry.')
+          : (isZh ? '⚠️ 未能自动提取数据，您可以手动填写' : '⚠️ Could not extract data. You can enter details manually.'));
       }
     }
   } catch(err){
@@ -395,53 +511,12 @@ async function analyzeUnifiedUploadWithGemini(base64DataUrl, signal = null){
   const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
   const base64Data = base64DataUrl.replace(/^data:[^;]+;base64,/, '').trim();
 
-  // ── OCR-focused prompt ────────────────────────────────────────────────────
-  // Kept intentionally small: fewer fields = fewer hallucinations and schema
-  // drift. Category / subCategory / tags are resolved locally by
-  // smartAutoDetectCategoryAndPayment() after parsing, then verified by a
-  // lightweight text-only Gemini call in verifyReceiptCategoryWithGemini().
-  const prompt = `You are an expert OCR engine for Malaysian receipts, dining bills, invoices, and e-wallet screenshots.
-Extract the following fields from the image and return ONLY a raw JSON object — no markdown, no backticks, no extra text.
-
-Required schema:
-{
-  "detectedType": "receipt",
-  "merchant": "Exact store or restaurant name as printed",
-  "currency": "MYR",
-  "originalAmount": 0.00,
-  "amount": 0.00,
-  "subtotal": 0.00,
-  "date": "YYYY-MM-DD",
-  "time": "HH:MM",
-  "paymentMethod": "Cash",
-  "location": "",
-  "items": [
-    { "name": "Item or dish name", "price": 0.00, "qty": 1, "calories": 0, "protein": 0 }
-  ],
-  "serviceChargePct": 0,
-  "serviceChargeAmount": 0.00,
-  "sstPct": 0,
-  "sstAmount": 0.00,
-  "roundingAmount": 0.00,
-  "taxReliefCat": "",
-  "taxReliefAmount": 0.00,
-  "taxReliefReason": ""
-}
-
-RULES:
-1. "merchant": The brand/store name printed on the receipt (e.g. "Lotus's", "McDonald's", "Watsons", "7-Eleven").
-2. "currency": Detect from symbols — RM/MYR, S$/SGD, $/USD, ¥/JPY, €/EUR, £/GBP, ฿/THB, NT$/TWD, ₩/KRW, Rp/IDR, ₫/VND, ₱/PHP. Default "MYR".
-3. "amount": The final grand total as a number. "originalAmount" = same value in native currency.
-4. "subtotal": Pre-tax subtotal. If not printed, leave 0.
-5. "date": Printed transaction date → YYYY-MM-DD. Convert "23/08/2026" → "2026-08-23".
-6. "time": Printed transaction time → 24-hour HH:MM. E.g. "1:45 PM" → "13:45".
-7. "paymentMethod": Payment tender printed (Cash, Credit Card, Visa, Mastercard, Touch 'n Go eWallet, GrabPay, ShopeePay, Maybank MAE, Debit Card, Online Banking). Default "Cash" if absent.
-8. "items": Every line item / dish / product with name, unit price, qty. Food/drink items: estimate calories (kcal integer) and protein (g integer); non-food set 0.
-9. "sstAmount" / "sstPct": Malaysian SST/Service Tax amount and rate (6% or 8%).
-10. "serviceChargeAmount" / "serviceChargePct": Restaurant service charge (e.g. 10%).
-11. "roundingAmount": Sen rounding (e.g. -0.02 or 0.00).
-12. "taxReliefCat": Malaysian LHDN tax relief category if applicable — "lifestyle" (books, sports, devices), "medical" (pharmacy, clinic), "childcare". Leave empty if not applicable.
-13. Output ONLY the raw JSON. Do NOT wrap in markdown fences or add any explanation.`;
+  // Fast capture is intentionally restricted to the fields a user needs to
+  // review or save an expense. Calorie estimates and other optional insights
+  // continue in the background after this result is visible.
+  const prompt = `Read this receipt or payment screenshot. Return only JSON, no markdown.
+{"merchant":"","currency":"MYR","amount":0,"date":"YYYY-MM-DD","time":"HH:MM","paymentMethod":"","items":[{"name":"","price":0,"qty":1}]}
+Use the final grand total for amount. Copy the printed merchant and date/time when visible. Extract up to 30 printed line items; otherwise use an empty array. Use empty strings or 0 for unreadable values. Do not estimate nutrition, categories, tax relief, or any unprinted values.`;
 
   const payload = {
     contents: [{
@@ -454,12 +529,18 @@ RULES:
           }
         }
       ]
-    }]
+    }],
+    generationConfig: {
+      temperature: 0,
+      maxOutputTokens: 1600,
+      responseMimeType: 'application/json'
+    }
   };
 
-  const generation = await generateGeminiContent(apiKey, payload, 25000, signal);
+  const generation = await generateFastGeminiReceiptContent(apiKey, payload, signal);
   const geminiRes = generation.data;
   const lastErrorMsg = generation.lastError;
+  lastReceiptScanError = lastErrorMsg || '';
   if(generation.model) console.log(`✅ Gemini OCR successfully processed receipt using model: ${generation.model}`);
 
   let parsed = null;
@@ -471,13 +552,14 @@ RULES:
       const rawJson = extractJsonFromText(rawText);
       if(rawJson){
         parsed = normalizeGeminiReceiptOutput(rawJson);
-        parsed = await verifyReceiptCategoryWithGemini(parsed, apiKey);
+        parsed = await verifyReceiptCategoryWithGemini(parsed, apiKey, { localOnly: true });
         console.log('Successfully parsed receipt data:', parsed);
       }
     }
   }
 
-  if(!parsed && lastErrorMsg){
+  const didTimeout = /abort|timeout|timed out/i.test(lastErrorMsg || '');
+  if(!parsed && lastErrorMsg && !(signal && signal.aborted) && !didTimeout){
     console.error('All Gemini OCR model attempts failed:', lastErrorMsg);
     if(lastErrorMsg.includes('API_KEY_INVALID') || lastErrorMsg.includes('API key not valid') || lastErrorMsg.includes('PERMISSION_DENIED')){
       toast(isZh ? '❌ Google API Key 无效，请在设置中重新配置' : '❌ Invalid Google API Key. Please check settings.');
@@ -499,7 +581,7 @@ async function analyzeReceiptWithGemini(base64DataUrl){ return analyzeUnifiedUpl
 // Silently retries on transient network errors or empty Gemini responses
 // without requiring the user to manually tap Scan again.
 async function analyzeUnifiedUploadWithRetry(base64DataUrl, signal, maxAttempts){
-  maxAttempts = maxAttempts || 2;
+  maxAttempts = maxAttempts || 1;
   for(var attempt = 1; attempt <= maxAttempts; attempt++){
     if(signal && signal.aborted) return null;
     var result = await analyzeUnifiedUploadWithGemini(base64DataUrl, signal);

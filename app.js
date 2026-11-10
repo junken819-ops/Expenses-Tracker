@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-10-26T03:42:53.417Z
+   Last build: 2026-11-10T08:10:15.216Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -598,8 +598,8 @@ const I18N = {
     "tx_advance_sub": "Mark this as paid on behalf of company or friend",
     "tx_advance_debtor": "Reimbursement Source / Person",
     "tx_advance_status": "Status",
-    "lbl_receipt_photo": "📷 AI Receipt Scan (Auto-fill)",
-    "ph_receipt_photo": "Tap or snap receipt to autofill (no photo stored)",
+    "lbl_receipt_photo": "📷 AI Receipt Scan",
+    "ph_receipt_photo": "Tap or snap receipt — progress appears on Home (no photo stored)",
     "btn_save_tx": "Save Transaction",
     "modal_add_acc": "Add Malaysian Bank / Wallet",
     "lbl_select_preset": "🇲🇾 Choose Bank / E-Wallet Preset",
@@ -936,8 +936,8 @@ const I18N = {
     "tx_advance_sub": "帮公司或朋友先行垫付，方便后续一键核销",
     "tx_advance_debtor": "报销来源 / 垫付对象",
     "tx_advance_status": "报销状态",
-    "lbl_receipt_photo": "📷 AI 智能扫小票 (自动填入)",
-    "ph_receipt_photo": "点击拍摄或上传小票识别 (不留存照片)",
+    "lbl_receipt_photo": "📷 AI 智能扫小票",
+    "ph_receipt_photo": "点击拍摄或上传小票；进度会显示在首页（不留存照片）",
     "btn_save_tx": "保存账单",
     "modal_add_acc": "添加马来西亚银行 / 电子钱包",
     "lbl_select_preset": "🇲🇾 选择银行 / 电子钱包预设",
@@ -1601,7 +1601,7 @@ function getReceiptCategoryEvidence(receipt){
   return null;
 }
 
-async function verifyReceiptCategoryWithGemini(receipt, apiKey){
+async function verifyReceiptCategoryWithGemini(receipt, apiKey, options = {}){
   if(!receipt || !apiKey) return receipt;
   const proposedCategory = getReceiptCategoryId(receipt.category) || 'food';
   const local = getReceiptCategoryEvidence(receipt);
@@ -1619,7 +1619,10 @@ async function verifyReceiptCategoryWithGemini(receipt, apiKey){
       message: `${local.reason} → ${catInfo('expense', local.category).name}`
     };
   }
-  if(!needsSecondOpinion) return receipt;
+  // Receipt capture should never wait for a second AI call before displaying
+  // its result. The local merchant/item matcher remains deterministic and is
+  // sufficient for the fast path.
+  if(options.localOnly || !needsSecondOpinion) return receipt;
 
   const allowedCategories = getCategories('expense').map(cat => cat.id).join(', ');
   const verificationPrompt = `You are a strict receipt category verifier. Decide the purchase type from the merchant and item names, not from isolated ingredient words. Prepared dishes at a restaurant, hawker, cafe, or food court are "food"; raw goods from a supermarket or convenience store are "groceries". Return only JSON: {"category":"one allowed category","subCategory":"optional subcategory id","confidence":"high|medium|low"}. Allowed categories: ${allowedCategories}. Merchant: ${receipt.merchant || 'unknown'}. Items: ${formatItemsSummary(receipt) || 'none'}. Initial OCR category: ${proposedCategory}.`;
@@ -4221,6 +4224,11 @@ function openEditTxModal(txId){
 function editTxFromDetail(){
   const tx = S.transactions.find(t => t.id === currentDetailTxId);
   if(!tx) return;
+  if(isPendingReceiptScan(tx)){
+    // A manual edit owns this record from now on. Abort the request before
+    // opening the form so a late Gemini response cannot overwrite the user.
+    cancelPendingReceiptScan(tx.id, 'manual');
+  }
   if(isInternalTransfer(tx)){
     toast(S.lang === 'zh' ? '内部转账请删除后重新建立，以保持两边账户余额正确。' : 'Delete and recreate an internal transfer to keep both account balances correct.');
     return;
@@ -4300,7 +4308,78 @@ function deleteTxFromDetail(){
   closeModal('tx-detail-modal');
 }
 
+function makeReceiptScanTxEl(tx){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const scan = tx.aiScan || {};
+  const processing = scan.status === 'processing';
+  const complete = scan.status === 'complete';
+  const failed = scan.status === 'failed';
+  const showProgress = processing || complete;
+  const title = processing
+    ? (isZh ? '正在读取小票…' : 'Reading receipt…')
+    : (complete ? (isZh ? '小票识别完成' : 'Receipt ready') : (isZh ? '小票需要填写' : 'Receipt needs details'));
+  const message = processing
+    ? (isZh ? '新记录已添加，可随时编辑或删除' : 'New transaction added — you can edit or remove it anytime')
+    : (complete
+      ? (isZh ? '资料已提取，正在完成记录…' : 'Details extracted — completing your transaction…')
+      : (scan.message || (isZh ? '点击编辑，手动填写账单资料。' : 'Tap Edit to enter the receipt details yourself.')));
+  const progress = processing ? getReceiptScanProgress(scan) : (complete ? 100 : 0);
+  const remaining = processing ? getReceiptScanRemainingSeconds(scan) : 0;
+  const stateColor = processing ? 'var(--cyan)' : (complete ? 'var(--green)' : (failed ? 'var(--red)' : 'var(--amber)'));
+  const stateBg = processing ? 'rgba(6,182,212,.10)' : (complete ? 'rgba(16,185,129,.10)' : (failed ? 'rgba(239,68,68,.10)' : 'rgba(245,158,11,.10)'));
+
+  const div = document.createElement('div');
+  div.className = 'tx-item receipt-scan-card';
+  div.dataset.id = tx.id;
+  div.innerHTML = `
+    <div class="receipt-scan-card-inner" style="padding:12px 12px 11px;background:${stateBg};border:1.5px solid ${processing ? 'rgba(6,182,212,.45)' : (complete ? 'rgba(16,185,129,.42)' : (failed ? 'rgba(239,68,68,.38)' : 'rgba(245,158,11,.38)'))};border-radius:var(--r)">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <div class="tx-cat-icon" style="background:${processing ? 'rgba(6,182,212,.16)' : (complete ? 'rgba(16,185,129,.16)' : (failed ? 'rgba(239,68,68,.16)' : 'rgba(245,158,11,.16)'))};font-size:21px">${processing ? '🧾' : (complete ? '✅' : (failed ? '⚠️' : '✏️'))}</div>
+        <div class="tx-info" style="padding-top:1px">
+          <div class="tx-desc" style="display:flex;align-items:center;gap:6px"><span>${title}</span></div>
+          <div class="tx-sub" style="display:block;line-height:1.35;margin-top:3px">${esc(message)}</div>
+        </div>
+        <span style="font-size:10.5px;font-weight:800;color:${stateColor};white-space:nowrap">${processing ? (isZh ? '处理中' : 'SCANNING') : (complete ? (isZh ? '完成' : 'DONE') : (failed ? (isZh ? '需处理' : 'REVIEW') : (isZh ? '手动填写' : 'MANUAL')))}</span>
+      </div>
+      <div class="receipt-scan-progress-wrap" style="margin:11px 0 9px;${showProgress ? '' : 'display:none'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;font-size:11px;font-weight:700;color:${stateColor}">
+          <span class="receipt-scan-progress-label">${processing ? (progress >= 96 ? (isZh ? '正在完成资料…' : 'Finishing receipt details…') : (isZh ? 'AI 正在读取小票' : 'AI is reading your receipt')) : (complete ? (isZh ? '小票资料已就绪' : 'Receipt details ready') : (isZh ? '可手动编辑全部资料' : 'All fields can be edited manually'))}</span>
+          <span class="receipt-scan-countdown">${processing ? (remaining > 0 ? `~${remaining}s ${isZh ? '剩余' : 'remaining'}` : (isZh ? '完成中…' : 'Finishing…')) : (complete ? (isZh ? '完成' : 'Done') : '')}</span>
+        </div>
+        <div style="height:8px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.5);border:1px solid rgba(6,182,212,.14)">
+          <div class="receipt-scan-progress-fill" style="height:100%;width:${progress}%;border-radius:inherit;background:linear-gradient(90deg,#06b6d4,#3b82f6,#8b5cf6);transition:width .22s linear"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button type="button" class="receipt-scan-edit-btn ghost-btn" style="flex:1;margin:0;padding:7px 9px;font-size:11.5px;border-color:${stateColor};color:${stateColor}">✏️ ${isZh ? '编辑资料' : 'Edit details'}</button>
+        <button type="button" class="receipt-scan-delete-btn ghost-btn" style="flex:.78;margin:0;padding:7px 9px;font-size:11.5px;color:var(--red);border-color:rgba(239,68,68,.42)">🗑 ${isZh ? '删除' : 'Remove'}</button>
+      </div>
+    </div>
+  `;
+
+  const editBtn = div.querySelector('.receipt-scan-edit-btn');
+  const deleteBtn = div.querySelector('.receipt-scan-delete-btn');
+  if(editBtn){
+    editBtn.onclick = event => {
+      event.stopPropagation();
+      openEditTxModal(tx.id);
+    };
+  }
+  if(deleteBtn){
+    deleteBtn.onclick = event => {
+      event.stopPropagation();
+      deleteTx(tx.id);
+    };
+  }
+  div.onclick = event => {
+    if(event.target.closest('button')) return;
+    openEditTxModal(tx.id);
+  };
+  return div;
+}
+
 function makeTxEl(tx){
+  if(tx && tx.aiScan) return makeReceiptScanTxEl(tx);
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const presentation = transactionPresentation(tx, isZh);
   const cat=presentation.category;
@@ -4447,6 +4526,9 @@ function deleteTx(id, skipConfirm = false){
     ? (S.lang === 'zh' ? '删除这笔内部转账？\n\n两个账户的对应转账记录都会移除。' : 'Delete this internal transfer?\n\nThe matching entry in the other account will also be removed.')
     : 'Delete this transaction?\n\n'+cat.icon+' '+tx.desc+'\n'+fmt(tx.amount)+' · '+tx.date;
   if(skipConfirm || confirm(confirmation)){
+    if(isPendingReceiptScan(tx)){
+      cancelPendingReceiptScan(tx.id, 'cancelled', { skipSave: true, skipRender: true });
+    }
     S.transactions = S.transactions.filter(t => isTransfer ? (t.transferId !== tx.transferId) : (t.id !== tx.id));
     save();renderAll();toast(isTransfer ? (S.lang === 'zh' ? '🗑️ 内部转账已删除' : '🗑️ Internal transfer deleted') : '🗑️ Transaction deleted');
     return true;
@@ -6086,106 +6168,22 @@ function saveTx(){
   }
 }
 
-let aiScanInterval = null;
-const AI_SCAN_MESSAGES = [
-  { step: '🤖 Connecting to Google Gemini Vision AI', sub: 'Uploading encrypted image to multimodal neural engine' },
-  { step: '🔍 Detecting Merchant, Store & Payee', sub: 'Recognizing brand logos and receipt headers' },
-  { step: '💵 Reading Total Amount, SST & Rounding', sub: 'Analyzing payable total, 6% SST & 5-sen BNM rounding' },
-  { step: '🛒 Extracting Itemized Dishes & Goods', sub: 'Categorizing expenses and formatting receipt items' },
-  { step: '🇲🇾 Verifying LHDN Tax Relief Eligibility', sub: 'Checking lifestyle, medical, sports & education claim categories' }
-];
-
-function startAiScanAnimation(context = 'universal'){
-  stopAiScanAnimation();
-  let stepIdx = 0;
-
-  if(context === 'universal'){
-    const progBox = el('uni-progress-box');
-    const laser = el('uni-scan-laser');
-    const grid = el('uni-scan-grid');
-    if(progBox) progBox.classList.remove('hidden');
-    if(laser) laser.classList.remove('hidden');
-    if(grid) grid.classList.remove('hidden');
-
-    const updateUniversalScanUI = () => {
-      const msg = AI_SCAN_MESSAGES[stepIdx % AI_SCAN_MESSAGES.length];
-      const stepEl = el('uni-progress-step');
-      const subEl = el('uni-progress-sub');
-      if(stepEl) stepEl.innerHTML = `${msg.step}<span class="ai-dots"></span>`;
-      if(subEl) subEl.textContent = msg.sub;
-      stepIdx++;
-    };
-    updateUniversalScanUI();
-    aiScanInterval = setInterval(updateUniversalScanUI, 900);
-  } else if(context === 'tx'){
-    const progBox = el('ocr-progress');
-    const laser = el('tx-scan-laser');
-    const grid = el('tx-scan-grid');
-    if(progBox) progBox.classList.remove('hidden');
-    if(laser) laser.classList.remove('hidden');
-    if(grid) grid.classList.remove('hidden');
-
-    const updateUI = () => {
-      const msg = AI_SCAN_MESSAGES[stepIdx % AI_SCAN_MESSAGES.length];
-      const stepEl = el('ocr-progress-step');
-      const subEl = el('ocr-progress-sub');
-      if(stepEl) stepEl.innerHTML = `${msg.step}<span class="ai-dots"></span>`;
-      if(subEl) subEl.textContent = msg.sub;
-      stepIdx++;
-    };
-    updateUI();
-    aiScanInterval = setInterval(updateUI, 900);
-  }
-}
-
-function stopAiScanAnimation(){
-  if(aiScanInterval){
-    clearInterval(aiScanInterval);
-    aiScanInterval = null;
-  }
-  ['uni-progress-box', 'uni-scan-laser', 'uni-scan-grid', 'ocr-progress', 'tx-scan-laser', 'tx-scan-grid', 'splitter-ocr-progress', 'xfr-ocr-progress'].forEach(id => {
-    const item = el(id);
-    if(item) item.classList.add('hidden');
-  });
-}
+// Receipt progress now belongs to the pending transaction card on Home. Keep
+// these compatibility hooks for callers that used the old modal animation.
+function startAiScanAnimation(){ }
+function stopAiScanAnimation(){ }
 
 async function handlePhoto(inp){
-  const file = inp.files[0]; if(!file) return;
-  const scanBtn = el('ocr-scan-btn');
-  if(scanBtn) scanBtn.style.display = 'none';
-
-  startAiScanAnimation('tx');
-
-  try {
-    const rawDataUrl = await new Promise(res => {
-      const reader = new FileReader();
-      reader.onload = ev => res(ev.target.result);
-      reader.readAsDataURL(file);
-    });
-
-    const compressed = await compressReceiptForStorage(rawDataUrl);
-    photoData = null; // Receipt image is processed in memory for OCR extraction only, never stored
-    toggleTxMoreDetails(true);
-
-    const result = await analyzeUnifiedUploadWithGemini(compressed);
-    if(result && (result.amount > 0 || result.merchant)){
-      // Enrich items with calorie estimates before applying
-      if(result.items && Array.isArray(result.items) && result.items.length > 0){
-        await enrichItemsWithCalories(result.items);
-      }
-      applyReceiptStructuredData(result, 'AI');
-      toast(`🤖 Auto-filled from receipt: ${result.merchant || 'Store'} · ${fmt(result.amount)}`);
-    } else {
-      toast('🔍 Receipt scanned! Please verify amount.');
-    }
-  } catch(err){
-    console.warn('Photo handle notice:', err);
-    toast('🔍 Receipt scanned!');
-  } finally {
-    photoData = null;
-    stopAiScanAnimation();
-    if(scanBtn) scanBtn.style.display = 'flex';
-  }
+  const file = inp?.files?.[0];
+  if(!file) return;
+  // Keep every receipt entry point consistent: the form closes, Home receives
+  // an editable pending transaction, and the scan never blocks behind a modal.
+  uniCurrentMode = 'expense';
+  uniCustomDate = '';
+  photoData = null;
+  if(inp) inp.value = '';
+  closeModal('tx-modal');
+  return handleUniversalFile(file);
 }
 
 
@@ -6306,14 +6304,26 @@ function markGeminiModelDeprecated(modelName, reason = ''){
   }
 }
 
-async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal = null){
+async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal = null, options = {}){
   const key = String(apiKey || '').trim();
   if(!key || key.length < 8){
     return { data: null, model: null, lastError: 'API key not configured' };
   }
 
-  const models = await getGeminiModelCandidates(key);
-  const candidateModels = models.slice(0, 5); // Try up to 5 models to survive rate-limit & deprecation cascades
+  // Callers that need a quick, user-facing response (such as receipt OCR) can
+  // provide an already-known model list. That avoids a model-discovery request
+  // and prevents a slow network from turning one action into five 25s waits.
+  const configuredModels = Array.isArray(options.models)
+    ? options.models.filter(Boolean)
+    : null;
+  const models = configuredModels && configuredModels.length
+    ? configuredModels
+    : await getGeminiModelCandidates(key);
+  const maxModels = Number.isFinite(options.maxModels)
+    ? Math.max(1, options.maxModels)
+    : 5;
+  const candidateModels = models.slice(0, maxModels); // Default keeps existing resilient behavior for non-receipt tools.
+  const retryOnlyOnRetiredModel = Boolean(options.retryOnlyOnRetiredModel);
   let lastError = '';
 
   for(const modelName of candidateModels){
@@ -6354,6 +6364,11 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
         continue;
       }
 
+      // Fast, interactive paths should surface normal network/API failures
+      // immediately. They may only fall through to a backup model when the
+      // primary model was actually retired.
+      if(retryOnlyOnRetiredModel) break;
+
       if(res.status === 401 || res.status === 403 || res.status === 429 ||
          /api.?key.*(invalid|not valid)|invalid.*api.?key|resource_exhausted|quota/i.test(lastError)){
         break;
@@ -6363,10 +6378,30 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
       if(signal) signal.removeEventListener('abort', onParentAbort);
       lastError = err?.message || String(err);
       if(signal && signal.aborted) break;
+      if(retryOnlyOnRetiredModel) break;
     }
   }
 
   return { data: null, model: null, lastError };
+}
+
+function getFastReceiptModelCandidates(){
+  const selectedModel = (typeof S !== 'undefined' && S && S.geminiModel && S.geminiModel !== 'auto')
+    ? S.geminiModel
+    : ((typeof S !== 'undefined' && S && S.geminiActiveModel) || 'gemini-2.0-flash');
+
+  // The fallback is considered only after a retired-model response. Normal
+  // slowness, quota errors, and network failures stop promptly instead.
+  return [...new Set([selectedModel, 'gemini-2.0-flash-lite'])]
+    .filter(model => !geminiDeprecatedModels.has(model));
+}
+
+async function generateFastGeminiReceiptContent(apiKey, payload, signal = null){
+  return generateGeminiContent(apiKey, payload, 15000, signal, {
+    models: getFastReceiptModelCandidates(),
+    maxModels: 2,
+    retryOnlyOnRetiredModel: true
+  });
 }
 
 function toggleGeminiKeyVisibility(){
@@ -6704,6 +6739,11 @@ function updateGeminiStatusUI(){
 
 async function reScanReceiptWithGemini(){
   if(!uniImageDataUrl) return;
+  if(isUniversalScanning) cancelUniversalScan();
+  isUniversalScanning = true;
+  uniScanAbortController = new AbortController();
+  const currentScanController = uniScanAbortController;
+  const currentScanSignal = currentScanController.signal;
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const placeholder = el('uni-upload-placeholder');
   const imgPrev = el('uni-img-preview');
@@ -6718,7 +6758,8 @@ async function reScanReceiptWithGemini(){
   }
 
   try {
-    const result = await analyzeUnifiedUploadWithGemini(uniImageDataUrl);
+    const result = await analyzeUnifiedUploadWithGemini(uniImageDataUrl, currentScanSignal);
+    if(currentScanSignal.aborted) return;
     stopAiScanAnimation();
     if(result && (result.merchant || result.amount > 0 || (result.items && result.items.length > 0))){
       uniParsedData = result;
@@ -6745,9 +6786,14 @@ async function reScanReceiptWithGemini(){
       toast(isZh ? '⚠️ 重新识别失败，请检查密钥或照片' : '⚠️ Re-scan failed. Please check key or image.');
     }
   } catch(e){
+    if(currentScanSignal.aborted) return;
     stopAiScanAnimation();
     toast(isZh ? '⚠️ 识别过程出错' : '⚠️ Error during re-scan');
   } finally {
+    if(uniScanAbortController === currentScanController){
+      uniScanAbortController = null;
+      isUniversalScanning = false;
+    }
     stopAiScanAnimation();
   }
 }
@@ -6768,14 +6814,319 @@ let isEditingFromUpload = false;
 
 let uniScanAbortController = null;
 let isUniversalScanning = false;
+let uniScanRunsInBackground = false;
+
+// Receipt scans are deliberately represented by a real, zero-value transaction
+// while they are running. This makes the work visible on Home without affecting
+// balances, and gives the user a normal record they can edit or remove at once.
+const pendingReceiptScanJobs = new Map();
+const RECEIPT_SCAN_DURATION_MS = 15000;
+
+function isPendingReceiptScan(tx){
+  return Boolean(tx && tx.aiScan && tx.aiScan.status === 'processing');
+}
+
+function getReceiptScanRemainingSeconds(aiScan){
+  if(!aiScan || !aiScan.startedAt) return 0;
+  const duration = Number(aiScan.durationMs) || RECEIPT_SCAN_DURATION_MS;
+  return Math.max(0, Math.ceil((duration - (Date.now() - Number(aiScan.startedAt))) / 1000));
+}
+
+function getReceiptScanProgress(aiScan){
+  if(!aiScan || !aiScan.startedAt) return 0;
+  const duration = Number(aiScan.durationMs) || RECEIPT_SCAN_DURATION_MS;
+  // Leave a small finishing window so a completely filled bar always means
+  // that the result (or the fallback state) has actually been applied.
+  return Math.min(96, Math.max(0, Math.floor(((Date.now() - Number(aiScan.startedAt)) / duration) * 100)));
+}
+
+function getReceiptScanTimeoutMessage(){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  return isZh
+    ? '扫描超过 15 秒。点击编辑以手动填写。'
+    : 'Scan reached 15 seconds. Tap Edit to enter the details manually.';
+}
+
+function refreshPendingReceiptScanCard(txId){
+  const tx = (S.transactions || []).find(item => item.id === txId);
+  if(!isPendingReceiptScan(tx)) return;
+
+  const progress = getReceiptScanProgress(tx.aiScan);
+  const remaining = getReceiptScanRemainingSeconds(tx.aiScan);
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  document.querySelectorAll('.receipt-scan-card').forEach(card => {
+    if(card.dataset.id !== txId) return;
+    const fill = card.querySelector('.receipt-scan-progress-fill');
+    const label = card.querySelector('.receipt-scan-progress-label');
+    const countdown = card.querySelector('.receipt-scan-countdown');
+    if(fill) fill.style.width = `${progress}%`;
+    if(label) label.textContent = progress >= 96
+      ? (isZh ? '正在完成资料…' : 'Finishing receipt details…')
+      : (isZh ? 'AI 正在读取小票' : 'AI is reading your receipt');
+    if(countdown) countdown.textContent = remaining > 0
+      ? (isZh ? `~${remaining}s 剩余` : `~${remaining}s remaining`)
+      : (isZh ? '完成中…' : 'Finishing…');
+  });
+}
+
+function startPendingReceiptScanTicker(txId){
+  const job = pendingReceiptScanJobs.get(txId);
+  if(!job) return;
+  if(job.timer) clearInterval(job.timer);
+  refreshPendingReceiptScanCard(txId);
+  job.timer = setInterval(() => refreshPendingReceiptScanCard(txId), 250);
+}
+
+function finishPendingReceiptScanJob(txId, controller = null){
+  const job = pendingReceiptScanJobs.get(txId);
+  if(!job || (controller && job.controller !== controller)) return;
+  if(job.timer) clearInterval(job.timer);
+  if(job.deadlineTimer) clearTimeout(job.deadlineTimer);
+  pendingReceiptScanJobs.delete(txId);
+  if(uniScanAbortController === job.controller){
+    uniScanAbortController = null;
+    isUniversalScanning = false;
+    uniScanRunsInBackground = false;
+  }
+}
+
+function didPendingReceiptScanTimeOut(txId, controller = null){
+  const job = pendingReceiptScanJobs.get(txId);
+  return Boolean(job && (!controller || job.controller === controller) && job.timedOut);
+}
+
+function focusHomeOnReceiptDate(dateStr){
+  const parts = normalizeDateStr(dateStr || today(), true).split('-');
+  const year = Number(parts[0]);
+  const month = Number(parts[1]) - 1;
+  if(Number.isFinite(year) && Number.isFinite(month) && month >= 0 && month <= 11){
+    homeActiveYear = year;
+    homeActiveMonth = month;
+  }
+}
+
+function createPendingReceiptScan(){
+  const now = Date.now();
+  const date = normalizeDateStr(uniCustomDate || today(), true);
+  const tx = {
+    id: uid('item'),
+    type: 'expense',
+    amount: 0,
+    desc: 'Reading receipt…',
+    category: 'food',
+    subCategory: null,
+    date,
+    time: currentTimeStr(),
+    accountId: 'default',
+    paymentMethod: '',
+    location: null,
+    note: '',
+    photo: null,
+    items: [],
+    tags: [],
+    aiScan: {
+      status: 'processing',
+      startedAt: now,
+      durationMs: RECEIPT_SCAN_DURATION_MS,
+      message: ''
+    },
+    createdAt: new Date().toISOString()
+  };
+  const controller = new AbortController();
+  const job = { controller, timer: null, deadlineTimer: null, timedOut: false };
+  job.deadlineTimer = setTimeout(() => {
+    job.timedOut = true;
+    try { controller.abort(); } catch(e){}
+    // Do not leave a 96% bar behind if a browser task such as image decoding
+    // ignores abort. The countdown always settles into an editable state.
+    markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
+  }, RECEIPT_SCAN_DURATION_MS);
+
+  S.transactions.unshift(tx);
+  pendingReceiptScanJobs.set(tx.id, job);
+  uniScanAbortController = controller;
+  isUniversalScanning = true;
+  uniScanRunsInBackground = true;
+  uniParsedData = null;
+  uniImageDataUrl = null;
+
+  focusHomeOnReceiptDate(date);
+  save();
+  renderAll();
+  startPendingReceiptScanTicker(tx.id);
+  return { tx, controller, signal: controller.signal };
+}
+
+function markPendingReceiptScanFailed(txId, message, controller = null){
+  const tx = (S.transactions || []).find(item => item.id === txId);
+  if(!tx || !isPendingReceiptScan(tx)){
+    finishPendingReceiptScanJob(txId, controller);
+    return false;
+  }
+
+  tx.aiScan.status = 'failed';
+  tx.aiScan.finishedAt = Date.now();
+  tx.aiScan.message = message || 'We could not read this receipt.';
+  tx.desc = 'Receipt needs review';
+  tx.note = tx.aiScan.message;
+  finishPendingReceiptScanJob(txId, controller);
+  save();
+  renderAll();
+  return true;
+}
+
+function applyPendingReceiptScanResult(txId, result, controller = null){
+  const tx = (S.transactions || []).find(item => item.id === txId);
+  if(!tx || !isPendingReceiptScan(tx)){
+    finishPendingReceiptScanJob(txId, controller);
+    return false;
+  }
+
+  const amount = Math.abs(Number(result.amount) || 0);
+  const currency = String(result.currency || 'MYR').toUpperCase();
+  const txDate = normalizeDateStr(uniCustomDate || result.date || tx.date || today(), true);
+  Object.assign(tx, {
+    amount,
+    desc: String(result.merchant || result.recipient || 'Receipt').trim() || 'Receipt',
+    category: result.category || 'food',
+    subCategory: result.subCategory || null,
+    tags: Array.isArray(result.tags) ? result.tags : [],
+    originalCurrency: currency,
+    originalAmount: result.originalAmount !== undefined ? result.originalAmount : amount,
+    exchangeRate: (typeof liveRates !== 'undefined' && liveRates[currency]) || 1,
+    date: txDate,
+    time: result.time || tx.time || currentTimeStr(),
+    paymentMethod: result.paymentMethod || 'Cash',
+    location: result.location || null,
+    note: formatItemsSummary(result) || '',
+    items: Array.isArray(result.items) ? JSON.parse(JSON.stringify(result.items)) : [],
+    sstPct: result.sstPct || 0,
+    sstAmount: result.sstAmount || 0,
+    serviceChargePct: result.serviceChargePct || 0,
+    serviceChargeAmount: result.serviceChargeAmount || 0,
+    roundingAmount: result.roundingAmount || 0,
+    taxesCollectedSummary: result.taxesCollectedSummary || null,
+    taxReliefCat: result.taxReliefCat || null,
+    taxReliefAmount: result.taxReliefAmount || (result.taxReliefCat ? amount : 0),
+    taxReliefReason: result.taxReliefReason || null,
+    updatedAt: new Date().toISOString()
+  });
+
+  // Keep the completed bar on screen just long enough for the user to see it
+  // reach 100%, then turn it into the normal editable transaction card.
+  tx.aiScan = {
+    status: 'complete',
+    startedAt: tx.aiScan.startedAt,
+    durationMs: tx.aiScan.durationMs || RECEIPT_SCAN_DURATION_MS,
+    finishedAt: Date.now(),
+    message: 'Receipt ready.'
+  };
+
+  focusHomeOnReceiptDate(txDate);
+  finishPendingReceiptScanJob(txId, controller);
+  save();
+  renderAll();
+  if(typeof renderCalendar === 'function') renderCalendar();
+  if(typeof renderFullTx === 'function') renderFullTx();
+  if(typeof renderTaxRelief === 'function') renderTaxRelief();
+
+  setTimeout(() => {
+    const completedTx = (S.transactions || []).find(item => item.id === txId);
+    if(!completedTx || completedTx.aiScan?.status !== 'complete') return;
+    delete completedTx.aiScan;
+    save();
+    renderAll();
+    if(typeof renderCalendar === 'function') renderCalendar();
+    if(typeof renderFullTx === 'function') renderFullTx();
+    if(typeof renderTaxRelief === 'function') renderTaxRelief();
+  }, 500);
+  return true;
+}
+
+function cancelPendingReceiptScan(txId, nextStatus = 'cancelled', options = {}){
+  const tx = (S.transactions || []).find(item => item.id === txId);
+  const job = pendingReceiptScanJobs.get(txId);
+  if(job && job.controller){
+    try { job.controller.abort(); } catch(e){}
+  }
+  finishPendingReceiptScanJob(txId, job?.controller || null);
+
+  if(tx && tx.aiScan && tx.aiScan.status === 'processing'){
+    tx.aiScan.status = nextStatus;
+    tx.aiScan.finishedAt = Date.now();
+    tx.aiScan.message = nextStatus === 'manual'
+      ? 'AI scan stopped. Add or adjust the details yourself.'
+      : 'Receipt scan cancelled.';
+    if(nextStatus === 'manual'){
+      tx.desc = 'Receipt needs details';
+      tx.note = tx.aiScan.message;
+    }
+    if(!options.skipSave) save();
+    if(!options.skipRender) renderAll();
+  }
+}
+
+function recoverInterruptedReceiptScans(){
+  let changed = false;
+  (S.transactions || []).forEach(tx => {
+    // A refresh may happen during the short 100%-complete transition. The
+    // receipt result is already stored, so simply reveal the normal card.
+    if(tx.aiScan?.status === 'complete'){
+      delete tx.aiScan;
+      changed = true;
+      return;
+    }
+    if(isPendingReceiptScan(tx)){
+      tx.aiScan.status = 'failed';
+      tx.aiScan.finishedAt = Date.now();
+      tx.aiScan.message = 'Receipt scan was interrupted. Edit it to enter the details manually.';
+      tx.desc = 'Receipt needs review';
+      tx.note = tx.aiScan.message;
+      changed = true;
+    }
+  });
+  if(changed) save();
+}
 
 function cancelUniversalScan(){
+  // Once a receipt has been handed to the Home screen, closing the original
+  // modal must not cancel its background job. Edit/remove actions cancel it
+  // explicitly via cancelPendingReceiptScan().
+  if(uniScanRunsInBackground) return;
   if(uniScanAbortController){
     try { uniScanAbortController.abort(); } catch(e){}
     uniScanAbortController = null;
   }
   isUniversalScanning = false;
   stopAiScanAnimation();
+}
+
+function continueUniversalUploadManually(){
+  // Abort the pending request first. handleUniversalFile checks the same signal
+  // after every awaited operation, so a late response cannot overwrite the
+  // manual form the user is about to see.
+  cancelUniversalScan();
+
+  if(!uniParsedData){
+    uniParsedData = {
+      detectedType: 'receipt',
+      merchant: '',
+      amount: 0,
+      category: uniCurrentMode === 'transfer' ? 'other' : 'food',
+      date: uniCustomDate || today(),
+      time: currentTimeStr(),
+      items: []
+    };
+  }
+
+  const actionBtns = el('uni-action-btns');
+  const badgeWrap = el('uni-detected-badge-wrap');
+  if(actionBtns) actionBtns.classList.remove('hidden');
+  if(badgeWrap) badgeWrap.classList.add('hidden');
+  renderUniversalPreview();
+
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  toast(isZh ? '✏️ 已停止 AI 扫描，您可以手动填写' : '✏️ AI scan stopped. You can fill in the receipt manually.');
 }
 
 function handleUniversalUploadBack(){
@@ -6810,8 +7161,16 @@ function handleUniversalUploadBack(){
 }
 
 function openUniversalUpload(preferredMode = 'auto', customDate = '', forceNew = false){
+  if(isUniversalScanning && uniScanRunsInBackground){
+    go('home');
+    const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+    toast(isZh ? '🧾 小票正在首页识别中，您可编辑或删除该记录' : '🧾 Your receipt is being read on Home. You can edit or remove it there.');
+    return;
+  }
   uniCurrentMode = preferredMode === 'auto' ? 'expense' : preferredMode;
-  if(customDate) uniCustomDate = customDate;
+  // A calendar-initiated scan carries its selected date once; a normal scan
+  // afterwards must return to today instead of reusing an old calendar day.
+  uniCustomDate = customDate || '';
 
   // If we already have parsed receipt data and user didn't ask for a forced re-scan, show it!
   if(!forceNew && uniParsedData){
@@ -6892,6 +7251,8 @@ function setUniversalMode(mode, reRender = true){
  */
 
 // ── 🧠 SMART AI AUTO-DETECTION ENGINE (CATEGORIES & MALAYSIAN BANKS) ──
+let lastReceiptScanError = '';
+
 function smartAutoDetectCategoryAndPayment(text){
   if(!text || typeof text !== 'string') return null;
   const s = text.toLowerCase();
@@ -7156,14 +7517,123 @@ function handleTxDescAutoDetect(){
 }
 
 async function handleUniversalFile(inputOrFile){
-  if(isUniversalScanning) return;
-
   let file = null;
   if(inputOrFile instanceof File) file = inputOrFile;
   else if(inputOrFile?.files?.[0]) file = inputOrFile.files[0];
   if(!file) return;
 
+  if(isUniversalScanning){
+    const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+    toast(isZh ? '🧾 已有一张小票正在识别，请先完成、编辑或删除首页的记录' : '🧾 A receipt is already being read. Finish, edit, or remove it from Home first.');
+    return;
+  }
+
+  const hasGeminiKey = Boolean(S.geminiApiKey && String(S.geminiApiKey).trim().length > 7);
+  if(!hasGeminiKey){
+    const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+    toast(isZh ? '🔑 请先配置 Google Gemini API Key' : '🔑 Please configure your Google Gemini API Key first');
+    openGeminiModal();
+    return;
+  }
+
+  // A normal expense receipt becomes a visible transaction immediately. Meal
+  // Splitter keeps its existing in-modal review flow because it does not create
+  // a standalone expense until the split is confirmed.
+  if(uniCurrentMode === 'expense'){
+    return startBackgroundReceiptScan(file);
+  }
+  return scanUniversalFileInModal(file);
+}
+
+function hasUsableReceiptResult(result){
+  if(!result) return false;
+  const merchant = String(result.merchant || result.recipient || '').trim();
+  const items = Array.isArray(result.items) ? result.items : [];
+  return Number(result.amount) > 0 || items.length > 0 || (merchant && merchant.toLowerCase() !== 'receipt');
+}
+
+async function startBackgroundReceiptScan(file){
+  const job = createPendingReceiptScan();
+  const { tx, controller, signal } = job;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  lastReceiptScanError = '';
+
+  // The modal is intentionally closed before any file/network work. Home owns
+  // the visible progress bar and keeps the record editable while AI works.
+  closeModal('universal-upload-modal');
+  go('home');
+  toast(isZh ? '🧾 小票已加入首页，正在后台识别…' : '🧾 Receipt added to Home. Reading it in the background…');
+
+  try {
+    const rawDataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = event => resolve(event.target.result);
+      reader.onerror = error => reject(error);
+      reader.readAsDataURL(file);
+    });
+    if(signal.aborted){
+      if(didPendingReceiptScanTimeOut(tx.id, controller)){
+        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+      }
+      return;
+    }
+
+    const compressed = await compressReceiptForStorage(rawDataUrl);
+    if(signal.aborted){
+      if(didPendingReceiptScanTimeOut(tx.id, controller)){
+        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+      }
+      return;
+    }
+
+    const result = await analyzeUnifiedUploadWithRetry(compressed, signal, 1);
+    if(signal.aborted){
+      if(didPendingReceiptScanTimeOut(tx.id, controller)){
+        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+      }
+      return;
+    }
+
+    if(hasUsableReceiptResult(result)){
+      const applied = applyPendingReceiptScanResult(tx.id, result, controller);
+      if(!applied) return;
+
+      toast(isZh ? '✅ 小票识别完成！点击该记录可编辑或删除。' : '✅ Receipt ready. Tap the transaction to edit or delete it.');
+      return;
+    }
+
+    const timeout = /abort|timeout|timed out/i.test(lastReceiptScanError || '');
+    markPendingReceiptScanFailed(
+      tx.id,
+      timeout
+        ? (isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.')
+        : (isZh ? '未能提取小票内容。点击编辑以手动填写。' : 'We could not extract the receipt. Tap Edit to enter it manually.'),
+      controller
+    );
+  } catch(err){
+    if(signal.aborted){
+      if(didPendingReceiptScanTimeOut(tx.id, controller)){
+        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+      }
+      return;
+    }
+    console.warn('Background receipt scan failed:', err);
+    markPendingReceiptScanFailed(
+      tx.id,
+      isZh ? '扫描遇到问题。点击编辑以手动填写。' : 'The scan ran into a problem. Tap Edit to enter it manually.',
+      controller
+    );
+  } finally {
+    // The completion helpers clean up successful/failed jobs. This covers an
+    // aborted job whose transaction was edited or removed while the request ran.
+    finishPendingReceiptScanJob(tx.id, controller);
+  }
+}
+
+async function scanUniversalFileInModal(file){
+
   isUniversalScanning = true;
+  uniScanRunsInBackground = false;
   if(uniScanAbortController){
     try { uniScanAbortController.abort(); } catch(e){}
   }
@@ -7201,12 +7671,14 @@ async function handleUniversalFile(inputOrFile){
 
     if(currentScanSignal.aborted) return;
 
-    const result = await analyzeUnifiedUploadWithRetry(compressed, currentScanSignal, 2);
+    // A receipt is an interactive action, not a background batch. One bounded
+    // attempt is faster and clearer than silently repeating a slow request.
+    const result = await analyzeUnifiedUploadWithRetry(compressed, currentScanSignal, 1);
     if(currentScanSignal.aborted) return;
 
     stopAiScanAnimation();
 
-    if(result && (result.merchant || result.amount > 0 || (result.items && result.items.length > 0))){
+    if(hasUsableReceiptResult(result)){
       uniParsedData = result;
 
       if(badgeWrap) badgeWrap.classList.remove('hidden');
@@ -7246,7 +7718,10 @@ async function handleUniversalFile(inputOrFile){
       renderUniversalPreview();
       const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
       if(S.geminiApiKey && S.geminiApiKey.length > 7){
-        toast(isZh ? '⚠️ 未能自动提取数据，您可以手动填写' : '⚠️ Could not extract data. You can enter details manually.');
+        const didTimeout = /abort|timeout|timed out/i.test(lastReceiptScanError || '');
+        toast(didTimeout
+          ? (isZh ? '⏱️ 扫描超过 15 秒，已为您保留图片，可手动填写' : '⏱️ Scan stopped after 15 seconds. Your image is kept for manual entry.')
+          : (isZh ? '⚠️ 未能自动提取数据，您可以手动填写' : '⚠️ Could not extract data. You can enter details manually.'));
       }
     }
   } catch(err){
@@ -7283,53 +7758,12 @@ async function analyzeUnifiedUploadWithGemini(base64DataUrl, signal = null){
   const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
   const base64Data = base64DataUrl.replace(/^data:[^;]+;base64,/, '').trim();
 
-  // ── OCR-focused prompt ────────────────────────────────────────────────────
-  // Kept intentionally small: fewer fields = fewer hallucinations and schema
-  // drift. Category / subCategory / tags are resolved locally by
-  // smartAutoDetectCategoryAndPayment() after parsing, then verified by a
-  // lightweight text-only Gemini call in verifyReceiptCategoryWithGemini().
-  const prompt = `You are an expert OCR engine for Malaysian receipts, dining bills, invoices, and e-wallet screenshots.
-Extract the following fields from the image and return ONLY a raw JSON object — no markdown, no backticks, no extra text.
-
-Required schema:
-{
-  "detectedType": "receipt",
-  "merchant": "Exact store or restaurant name as printed",
-  "currency": "MYR",
-  "originalAmount": 0.00,
-  "amount": 0.00,
-  "subtotal": 0.00,
-  "date": "YYYY-MM-DD",
-  "time": "HH:MM",
-  "paymentMethod": "Cash",
-  "location": "",
-  "items": [
-    { "name": "Item or dish name", "price": 0.00, "qty": 1, "calories": 0, "protein": 0 }
-  ],
-  "serviceChargePct": 0,
-  "serviceChargeAmount": 0.00,
-  "sstPct": 0,
-  "sstAmount": 0.00,
-  "roundingAmount": 0.00,
-  "taxReliefCat": "",
-  "taxReliefAmount": 0.00,
-  "taxReliefReason": ""
-}
-
-RULES:
-1. "merchant": The brand/store name printed on the receipt (e.g. "Lotus's", "McDonald's", "Watsons", "7-Eleven").
-2. "currency": Detect from symbols — RM/MYR, S$/SGD, $/USD, ¥/JPY, €/EUR, £/GBP, ฿/THB, NT$/TWD, ₩/KRW, Rp/IDR, ₫/VND, ₱/PHP. Default "MYR".
-3. "amount": The final grand total as a number. "originalAmount" = same value in native currency.
-4. "subtotal": Pre-tax subtotal. If not printed, leave 0.
-5. "date": Printed transaction date → YYYY-MM-DD. Convert "23/08/2026" → "2026-08-23".
-6. "time": Printed transaction time → 24-hour HH:MM. E.g. "1:45 PM" → "13:45".
-7. "paymentMethod": Payment tender printed (Cash, Credit Card, Visa, Mastercard, Touch 'n Go eWallet, GrabPay, ShopeePay, Maybank MAE, Debit Card, Online Banking). Default "Cash" if absent.
-8. "items": Every line item / dish / product with name, unit price, qty. Food/drink items: estimate calories (kcal integer) and protein (g integer); non-food set 0.
-9. "sstAmount" / "sstPct": Malaysian SST/Service Tax amount and rate (6% or 8%).
-10. "serviceChargeAmount" / "serviceChargePct": Restaurant service charge (e.g. 10%).
-11. "roundingAmount": Sen rounding (e.g. -0.02 or 0.00).
-12. "taxReliefCat": Malaysian LHDN tax relief category if applicable — "lifestyle" (books, sports, devices), "medical" (pharmacy, clinic), "childcare". Leave empty if not applicable.
-13. Output ONLY the raw JSON. Do NOT wrap in markdown fences or add any explanation.`;
+  // Fast capture is intentionally restricted to the fields a user needs to
+  // review or save an expense. Calorie estimates and other optional insights
+  // continue in the background after this result is visible.
+  const prompt = `Read this receipt or payment screenshot. Return only JSON, no markdown.
+{"merchant":"","currency":"MYR","amount":0,"date":"YYYY-MM-DD","time":"HH:MM","paymentMethod":"","items":[{"name":"","price":0,"qty":1}]}
+Use the final grand total for amount. Copy the printed merchant and date/time when visible. Extract up to 30 printed line items; otherwise use an empty array. Use empty strings or 0 for unreadable values. Do not estimate nutrition, categories, tax relief, or any unprinted values.`;
 
   const payload = {
     contents: [{
@@ -7342,12 +7776,18 @@ RULES:
           }
         }
       ]
-    }]
+    }],
+    generationConfig: {
+      temperature: 0,
+      maxOutputTokens: 1600,
+      responseMimeType: 'application/json'
+    }
   };
 
-  const generation = await generateGeminiContent(apiKey, payload, 25000, signal);
+  const generation = await generateFastGeminiReceiptContent(apiKey, payload, signal);
   const geminiRes = generation.data;
   const lastErrorMsg = generation.lastError;
+  lastReceiptScanError = lastErrorMsg || '';
   if(generation.model) console.log(`✅ Gemini OCR successfully processed receipt using model: ${generation.model}`);
 
   let parsed = null;
@@ -7359,13 +7799,14 @@ RULES:
       const rawJson = extractJsonFromText(rawText);
       if(rawJson){
         parsed = normalizeGeminiReceiptOutput(rawJson);
-        parsed = await verifyReceiptCategoryWithGemini(parsed, apiKey);
+        parsed = await verifyReceiptCategoryWithGemini(parsed, apiKey, { localOnly: true });
         console.log('Successfully parsed receipt data:', parsed);
       }
     }
   }
 
-  if(!parsed && lastErrorMsg){
+  const didTimeout = /abort|timeout|timed out/i.test(lastErrorMsg || '');
+  if(!parsed && lastErrorMsg && !(signal && signal.aborted) && !didTimeout){
     console.error('All Gemini OCR model attempts failed:', lastErrorMsg);
     if(lastErrorMsg.includes('API_KEY_INVALID') || lastErrorMsg.includes('API key not valid') || lastErrorMsg.includes('PERMISSION_DENIED')){
       toast(isZh ? '❌ Google API Key 无效，请在设置中重新配置' : '❌ Invalid Google API Key. Please check settings.');
@@ -7387,7 +7828,7 @@ async function analyzeReceiptWithGemini(base64DataUrl){ return analyzeUnifiedUpl
 // Silently retries on transient network errors or empty Gemini responses
 // without requiring the user to manually tap Scan again.
 async function analyzeUnifiedUploadWithRetry(base64DataUrl, signal, maxAttempts){
-  maxAttempts = maxAttempts || 2;
+  maxAttempts = maxAttempts || 1;
   for(var attempt = 1; attempt <= maxAttempts; attempt++){
     if(signal && signal.aborted) return null;
     var result = await analyzeUnifiedUploadWithGemini(base64DataUrl, signal);
@@ -8459,7 +8900,9 @@ function compressReceiptForStorage(dataUrl){
     if(!dataUrl || !dataUrl.startsWith('data:image')) return resolve(dataUrl);
     const img = new Image();
     img.onload = () => {
-      const maxDim = 2000; // Higher res for sharper OCR on dense receipts
+      // A 1440px long edge remains readable for normal phone receipts while
+      // making the base64 upload substantially smaller and faster on mobile.
+      const maxDim = 1440;
       let w = img.width, h = img.height;
       if(w > maxDim || h > maxDim){
         if(w > h){
@@ -8477,19 +8920,16 @@ function compressReceiptForStorage(dataUrl){
       ctx.drawImage(img, 0, 0, w, h);
 
       // -- Contrast + brightness boost for faded thermal receipts ----------------
-      // Thermal paper fades quickly and dim lighting causes underexposed shots.
-      // A mild contrast lift significantly improves Gemini OCR accuracy.
       // Uses CSS canvas filter for reliable, color-safe enhancement.
       try {
         ctx.filter = 'contrast(1.15) brightness(1.06)';
         ctx.drawImage(img, 0, 0, w, h);
         ctx.filter = 'none';
-      } catch(enhanceErr){
-        // Cross-origin or canvas security restriction — proceed with original pixels
+      } catch (enhanceErr) {
         console.warn('Receipt image enhancement skipped:', enhanceErr.message);
       }
 
-      resolve(canvas.toDataURL('image/jpeg', 0.88)); // Higher quality for dense OCR text
+      resolve(canvas.toDataURL('image/jpeg', 0.78));
     };
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
@@ -14557,6 +14997,10 @@ function removeNetlifyBadge(){
 // notification alerts evaluator, and third-party widget suppression.─
 function init(){
   load();
+  // A browser refresh cannot resume an in-memory Gemini request. Keep any
+  // visible pending receipt as an editable review record instead of leaving a
+  // permanent loading bar behind.
+  if(typeof recoverInterruptedReceiptScans === 'function') recoverInterruptedReceiptScans();
   applyTheme();
   applyAppBackground();
   applyLanguage();

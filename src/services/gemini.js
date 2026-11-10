@@ -114,14 +114,26 @@ function markGeminiModelDeprecated(modelName, reason = ''){
   }
 }
 
-async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal = null){
+async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal = null, options = {}){
   const key = String(apiKey || '').trim();
   if(!key || key.length < 8){
     return { data: null, model: null, lastError: 'API key not configured' };
   }
 
-  const models = await getGeminiModelCandidates(key);
-  const candidateModels = models.slice(0, 5); // Try up to 5 models to survive rate-limit & deprecation cascades
+  // Callers that need a quick, user-facing response (such as receipt OCR) can
+  // provide an already-known model list. That avoids a model-discovery request
+  // and prevents a slow network from turning one action into five 25s waits.
+  const configuredModels = Array.isArray(options.models)
+    ? options.models.filter(Boolean)
+    : null;
+  const models = configuredModels && configuredModels.length
+    ? configuredModels
+    : await getGeminiModelCandidates(key);
+  const maxModels = Number.isFinite(options.maxModels)
+    ? Math.max(1, options.maxModels)
+    : 5;
+  const candidateModels = models.slice(0, maxModels); // Default keeps existing resilient behavior for non-receipt tools.
+  const retryOnlyOnRetiredModel = Boolean(options.retryOnlyOnRetiredModel);
   let lastError = '';
 
   for(const modelName of candidateModels){
@@ -162,6 +174,11 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
         continue;
       }
 
+      // Fast, interactive paths should surface normal network/API failures
+      // immediately. They may only fall through to a backup model when the
+      // primary model was actually retired.
+      if(retryOnlyOnRetiredModel) break;
+
       if(res.status === 401 || res.status === 403 || res.status === 429 ||
          /api.?key.*(invalid|not valid)|invalid.*api.?key|resource_exhausted|quota/i.test(lastError)){
         break;
@@ -171,10 +188,30 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
       if(signal) signal.removeEventListener('abort', onParentAbort);
       lastError = err?.message || String(err);
       if(signal && signal.aborted) break;
+      if(retryOnlyOnRetiredModel) break;
     }
   }
 
   return { data: null, model: null, lastError };
+}
+
+function getFastReceiptModelCandidates(){
+  const selectedModel = (typeof S !== 'undefined' && S && S.geminiModel && S.geminiModel !== 'auto')
+    ? S.geminiModel
+    : ((typeof S !== 'undefined' && S && S.geminiActiveModel) || 'gemini-2.0-flash');
+
+  // The fallback is considered only after a retired-model response. Normal
+  // slowness, quota errors, and network failures stop promptly instead.
+  return [...new Set([selectedModel, 'gemini-2.0-flash-lite'])]
+    .filter(model => !geminiDeprecatedModels.has(model));
+}
+
+async function generateFastGeminiReceiptContent(apiKey, payload, signal = null){
+  return generateGeminiContent(apiKey, payload, 15000, signal, {
+    models: getFastReceiptModelCandidates(),
+    maxModels: 2,
+    retryOnlyOnRetiredModel: true
+  });
 }
 
 function toggleGeminiKeyVisibility(){
@@ -512,6 +549,11 @@ function updateGeminiStatusUI(){
 
 async function reScanReceiptWithGemini(){
   if(!uniImageDataUrl) return;
+  if(isUniversalScanning) cancelUniversalScan();
+  isUniversalScanning = true;
+  uniScanAbortController = new AbortController();
+  const currentScanController = uniScanAbortController;
+  const currentScanSignal = currentScanController.signal;
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const placeholder = el('uni-upload-placeholder');
   const imgPrev = el('uni-img-preview');
@@ -526,7 +568,8 @@ async function reScanReceiptWithGemini(){
   }
 
   try {
-    const result = await analyzeUnifiedUploadWithGemini(uniImageDataUrl);
+    const result = await analyzeUnifiedUploadWithGemini(uniImageDataUrl, currentScanSignal);
+    if(currentScanSignal.aborted) return;
     stopAiScanAnimation();
     if(result && (result.merchant || result.amount > 0 || (result.items && result.items.length > 0))){
       uniParsedData = result;
@@ -553,9 +596,14 @@ async function reScanReceiptWithGemini(){
       toast(isZh ? '⚠️ 重新识别失败，请检查密钥或照片' : '⚠️ Re-scan failed. Please check key or image.');
     }
   } catch(e){
+    if(currentScanSignal.aborted) return;
     stopAiScanAnimation();
     toast(isZh ? '⚠️ 识别过程出错' : '⚠️ Error during re-scan');
   } finally {
+    if(uniScanAbortController === currentScanController){
+      uniScanAbortController = null;
+      isUniversalScanning = false;
+    }
     stopAiScanAnimation();
   }
 }

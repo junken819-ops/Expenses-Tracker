@@ -501,6 +501,11 @@ function openEditTxModal(txId){
 function editTxFromDetail(){
   const tx = S.transactions.find(t => t.id === currentDetailTxId);
   if(!tx) return;
+  if(isPendingReceiptScan(tx)){
+    // A manual edit owns this record from now on. Abort the request before
+    // opening the form so a late Gemini response cannot overwrite the user.
+    cancelPendingReceiptScan(tx.id, 'manual');
+  }
   if(isInternalTransfer(tx)){
     toast(S.lang === 'zh' ? '内部转账请删除后重新建立，以保持两边账户余额正确。' : 'Delete and recreate an internal transfer to keep both account balances correct.');
     return;
@@ -580,7 +585,78 @@ function deleteTxFromDetail(){
   closeModal('tx-detail-modal');
 }
 
+function makeReceiptScanTxEl(tx){
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const scan = tx.aiScan || {};
+  const processing = scan.status === 'processing';
+  const complete = scan.status === 'complete';
+  const failed = scan.status === 'failed';
+  const showProgress = processing || complete;
+  const title = processing
+    ? (isZh ? '正在读取小票…' : 'Reading receipt…')
+    : (complete ? (isZh ? '小票识别完成' : 'Receipt ready') : (isZh ? '小票需要填写' : 'Receipt needs details'));
+  const message = processing
+    ? (isZh ? '新记录已添加，可随时编辑或删除' : 'New transaction added — you can edit or remove it anytime')
+    : (complete
+      ? (isZh ? '资料已提取，正在完成记录…' : 'Details extracted — completing your transaction…')
+      : (scan.message || (isZh ? '点击编辑，手动填写账单资料。' : 'Tap Edit to enter the receipt details yourself.')));
+  const progress = processing ? getReceiptScanProgress(scan) : (complete ? 100 : 0);
+  const remaining = processing ? getReceiptScanRemainingSeconds(scan) : 0;
+  const stateColor = processing ? 'var(--cyan)' : (complete ? 'var(--green)' : (failed ? 'var(--red)' : 'var(--amber)'));
+  const stateBg = processing ? 'rgba(6,182,212,.10)' : (complete ? 'rgba(16,185,129,.10)' : (failed ? 'rgba(239,68,68,.10)' : 'rgba(245,158,11,.10)'));
+
+  const div = document.createElement('div');
+  div.className = 'tx-item receipt-scan-card';
+  div.dataset.id = tx.id;
+  div.innerHTML = `
+    <div class="receipt-scan-card-inner" style="padding:12px 12px 11px;background:${stateBg};border:1.5px solid ${processing ? 'rgba(6,182,212,.45)' : (complete ? 'rgba(16,185,129,.42)' : (failed ? 'rgba(239,68,68,.38)' : 'rgba(245,158,11,.38)'))};border-radius:var(--r)">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <div class="tx-cat-icon" style="background:${processing ? 'rgba(6,182,212,.16)' : (complete ? 'rgba(16,185,129,.16)' : (failed ? 'rgba(239,68,68,.16)' : 'rgba(245,158,11,.16)'))};font-size:21px">${processing ? '🧾' : (complete ? '✅' : (failed ? '⚠️' : '✏️'))}</div>
+        <div class="tx-info" style="padding-top:1px">
+          <div class="tx-desc" style="display:flex;align-items:center;gap:6px"><span>${title}</span></div>
+          <div class="tx-sub" style="display:block;line-height:1.35;margin-top:3px">${esc(message)}</div>
+        </div>
+        <span style="font-size:10.5px;font-weight:800;color:${stateColor};white-space:nowrap">${processing ? (isZh ? '处理中' : 'SCANNING') : (complete ? (isZh ? '完成' : 'DONE') : (failed ? (isZh ? '需处理' : 'REVIEW') : (isZh ? '手动填写' : 'MANUAL')))}</span>
+      </div>
+      <div class="receipt-scan-progress-wrap" style="margin:11px 0 9px;${showProgress ? '' : 'display:none'}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;font-size:11px;font-weight:700;color:${stateColor}">
+          <span class="receipt-scan-progress-label">${processing ? (progress >= 96 ? (isZh ? '正在完成资料…' : 'Finishing receipt details…') : (isZh ? 'AI 正在读取小票' : 'AI is reading your receipt')) : (complete ? (isZh ? '小票资料已就绪' : 'Receipt details ready') : (isZh ? '可手动编辑全部资料' : 'All fields can be edited manually'))}</span>
+          <span class="receipt-scan-countdown">${processing ? (remaining > 0 ? `~${remaining}s ${isZh ? '剩余' : 'remaining'}` : (isZh ? '完成中…' : 'Finishing…')) : (complete ? (isZh ? '完成' : 'Done') : '')}</span>
+        </div>
+        <div style="height:8px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.5);border:1px solid rgba(6,182,212,.14)">
+          <div class="receipt-scan-progress-fill" style="height:100%;width:${progress}%;border-radius:inherit;background:linear-gradient(90deg,#06b6d4,#3b82f6,#8b5cf6);transition:width .22s linear"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button type="button" class="receipt-scan-edit-btn ghost-btn" style="flex:1;margin:0;padding:7px 9px;font-size:11.5px;border-color:${stateColor};color:${stateColor}">✏️ ${isZh ? '编辑资料' : 'Edit details'}</button>
+        <button type="button" class="receipt-scan-delete-btn ghost-btn" style="flex:.78;margin:0;padding:7px 9px;font-size:11.5px;color:var(--red);border-color:rgba(239,68,68,.42)">🗑 ${isZh ? '删除' : 'Remove'}</button>
+      </div>
+    </div>
+  `;
+
+  const editBtn = div.querySelector('.receipt-scan-edit-btn');
+  const deleteBtn = div.querySelector('.receipt-scan-delete-btn');
+  if(editBtn){
+    editBtn.onclick = event => {
+      event.stopPropagation();
+      openEditTxModal(tx.id);
+    };
+  }
+  if(deleteBtn){
+    deleteBtn.onclick = event => {
+      event.stopPropagation();
+      deleteTx(tx.id);
+    };
+  }
+  div.onclick = event => {
+    if(event.target.closest('button')) return;
+    openEditTxModal(tx.id);
+  };
+  return div;
+}
+
 function makeTxEl(tx){
+  if(tx && tx.aiScan) return makeReceiptScanTxEl(tx);
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const presentation = transactionPresentation(tx, isZh);
   const cat=presentation.category;
@@ -727,6 +803,9 @@ function deleteTx(id, skipConfirm = false){
     ? (S.lang === 'zh' ? '删除这笔内部转账？\n\n两个账户的对应转账记录都会移除。' : 'Delete this internal transfer?\n\nThe matching entry in the other account will also be removed.')
     : 'Delete this transaction?\n\n'+cat.icon+' '+tx.desc+'\n'+fmt(tx.amount)+' · '+tx.date;
   if(skipConfirm || confirm(confirmation)){
+    if(isPendingReceiptScan(tx)){
+      cancelPendingReceiptScan(tx.id, 'cancelled', { skipSave: true, skipRender: true });
+    }
     S.transactions = S.transactions.filter(t => isTransfer ? (t.transferId !== tx.transferId) : (t.id !== tx.id));
     save();renderAll();toast(isTransfer ? (S.lang === 'zh' ? '🗑️ 内部转账已删除' : '🗑️ Internal transfer deleted') : '🗑️ Transaction deleted');
     return true;
