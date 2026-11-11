@@ -200,17 +200,15 @@ function getFastReceiptModelCandidates(){
     ? S.geminiModel
     : ((typeof S !== 'undefined' && S && S.geminiActiveModel) || 'gemini-2.0-flash');
 
-  // The fallback is considered only after a retired-model response. Normal
-  // slowness, quota errors, and network failures stop promptly instead.
-  return [...new Set([selectedModel, 'gemini-2.0-flash-lite'])]
+  return [...new Set([selectedModel, 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash'])]
     .filter(model => !geminiDeprecatedModels.has(model));
 }
 
 async function generateFastGeminiReceiptContent(apiKey, payload, signal = null){
-  return generateGeminiContent(apiKey, payload, 15000, signal, {
+  return generateGeminiContent(apiKey, payload, 35000, signal, {
     models: getFastReceiptModelCandidates(),
-    maxModels: 2,
-    retryOnlyOnRetiredModel: true
+    maxModels: 3,
+    retryOnlyOnRetiredModel: false
   });
 }
 

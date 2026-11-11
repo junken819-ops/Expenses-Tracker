@@ -18,7 +18,7 @@ let uniScanRunsInBackground = false;
 // while they are running. This makes the work visible on Home without affecting
 // balances, and gives the user a normal record they can edit or remove at once.
 const pendingReceiptScanJobs = new Map();
-const RECEIPT_SCAN_DURATION_MS = 15000;
+const RECEIPT_SCAN_DURATION_MS = 40000;
 
 function isPendingReceiptScan(tx){
   return Boolean(tx && tx.aiScan && tx.aiScan.status === 'processing');
@@ -41,8 +41,8 @@ function getReceiptScanProgress(aiScan){
 function getReceiptScanTimeoutMessage(){
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   return isZh
-    ? '扫描超过 15 秒。点击编辑以手动填写。'
-    : 'Scan reached 15 seconds. Tap Edit to enter the details manually.';
+    ? '扫描超时。点击编辑以手动填写。'
+    : 'Scan timed out. Tap Edit to enter the details manually.';
 }
 
 function refreshPendingReceiptScanCard(txId){
@@ -81,7 +81,7 @@ function finishPendingReceiptScanJob(txId, controller = null){
   if(job.timer) clearInterval(job.timer);
   if(job.deadlineTimer) clearTimeout(job.deadlineTimer);
   pendingReceiptScanJobs.delete(txId);
-  if(uniScanAbortController === job.controller){
+  if(pendingReceiptScanJobs.size === 0 || uniScanAbortController === job.controller){
     uniScanAbortController = null;
     isUniversalScanning = false;
     uniScanRunsInBackground = false;
@@ -359,7 +359,7 @@ function handleUniversalUploadBack(){
 }
 
 function openUniversalUpload(preferredMode = 'auto', customDate = '', forceNew = false){
-  if(isUniversalScanning && uniScanRunsInBackground){
+  if(isUniversalScanning && uniScanRunsInBackground && pendingReceiptScanJobs.size > 0){
     go('home');
     const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
     toast(isZh ? '🧾 小票正在首页识别中，您可编辑或删除该记录' : '🧾 Your receipt is being read on Home. You can edit or remove it there.');

@@ -275,7 +275,7 @@ async function handleUniversalFile(inputOrFile){
   else if(inputOrFile?.files?.[0]) file = inputOrFile.files[0];
   if(!file) return;
 
-  if(isUniversalScanning){
+  if(isUniversalScanning && typeof pendingReceiptScanJobs !== 'undefined' && pendingReceiptScanJobs.size > 0){
     const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
     toast(isZh ? '🧾 已有一张小票正在识别，请先完成、编辑或删除首页的记录' : '🧾 A receipt is already being read. Finish, edit, or remove it from Home first.');
     return;
@@ -326,7 +326,7 @@ async function startBackgroundReceiptScan(file){
     });
     if(signal.aborted){
       if(didPendingReceiptScanTimeOut(tx.id, controller)){
-        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+        markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
       }
       return;
     }
@@ -334,7 +334,7 @@ async function startBackgroundReceiptScan(file){
     const compressed = await compressReceiptForStorage(rawDataUrl);
     if(signal.aborted){
       if(didPendingReceiptScanTimeOut(tx.id, controller)){
-        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+        markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
       }
       return;
     }
@@ -342,7 +342,7 @@ async function startBackgroundReceiptScan(file){
     const result = await analyzeUnifiedUploadWithRetry(compressed, signal, 1);
     if(signal.aborted){
       if(didPendingReceiptScanTimeOut(tx.id, controller)){
-        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+        markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
       }
       return;
     }
@@ -359,14 +359,14 @@ async function startBackgroundReceiptScan(file){
     markPendingReceiptScanFailed(
       tx.id,
       timeout
-        ? (isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.')
+        ? getReceiptScanTimeoutMessage()
         : (isZh ? '未能提取小票内容。点击编辑以手动填写。' : 'We could not extract the receipt. Tap Edit to enter it manually.'),
       controller
     );
   } catch(err){
     if(signal.aborted){
       if(didPendingReceiptScanTimeOut(tx.id, controller)){
-        markPendingReceiptScanFailed(tx.id, isZh ? '扫描超过 15 秒。点击编辑以手动填写。' : 'Scan reached 15 seconds. Tap Edit to enter the details manually.', controller);
+        markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
       }
       return;
     }
@@ -473,7 +473,7 @@ async function scanUniversalFileInModal(file){
       if(S.geminiApiKey && S.geminiApiKey.length > 7){
         const didTimeout = /abort|timeout|timed out/i.test(lastReceiptScanError || '');
         toast(didTimeout
-          ? (isZh ? '⏱️ 扫描超过 15 秒，已为您保留图片，可手动填写' : '⏱️ Scan stopped after 15 seconds. Your image is kept for manual entry.')
+          ? (isZh ? '⏱️ 扫描超时，已为您保留图片，可手动填写' : '⏱️ Scan timed out. Your image is kept for manual entry.')
           : (isZh ? '⚠️ 未能自动提取数据，您可以手动填写' : '⚠️ Could not extract data. You can enter details manually.'));
       }
     }
@@ -511,12 +511,19 @@ async function analyzeUnifiedUploadWithGemini(base64DataUrl, signal = null){
   const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
   const base64Data = base64DataUrl.replace(/^data:[^;]+;base64,/, '').trim();
 
-  // Fast capture is intentionally restricted to the fields a user needs to
-  // review or save an expense. Calorie estimates and other optional insights
-  // continue in the background after this result is visible.
-  const prompt = `Read this receipt or payment screenshot. Return only JSON, no markdown.
-{"merchant":"","currency":"MYR","amount":0,"date":"YYYY-MM-DD","time":"HH:MM","paymentMethod":"","items":[{"name":"","price":0,"qty":1}]}
-Use the final grand total for amount. Copy the printed merchant and date/time when visible. Extract up to 30 printed line items; otherwise use an empty array. Use empty strings or 0 for unreadable values. Do not estimate nutrition, categories, tax relief, or any unprinted values.`;
+  // Fast capture extracting necessary fields for transaction review
+  const prompt = `Read this receipt or payment screenshot. Return ONLY raw JSON, no markdown formatting.
+Schema:
+{"merchant":"","currency":"MYR","amount":0,"category":"food","date":"YYYY-MM-DD","time":"HH:MM","paymentMethod":"Cash","items":[{"name":"","price":0,"qty":1}],"sstAmount":0,"serviceChargeAmount":0,"roundingAmount":0}
+Rules:
+1. "amount": Final grand total payable as a number.
+2. "merchant": Printed store, restaurant, or business brand name.
+3. "category": Choose best match: "food","drinks","groceries","fuel","toll_parking","transport","shopping","health","beauty","bills","entertainment","education","pets","other".
+4. "date": Transaction date in YYYY-MM-DD format.
+5. "paymentMethod": e.g. "Cash", "Touch 'n Go eWallet", "Maybank (MAE / QR)", "Credit Card", "Debit Card", etc.
+6. "items": Printed itemized list with line price and quantity (up to 30 items).
+7. "sstAmount", "serviceChargeAmount", "roundingAmount": Printed tax/rounding amounts if present, else 0.
+8. Use empty string or 0 for missing values.`;
 
   const payload = {
     contents: [{
@@ -532,7 +539,7 @@ Use the final grand total for amount. Copy the printed merchant and date/time wh
     }],
     generationConfig: {
       temperature: 0,
-      maxOutputTokens: 1600,
+      maxOutputTokens: 2048,
       responseMimeType: 'application/json'
     }
   };
