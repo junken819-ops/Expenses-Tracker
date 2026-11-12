@@ -179,9 +179,17 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
       // primary model was actually retired.
       if(retryOnlyOnRetiredModel) break;
 
-      if(res.status === 401 || res.status === 403 || res.status === 429 ||
-         /api.?key.*(invalid|not valid)|invalid.*api.?key|resource_exhausted|quota/i.test(lastError)){
+      // Unrecoverable authorization errors (wrong/invalid API key) -> stop trying immediately
+      if(res.status === 401 || res.status === 403 ||
+         /api.?key.*(invalid|not valid)|invalid.*api.?key|permission_denied/i.test(lastError)){
         break;
+      }
+
+      // Rate limit / Quota reached on this specific model (429 / RESOURCE_EXHAUSTED)
+      // Google models have independent rate limit buckets, so automatically failover to the next candidate model!
+      if(res.status === 429 || /resource_exhausted|quota|rate.?limit/i.test(lastError)){
+        console.warn(`⏳ Model "${modelName}" rate-limited (429/quota). Failing over to next candidate model...`);
+        continue;
       }
     } catch(err){
       clearTimeout(timeoutId);
@@ -200,14 +208,39 @@ function getFastReceiptModelCandidates(){
     ? S.geminiModel
     : ((typeof S !== 'undefined' && S && S.geminiActiveModel) || 'gemini-2.0-flash');
 
-  return [...new Set([selectedModel, 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash'])]
+  // Provide diverse models with independent quota pools for seamless 429 auto-failover
+  return [...new Set([selectedModel, 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'])]
     .filter(model => !geminiDeprecatedModels.has(model));
 }
 
-async function generateFastGeminiReceiptContent(apiKey, payload, signal = null){
-  return generateGeminiContent(apiKey, payload, 35000, signal, {
-    models: getFastReceiptModelCandidates(),
-    maxModels: 3,
+const RECEIPT_ROUND_ROBIN_MODELS = [
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-8b'
+];
+let receiptRoundRobinIdx = 0;
+
+function getNextRoundRobinReceiptModel(){
+  const selectedModel = (typeof S !== 'undefined' && S && S.geminiModel && S.geminiModel !== 'auto') ? S.geminiModel : null;
+  const pool = selectedModel
+    ? [selectedModel, ...RECEIPT_ROUND_ROBIN_MODELS.filter(m => m !== selectedModel)]
+    : RECEIPT_ROUND_ROBIN_MODELS;
+  const available = pool.filter(m => !geminiDeprecatedModels.has(m));
+  if(available.length === 0) return 'gemini-2.0-flash';
+  const model = available[receiptRoundRobinIdx % available.length];
+  receiptRoundRobinIdx = (receiptRoundRobinIdx + 1) % available.length;
+  return model;
+}
+
+async function generateFastGeminiReceiptContent(apiKey, payload, signal = null, preferredModel = null){
+  const candidates = getFastReceiptModelCandidates();
+  const models = preferredModel
+    ? [preferredModel, ...candidates.filter(m => m !== preferredModel)]
+    : candidates;
+  return generateGeminiContent(apiKey, payload, 30000, signal, {
+    models: models,
+    maxModels: 4,
     retryOnlyOnRetiredModel: false
   });
 }

@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-11-11T02:36:10.099Z
+   Last build: 2026-11-12T04:28:46.611Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -6369,9 +6369,17 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
       // primary model was actually retired.
       if(retryOnlyOnRetiredModel) break;
 
-      if(res.status === 401 || res.status === 403 || res.status === 429 ||
-         /api.?key.*(invalid|not valid)|invalid.*api.?key|resource_exhausted|quota/i.test(lastError)){
+      // Unrecoverable authorization errors (wrong/invalid API key) -> stop trying immediately
+      if(res.status === 401 || res.status === 403 ||
+         /api.?key.*(invalid|not valid)|invalid.*api.?key|permission_denied/i.test(lastError)){
         break;
+      }
+
+      // Rate limit / Quota reached on this specific model (429 / RESOURCE_EXHAUSTED)
+      // Google models have independent rate limit buckets, so automatically failover to the next candidate model!
+      if(res.status === 429 || /resource_exhausted|quota|rate.?limit/i.test(lastError)){
+        console.warn(`⏳ Model "${modelName}" rate-limited (429/quota). Failing over to next candidate model...`);
+        continue;
       }
     } catch(err){
       clearTimeout(timeoutId);
@@ -6390,14 +6398,39 @@ function getFastReceiptModelCandidates(){
     ? S.geminiModel
     : ((typeof S !== 'undefined' && S && S.geminiActiveModel) || 'gemini-2.0-flash');
 
-  return [...new Set([selectedModel, 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash'])]
+  // Provide diverse models with independent quota pools for seamless 429 auto-failover
+  return [...new Set([selectedModel, 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'])]
     .filter(model => !geminiDeprecatedModels.has(model));
 }
 
-async function generateFastGeminiReceiptContent(apiKey, payload, signal = null){
-  return generateGeminiContent(apiKey, payload, 35000, signal, {
-    models: getFastReceiptModelCandidates(),
-    maxModels: 3,
+const RECEIPT_ROUND_ROBIN_MODELS = [
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-lite',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-8b'
+];
+let receiptRoundRobinIdx = 0;
+
+function getNextRoundRobinReceiptModel(){
+  const selectedModel = (typeof S !== 'undefined' && S && S.geminiModel && S.geminiModel !== 'auto') ? S.geminiModel : null;
+  const pool = selectedModel
+    ? [selectedModel, ...RECEIPT_ROUND_ROBIN_MODELS.filter(m => m !== selectedModel)]
+    : RECEIPT_ROUND_ROBIN_MODELS;
+  const available = pool.filter(m => !geminiDeprecatedModels.has(m));
+  if(available.length === 0) return 'gemini-2.0-flash';
+  const model = available[receiptRoundRobinIdx % available.length];
+  receiptRoundRobinIdx = (receiptRoundRobinIdx + 1) % available.length;
+  return model;
+}
+
+async function generateFastGeminiReceiptContent(apiKey, payload, signal = null, preferredModel = null){
+  const candidates = getFastReceiptModelCandidates();
+  const models = preferredModel
+    ? [preferredModel, ...candidates.filter(m => m !== preferredModel)]
+    : candidates;
+  return generateGeminiContent(apiKey, payload, 30000, signal, {
+    models: models,
+    maxModels: 4,
     retryOnlyOnRetiredModel: false
   });
 }
@@ -7159,10 +7192,9 @@ function handleUniversalUploadBack(){
 }
 
 function openUniversalUpload(preferredMode = 'auto', customDate = '', forceNew = false){
-  if(isUniversalScanning && uniScanRunsInBackground && pendingReceiptScanJobs.size > 0){
-    go('home');
+  if(isUniversalScanning && !uniScanRunsInBackground){
     const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-    toast(isZh ? '🧾 小票正在首页识别中，您可编辑或删除该记录' : '🧾 Your receipt is being read on Home. You can edit or remove it there.');
+    toast(isZh ? '🧾 已有任务正在识别中，请稍候' : '🧾 A scan is already in progress. Please wait.');
     return;
   }
   uniCurrentMode = preferredMode === 'auto' ? 'expense' : preferredMode;
@@ -7514,17 +7546,81 @@ function handleTxDescAutoDetect(){
   }
 }
 
-async function handleUniversalFile(inputOrFile){
-  let file = null;
-  if(inputOrFile instanceof File) file = inputOrFile;
-  else if(inputOrFile?.files?.[0]) file = inputOrFile.files[0];
-  if(!file) return;
+const receiptScanFileQueue = [];
+let isProcessingReceiptQueue = false;
 
-  if(isUniversalScanning && typeof pendingReceiptScanJobs !== 'undefined' && pendingReceiptScanJobs.size > 0){
-    const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-    toast(isZh ? '🧾 已有一张小票正在识别，请先完成、编辑或删除首页的记录' : '🧾 A receipt is already being read. Finish, edit, or remove it from Home first.');
-    return;
+function enqueueBackgroundReceiptScans(files){
+  if(!Array.isArray(files) || files.length === 0) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  closeModal('universal-upload-modal');
+  go('home');
+
+  const count = files.length;
+  for(let i = 0; i < count; i++){
+    const preferredModel = (typeof getNextRoundRobinReceiptModel === 'function')
+      ? getNextRoundRobinReceiptModel()
+      : null;
+    receiptScanFileQueue.push({
+      file: files[i],
+      preferredModel
+    });
   }
+
+  if(count > 1){
+    toast(isZh
+      ? `🧾 已加入 ${count} 张小票到队列，正在依次后台识别…`
+      : `🧾 ${count} receipts queued. Reading them sequentially…`);
+  } else if(!isProcessingReceiptQueue && receiptScanFileQueue.length <= 1){
+    // Single receipt toast will be shown by startBackgroundReceiptScan
+  } else {
+    toast(isZh
+      ? `🧾 已加入队列 (当前排队: ${receiptScanFileQueue.length} 张)`
+      : `🧾 Added to queue (${receiptScanFileQueue.length} waiting)`);
+  }
+
+  processReceiptQueue();
+}
+
+async function processReceiptQueue(){
+  if(isProcessingReceiptQueue) return;
+  isProcessingReceiptQueue = true;
+  let processedInBatch = 0;
+  const initialBatchTotal = receiptScanFileQueue.length;
+
+  try {
+    while(receiptScanFileQueue.length > 0){
+      const item = receiptScanFileQueue.shift();
+      processedInBatch++;
+      const currentQueueInfo = {
+        current: processedInBatch,
+        total: Math.max(initialBatchTotal, processedInBatch + receiptScanFileQueue.length)
+      };
+
+      try {
+        await startBackgroundReceiptScan(item.file, item.preferredModel, currentQueueInfo);
+      } catch(err){
+        console.warn('Queue scan item error:', err);
+      }
+
+      if(receiptScanFileQueue.length > 0){
+        // 1.2s delay between requests prevents burst rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1200));
+      }
+    }
+  } finally {
+    isProcessingReceiptQueue = false;
+  }
+}
+
+async function handleUniversalFile(inputOrFile){
+  let files = [];
+  if(inputOrFile instanceof File){
+    files = [inputOrFile];
+  } else if(inputOrFile?.files?.length){
+    files = Array.from(inputOrFile.files);
+    try { inputOrFile.value = ''; } catch(e){}
+  }
+  if(!files.length) return;
 
   const hasGeminiKey = Boolean(S.geminiApiKey && String(S.geminiApiKey).trim().length > 7);
   if(!hasGeminiKey){
@@ -7534,13 +7630,19 @@ async function handleUniversalFile(inputOrFile){
     return;
   }
 
-  // A normal expense receipt becomes a visible transaction immediately. Meal
-  // Splitter keeps its existing in-modal review flow because it does not create
-  // a standalone expense until the split is confirmed.
+  // A normal expense receipt becomes a visible transaction immediately on Home.
+  // Multiple files are enqueued and processed sequentially with model round-robin.
   if(uniCurrentMode === 'expense'){
-    return startBackgroundReceiptScan(file);
+    return enqueueBackgroundReceiptScans(files);
   }
-  return scanUniversalFileInModal(file);
+
+  // Splitter & other interactive modes keep in-modal review
+  if(isUniversalScanning && !uniScanRunsInBackground){
+    const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+    toast(isZh ? '🧾 已有任务正在识别中，请稍候' : '🧾 A scan is already in progress. Please wait.');
+    return;
+  }
+  return scanUniversalFileInModal(files[0]);
 }
 
 function hasUsableReceiptResult(result){
@@ -7550,7 +7652,7 @@ function hasUsableReceiptResult(result){
   return Number(result.amount) > 0 || items.length > 0 || (merchant && merchant.toLowerCase() !== 'receipt');
 }
 
-async function startBackgroundReceiptScan(file){
+async function startBackgroundReceiptScan(file, preferredModel = null, queueInfo = null){
   const job = createPendingReceiptScan();
   const { tx, controller, signal } = job;
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
@@ -7560,7 +7662,9 @@ async function startBackgroundReceiptScan(file){
   // the visible progress bar and keeps the record editable while AI works.
   closeModal('universal-upload-modal');
   go('home');
-  toast(isZh ? '🧾 小票已加入首页，正在后台识别…' : '🧾 Receipt added to Home. Reading it in the background…');
+  if(!queueInfo || queueInfo.total <= 1){
+    toast(isZh ? '🧾 小票已加入首页，正在后台识别…' : '🧾 Receipt added to Home. Reading it in the background…');
+  }
 
   try {
     const rawDataUrl = await new Promise((resolve, reject) => {
@@ -7584,7 +7688,7 @@ async function startBackgroundReceiptScan(file){
       return;
     }
 
-    const result = await analyzeUnifiedUploadWithRetry(compressed, signal, 1);
+    const result = await analyzeUnifiedUploadWithRetry(compressed, signal, 2, preferredModel);
     if(signal.aborted){
       if(didPendingReceiptScanTimeOut(tx.id, controller)){
         markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
@@ -7596,7 +7700,15 @@ async function startBackgroundReceiptScan(file){
       const applied = applyPendingReceiptScanResult(tx.id, result, controller);
       if(!applied) return;
 
-      toast(isZh ? '✅ 小票识别完成！点击该记录可编辑或删除。' : '✅ Receipt ready. Tap the transaction to edit or delete it.');
+      if(queueInfo && queueInfo.total > 1){
+        if(queueInfo.current === queueInfo.total){
+          toast(isZh ? `🎉 全部 ${queueInfo.total} 张小票已识别完成！` : `🎉 All ${queueInfo.total} receipts processed successfully!`);
+        } else {
+          toast(isZh ? `✅ 小票 (${queueInfo.current}/${queueInfo.total}) 识别完成！正在识别下一张…` : `✅ Receipt (${queueInfo.current}/${queueInfo.total}) ready! Reading next…`);
+        }
+      } else {
+        toast(isZh ? '✅ 小票识别完成！点击该记录可编辑或删除。' : '✅ Receipt ready. Tap the transaction to edit or delete it.');
+      }
       return;
     }
 
@@ -7671,7 +7783,7 @@ async function scanUniversalFileInModal(file){
 
     // A receipt is an interactive action, not a background batch. One bounded
     // attempt is faster and clearer than silently repeating a slow request.
-    const result = await analyzeUnifiedUploadWithRetry(compressed, currentScanSignal, 1);
+    const result = await analyzeUnifiedUploadWithRetry(compressed, currentScanSignal, 2);
     if(currentScanSignal.aborted) return;
 
     stopAiScanAnimation();
@@ -7735,7 +7847,7 @@ async function scanUniversalFileInModal(file){
   }
 }
 
-async function analyzeUnifiedUploadWithGemini(base64DataUrl, signal = null){
+async function analyzeUnifiedUploadWithGemini(base64DataUrl, signal = null, preferredModel = null){
   let apiKey = (S.geminiApiKey || '').trim();
   apiKey = apiKey.replace(/^["']|["']$/g, '').trim();
   const isZh = (S.lang === 'zh');
@@ -7789,7 +7901,7 @@ Rules:
     }
   };
 
-  const generation = await generateFastGeminiReceiptContent(apiKey, payload, signal);
+  const generation = await generateFastGeminiReceiptContent(apiKey, payload, signal, preferredModel);
   const geminiRes = generation.data;
   const lastErrorMsg = generation.lastError;
   lastReceiptScanError = lastErrorMsg || '';
@@ -7832,19 +7944,20 @@ async function analyzeReceiptWithGemini(base64DataUrl){ return analyzeUnifiedUpl
 // -- Auto-retry wrapper: up to 2 attempts with exponential back-off ----------
 // Silently retries on transient network errors or empty Gemini responses
 // without requiring the user to manually tap Scan again.
-async function analyzeUnifiedUploadWithRetry(base64DataUrl, signal, maxAttempts){
-  maxAttempts = maxAttempts || 1;
+async function analyzeUnifiedUploadWithRetry(base64DataUrl, signal, maxAttempts, preferredModel = null){
+  maxAttempts = maxAttempts || 2;
   for(var attempt = 1; attempt <= maxAttempts; attempt++){
     if(signal && signal.aborted) return null;
-    var result = await analyzeUnifiedUploadWithGemini(base64DataUrl, signal);
+    var result = await analyzeUnifiedUploadWithGemini(base64DataUrl, signal, preferredModel);
     if(result && (result.merchant || result.amount > 0 || (result.items && result.items.length > 0))){
       return result;
     }
     if(signal && signal.aborted) return null;
     if(attempt < maxAttempts){
-      var delayMs = 1500 * attempt;
+      var isQuota = /resource_exhausted|quota|429/i.test(lastReceiptScanError || '');
+      var delayMs = isQuota ? 2500 : 1500;
       var isZh2 = (typeof S !== 'undefined' && S && S.lang === 'zh');
-      toast(isZh2 ? ('⚠️ 正在重试扫描… (第 ' + (attempt + 1) + ' 次)') : ('⚠️ Retrying scan… (attempt ' + (attempt + 1) + ' of ' + maxAttempts + ')'));
+      toast(isZh2 ? (isQuota ? '⏳ 配额繁忙，正在切换备用模型重试…' : '⚠️ 正在重试扫描…') : (isQuota ? '⏳ Model quota busy, retrying with fallback…' : '⚠️ Retrying scan…'));
       await new Promise(function(r){ setTimeout(r, delayMs); });
     }
   }
@@ -8905,9 +9018,9 @@ function compressReceiptForStorage(dataUrl){
     if(!dataUrl || !dataUrl.startsWith('data:image')) return resolve(dataUrl);
     const img = new Image();
     img.onload = () => {
-      // A 1440px long edge remains readable for normal phone receipts while
-      // making the base64 upload substantially smaller and faster on mobile.
-      const maxDim = 1440;
+      // 1200px max edge is optimal for receipt OCR, keeping token consumption low
+      // and preventing Token-Per-Minute quota limits on Google Gemini Free Tier.
+      const maxDim = 1200;
       let w = img.width, h = img.height;
       if(w > maxDim || h > maxDim){
         if(w > h){
@@ -8934,7 +9047,7 @@ function compressReceiptForStorage(dataUrl){
         console.warn('Receipt image enhancement skipped:', enhanceErr.message);
       }
 
-      resolve(canvas.toDataURL('image/jpeg', 0.78));
+      resolve(canvas.toDataURL('image/jpeg', 0.74));
     };
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;

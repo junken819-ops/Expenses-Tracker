@@ -13,9 +13,9 @@ function compressReceiptForStorage(dataUrl){
     if(!dataUrl || !dataUrl.startsWith('data:image')) return resolve(dataUrl);
     const img = new Image();
     img.onload = () => {
-      // A 1440px long edge remains readable for normal phone receipts while
-      // making the base64 upload substantially smaller and faster on mobile.
-      const maxDim = 1440;
+      // 1200px max edge is optimal for receipt OCR, keeping token consumption low
+      // and preventing Token-Per-Minute quota limits on Google Gemini Free Tier.
+      const maxDim = 1200;
       let w = img.width, h = img.height;
       if(w > maxDim || h > maxDim){
         if(w > h){
@@ -42,7 +42,7 @@ function compressReceiptForStorage(dataUrl){
         console.warn('Receipt image enhancement skipped:', enhanceErr.message);
       }
 
-      resolve(canvas.toDataURL('image/jpeg', 0.78));
+      resolve(canvas.toDataURL('image/jpeg', 0.74));
     };
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;

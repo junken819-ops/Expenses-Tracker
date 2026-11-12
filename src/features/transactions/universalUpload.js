@@ -359,10 +359,9 @@ function handleUniversalUploadBack(){
 }
 
 function openUniversalUpload(preferredMode = 'auto', customDate = '', forceNew = false){
-  if(isUniversalScanning && uniScanRunsInBackground && pendingReceiptScanJobs.size > 0){
-    go('home');
+  if(isUniversalScanning && !uniScanRunsInBackground){
     const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-    toast(isZh ? '🧾 小票正在首页识别中，您可编辑或删除该记录' : '🧾 Your receipt is being read on Home. You can edit or remove it there.');
+    toast(isZh ? '🧾 已有任务正在识别中，请稍候' : '🧾 A scan is already in progress. Please wait.');
     return;
   }
   uniCurrentMode = preferredMode === 'auto' ? 'expense' : preferredMode;
