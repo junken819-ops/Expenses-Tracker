@@ -413,7 +413,7 @@ async function startBackgroundReceiptScan(file, preferredModel = null, queueInfo
     }
 
     const compressed = await compressReceiptForStorage(rawDataUrl);
-    if(typeof pendingReceiptScanImages !== 'undefined') pendingReceiptScanImages.set(tx.id, compressed);
+    if(typeof saveScanImage === 'function') saveScanImage(tx.id, compressed);
     if(signal.aborted){
       if(didPendingReceiptScanTimeOut(tx.id, controller)){
         markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
@@ -481,7 +481,7 @@ async function retryPendingReceiptScan(txId){
   if(!tx) return;
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
 
-  const base64Data = (typeof pendingReceiptScanImages !== 'undefined') ? pendingReceiptScanImages.get(txId) : null;
+  const base64Data = (typeof getScanImage === 'function') ? getScanImage(txId) : null;
   if(!base64Data){
     toast(isZh ? '📷 请重新选择小票照片进行扫描' : '📷 Please re-select the receipt photo to scan');
     openUniversalUpload('expense');
@@ -537,7 +537,7 @@ async function retryPendingReceiptScan(txId){
     if(hasUsableReceiptResult(result)){
       const applied = applyPendingReceiptScanResult(tx.id, result, controller);
       if(!applied) return;
-      if(typeof pendingReceiptScanImages !== 'undefined') pendingReceiptScanImages.delete(tx.id);
+      if(typeof deleteScanImage === 'function') deleteScanImage(tx.id);
       toast(isZh ? '✅ 小票识别完成！点击该记录可编辑或删除。' : '✅ Receipt ready. Tap the transaction to edit or delete it.');
       return;
     }

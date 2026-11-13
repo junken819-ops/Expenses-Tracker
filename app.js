@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-11-13T03:10:13.008Z
+   Last build: 2026-11-13T08:12:35.966Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -4378,8 +4378,8 @@ function makeReceiptScanTxEl(tx){
   if(deleteBtn){
     deleteBtn.onclick = event => {
       event.stopPropagation();
-      if(typeof pendingReceiptScanImages !== 'undefined'){
-        pendingReceiptScanImages.delete(tx.id);
+      if(typeof deleteScanImage === 'function'){
+        deleteScanImage(tx.id);
       }
       deleteTx(tx.id);
     };
@@ -6870,8 +6870,41 @@ let uniScanRunsInBackground = false;
 // while they are running. This makes the work visible on Home without affecting
 // balances, and gives the user a normal record they can edit or remove at once.
 const pendingReceiptScanJobs = new Map();
-const pendingReceiptScanImages = new Map();
 const RECEIPT_SCAN_DURATION_MS = 75000;
+
+// ── Persist receipt scan images across page reloads ──────
+// Uses sessionStorage (survives refresh, clears on tab close).
+// Falls back to an in-memory Map if sessionStorage is unavailable.
+const _scanImgFallback = new Map();
+const _SCAN_IMG_KEY = 'ff2_scan_imgs';
+
+function saveScanImage(txId, base64){
+  try {
+    const m = JSON.parse(sessionStorage.getItem(_SCAN_IMG_KEY) || '{}');
+    m[txId] = base64;
+    sessionStorage.setItem(_SCAN_IMG_KEY, JSON.stringify(m));
+  } catch(e){
+    _scanImgFallback.set(txId, base64);
+  }
+}
+
+function getScanImage(txId){
+  try {
+    const val = JSON.parse(sessionStorage.getItem(_SCAN_IMG_KEY) || '{}')[txId];
+    return val || _scanImgFallback.get(txId) || null;
+  } catch(e){
+    return _scanImgFallback.get(txId) || null;
+  }
+}
+
+function deleteScanImage(txId){
+  _scanImgFallback.delete(txId);
+  try {
+    const m = JSON.parse(sessionStorage.getItem(_SCAN_IMG_KEY) || '{}');
+    delete m[txId];
+    sessionStorage.setItem(_SCAN_IMG_KEY, JSON.stringify(m));
+  } catch(e){}
+}
 
 function isPendingReceiptScan(tx){
   return Boolean(tx && tx.aiScan && tx.aiScan.status === 'processing');
@@ -7075,7 +7108,7 @@ function applyPendingReceiptScanResult(txId, result, controller = null){
 
   focusHomeOnReceiptDate(txDate);
   finishPendingReceiptScanJob(txId, controller);
-  if(typeof pendingReceiptScanImages !== 'undefined') pendingReceiptScanImages.delete(txId);
+  if(typeof deleteScanImage === 'function') deleteScanImage(txId);
   save();
   renderAll();
   if(typeof renderCalendar === 'function') renderCalendar();
@@ -7711,7 +7744,7 @@ async function startBackgroundReceiptScan(file, preferredModel = null, queueInfo
     }
 
     const compressed = await compressReceiptForStorage(rawDataUrl);
-    if(typeof pendingReceiptScanImages !== 'undefined') pendingReceiptScanImages.set(tx.id, compressed);
+    if(typeof saveScanImage === 'function') saveScanImage(tx.id, compressed);
     if(signal.aborted){
       if(didPendingReceiptScanTimeOut(tx.id, controller)){
         markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
@@ -7779,7 +7812,7 @@ async function retryPendingReceiptScan(txId){
   if(!tx) return;
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
 
-  const base64Data = (typeof pendingReceiptScanImages !== 'undefined') ? pendingReceiptScanImages.get(txId) : null;
+  const base64Data = (typeof getScanImage === 'function') ? getScanImage(txId) : null;
   if(!base64Data){
     toast(isZh ? '📷 请重新选择小票照片进行扫描' : '📷 Please re-select the receipt photo to scan');
     openUniversalUpload('expense');
@@ -7835,7 +7868,7 @@ async function retryPendingReceiptScan(txId){
     if(hasUsableReceiptResult(result)){
       const applied = applyPendingReceiptScanResult(tx.id, result, controller);
       if(!applied) return;
-      if(typeof pendingReceiptScanImages !== 'undefined') pendingReceiptScanImages.delete(tx.id);
+      if(typeof deleteScanImage === 'function') deleteScanImage(tx.id);
       toast(isZh ? '✅ 小票识别完成！点击该记录可编辑或删除。' : '✅ Receipt ready. Tap the transaction to edit or delete it.');
       return;
     }

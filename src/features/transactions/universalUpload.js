@@ -18,8 +18,41 @@ let uniScanRunsInBackground = false;
 // while they are running. This makes the work visible on Home without affecting
 // balances, and gives the user a normal record they can edit or remove at once.
 const pendingReceiptScanJobs = new Map();
-const pendingReceiptScanImages = new Map();
 const RECEIPT_SCAN_DURATION_MS = 75000;
+
+// ── Persist receipt scan images across page reloads ──────
+// Uses sessionStorage (survives refresh, clears on tab close).
+// Falls back to an in-memory Map if sessionStorage is unavailable.
+const _scanImgFallback = new Map();
+const _SCAN_IMG_KEY = 'ff2_scan_imgs';
+
+function saveScanImage(txId, base64){
+  try {
+    const m = JSON.parse(sessionStorage.getItem(_SCAN_IMG_KEY) || '{}');
+    m[txId] = base64;
+    sessionStorage.setItem(_SCAN_IMG_KEY, JSON.stringify(m));
+  } catch(e){
+    _scanImgFallback.set(txId, base64);
+  }
+}
+
+function getScanImage(txId){
+  try {
+    const val = JSON.parse(sessionStorage.getItem(_SCAN_IMG_KEY) || '{}')[txId];
+    return val || _scanImgFallback.get(txId) || null;
+  } catch(e){
+    return _scanImgFallback.get(txId) || null;
+  }
+}
+
+function deleteScanImage(txId){
+  _scanImgFallback.delete(txId);
+  try {
+    const m = JSON.parse(sessionStorage.getItem(_SCAN_IMG_KEY) || '{}');
+    delete m[txId];
+    sessionStorage.setItem(_SCAN_IMG_KEY, JSON.stringify(m));
+  } catch(e){}
+}
 
 function isPendingReceiptScan(tx){
   return Boolean(tx && tx.aiScan && tx.aiScan.status === 'processing');
@@ -223,7 +256,7 @@ function applyPendingReceiptScanResult(txId, result, controller = null){
 
   focusHomeOnReceiptDate(txDate);
   finishPendingReceiptScanJob(txId, controller);
-  if(typeof pendingReceiptScanImages !== 'undefined') pendingReceiptScanImages.delete(txId);
+  if(typeof deleteScanImage === 'function') deleteScanImage(txId);
   save();
   renderAll();
   if(typeof renderCalendar === 'function') renderCalendar();

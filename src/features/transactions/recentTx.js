@@ -655,8 +655,8 @@ function makeReceiptScanTxEl(tx){
   if(deleteBtn){
     deleteBtn.onclick = event => {
       event.stopPropagation();
-      if(typeof pendingReceiptScanImages !== 'undefined'){
-        pendingReceiptScanImages.delete(tx.id);
+      if(typeof deleteScanImage === 'function'){
+        deleteScanImage(tx.id);
       }
       deleteTx(tx.id);
     };
