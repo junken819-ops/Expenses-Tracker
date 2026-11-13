@@ -627,15 +627,25 @@ function makeReceiptScanTxEl(tx){
           <div class="receipt-scan-progress-fill" style="height:100%;width:${progress}%;border-radius:inherit;background:linear-gradient(90deg,#06b6d4,#3b82f6,#8b5cf6);transition:width .22s linear"></div>
         </div>
       </div>
-      <div style="display:flex;gap:7px">
-        <button type="button" class="receipt-scan-edit-btn ghost-btn" style="flex:1;margin:0;padding:7px 9px;font-size:11.5px;border-color:${stateColor};color:${stateColor}">✏️ ${isZh ? '编辑资料' : 'Edit details'}</button>
-        <button type="button" class="receipt-scan-delete-btn ghost-btn" style="flex:.78;margin:0;padding:7px 9px;font-size:11.5px;color:var(--red);border-color:rgba(239,68,68,.42)">🗑 ${isZh ? '删除' : 'Remove'}</button>
+      <div style="display:flex;gap:6px">
+        ${failed ? `<button type="button" class="receipt-scan-retry-btn ghost-btn" style="flex:1.1;margin:0;padding:7px 8px;font-size:11.5px;border-color:var(--amber);color:var(--amber);font-weight:700">🔄 ${isZh ? '重试扫描' : 'Retry scan'}</button>` : ''}
+        <button type="button" class="receipt-scan-edit-btn ghost-btn" style="flex:1;margin:0;padding:7px 8px;font-size:11.5px;border-color:${stateColor};color:${stateColor}">✏️ ${isZh ? '编辑资料' : 'Edit details'}</button>
+        <button type="button" class="receipt-scan-delete-btn ghost-btn" style="flex:.7;margin:0;padding:7px 8px;font-size:11.5px;color:var(--red);border-color:rgba(239,68,68,.42)">🗑 ${isZh ? '删除' : 'Remove'}</button>
       </div>
     </div>
   `;
 
+  const retryBtn = div.querySelector('.receipt-scan-retry-btn');
   const editBtn = div.querySelector('.receipt-scan-edit-btn');
   const deleteBtn = div.querySelector('.receipt-scan-delete-btn');
+  if(retryBtn){
+    retryBtn.onclick = event => {
+      event.stopPropagation();
+      if(typeof retryPendingReceiptScan === 'function'){
+        retryPendingReceiptScan(tx.id);
+      }
+    };
+  }
   if(editBtn){
     editBtn.onclick = event => {
       event.stopPropagation();
@@ -645,6 +655,9 @@ function makeReceiptScanTxEl(tx){
   if(deleteBtn){
     deleteBtn.onclick = event => {
       event.stopPropagation();
+      if(typeof pendingReceiptScanImages !== 'undefined'){
+        pendingReceiptScanImages.delete(tx.id);
+      }
       deleteTx(tx.id);
     };
   }

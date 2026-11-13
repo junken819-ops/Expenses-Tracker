@@ -18,7 +18,8 @@ let uniScanRunsInBackground = false;
 // while they are running. This makes the work visible on Home without affecting
 // balances, and gives the user a normal record they can edit or remove at once.
 const pendingReceiptScanJobs = new Map();
-const RECEIPT_SCAN_DURATION_MS = 40000;
+const pendingReceiptScanImages = new Map();
+const RECEIPT_SCAN_DURATION_MS = 75000;
 
 function isPendingReceiptScan(tx){
   return Boolean(tx && tx.aiScan && tx.aiScan.status === 'processing');
@@ -222,6 +223,7 @@ function applyPendingReceiptScanResult(txId, result, controller = null){
 
   focusHomeOnReceiptDate(txDate);
   finishPendingReceiptScanJob(txId, controller);
+  if(typeof pendingReceiptScanImages !== 'undefined') pendingReceiptScanImages.delete(txId);
   save();
   renderAll();
   if(typeof renderCalendar === 'function') renderCalendar();

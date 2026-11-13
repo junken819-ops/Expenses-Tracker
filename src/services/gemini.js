@@ -12,25 +12,26 @@
 
 const GEMINI_MODEL_FALLBACKS = [
   'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b',
-  'gemini-1.5-pro',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite'
+  'gemini-2.0-flash-exp'
 ];
 
 const MODEL_INFO_MAP = {
   'auto': { title: 'Auto-Detect Working Model', desc: 'Automatically selects fastest active model', tag: '⚡ Recommended' },
   'gemini-2.0-flash': { title: 'Gemini 2.0 Flash', desc: 'Ultra-fast multimodal vision & OCR', tag: '🚀 Fastest' },
-  'gemini-2.0-flash-lite': { title: 'Gemini 2.0 Flash-Lite', desc: 'Lightweight & higher rate limits', tag: '⚡ High Quota' },
-  'gemini-1.5-flash': { title: 'Gemini 1.5 Flash', desc: 'Reliable long-context vision fallback', tag: '🛡️ Stable' },
-  'gemini-1.5-pro': { title: 'Gemini 1.5 Pro', desc: 'Complex reasoning & dense invoices', tag: '🧠 Pro' },
-  'gemini-2.5-flash': { title: 'Gemini 2.5 Flash', desc: 'Next-generation multimodal model', tag: '✨ Next-Gen' }
+  'gemini-2.0-flash-exp': { title: 'Gemini 2.0 Flash Exp', desc: 'Experimental fast multimodal fallback', tag: '🧪 Fallback' }
 };
 
 const geminiModelCache = new Map();
-const geminiDeprecatedModels = new Set();
+const geminiDeprecatedModels = new Set([
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-8b',
+  'gemini-1.5-pro',
+  'gemini-2.0-flash-lite',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-3.8-flash',
+  'gemini-3.5-flash-lite'
+]);
 
 function geminiModelScore(name){
   const model = String(name || '').toLowerCase();
@@ -147,7 +148,10 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelName)}:generateContent?key=${encodeURIComponent(key)}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': key
+        },
         body: JSON.stringify(payload),
         signal: fetchController.signal
       });
@@ -206,30 +210,32 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
 function getFastReceiptModelCandidates(){
   const selectedModel = (typeof S !== 'undefined' && S && S.geminiModel && S.geminiModel !== 'auto')
     ? S.geminiModel
-    : ((typeof S !== 'undefined' && S && S.geminiActiveModel) || 'gemini-2.0-flash');
+    : null;
+  const activeModel = (typeof S !== 'undefined' && S && S.geminiActiveModel) || null;
 
-  // Provide diverse models with independent quota pools for seamless 429 auto-failover
-  return [...new Set([selectedModel, 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-flash-8b'])]
-    .filter(model => !geminiDeprecatedModels.has(model));
+  const discovered = (typeof S !== 'undefined' && S && Array.isArray(S.geminiDiscoveredModels))
+    ? S.geminiDiscoveredModels.filter(m => /flash|pro/i.test(m) && !geminiDeprecatedModels.has(m))
+    : [];
+
+  const candidates = [
+    selectedModel,
+    activeModel,
+    ...discovered,
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-exp'
+  ].filter(m => m && !geminiDeprecatedModels.has(m));
+
+  const filtered = [...new Set(candidates)];
+  return filtered.length ? filtered : ['gemini-2.0-flash'];
 }
 
-const RECEIPT_ROUND_ROBIN_MODELS = [
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
-  'gemini-1.5-flash',
-  'gemini-1.5-flash-8b'
-];
 let receiptRoundRobinIdx = 0;
 
 function getNextRoundRobinReceiptModel(){
-  const selectedModel = (typeof S !== 'undefined' && S && S.geminiModel && S.geminiModel !== 'auto') ? S.geminiModel : null;
-  const pool = selectedModel
-    ? [selectedModel, ...RECEIPT_ROUND_ROBIN_MODELS.filter(m => m !== selectedModel)]
-    : RECEIPT_ROUND_ROBIN_MODELS;
-  const available = pool.filter(m => !geminiDeprecatedModels.has(m));
-  if(available.length === 0) return 'gemini-2.0-flash';
-  const model = available[receiptRoundRobinIdx % available.length];
-  receiptRoundRobinIdx = (receiptRoundRobinIdx + 1) % available.length;
+  const candidates = getFastReceiptModelCandidates();
+  if(!candidates.length) return 'gemini-2.0-flash';
+  const model = candidates[receiptRoundRobinIdx % candidates.length];
+  receiptRoundRobinIdx = (receiptRoundRobinIdx + 1) % candidates.length;
   return model;
 }
 
@@ -238,9 +244,9 @@ async function generateFastGeminiReceiptContent(apiKey, payload, signal = null, 
   const models = preferredModel
     ? [preferredModel, ...candidates.filter(m => m !== preferredModel)]
     : candidates;
-  return generateGeminiContent(apiKey, payload, 30000, signal, {
+  return generateGeminiContent(apiKey, payload, 25000, signal, {
     models: models,
-    maxModels: 4,
+    maxModels: 3,
     retryOnlyOnRetiredModel: false
   });
 }

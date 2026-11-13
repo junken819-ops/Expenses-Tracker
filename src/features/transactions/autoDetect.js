@@ -289,6 +289,11 @@ function enqueueBackgroundReceiptScans(files){
     });
   }
 
+  // Pre-fetch live model candidates in background so subsequent items use verified active models
+  if(typeof S !== 'undefined' && S && S.geminiApiKey && typeof getGeminiModelCandidates === 'function'){
+    getGeminiModelCandidates(S.geminiApiKey).catch(() => {});
+  }
+
   if(count > 1){
     toast(isZh
       ? `🧾 已加入 ${count} 张小票到队列，正在依次后台识别…`
@@ -326,8 +331,12 @@ async function processReceiptQueue(){
       }
 
       if(receiptScanFileQueue.length > 0){
-        // 1.2s delay between requests prevents burst rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1200));
+        // 4.5s safe pacing between receipts to avoid Google free-tier RPM rate limits
+        const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+        toast(isZh
+          ? `⏳ 正在排队下一张小票 (冷却防超限，剩余 ${receiptScanFileQueue.length} 张)…`
+          : `⏳ Pacing next receipt (${receiptScanFileQueue.length} remaining) to avoid rate limits…`);
+        await new Promise(resolve => setTimeout(resolve, 4500));
       }
     }
   } finally {
@@ -404,6 +413,7 @@ async function startBackgroundReceiptScan(file, preferredModel = null, queueInfo
     }
 
     const compressed = await compressReceiptForStorage(rawDataUrl);
+    if(typeof pendingReceiptScanImages !== 'undefined') pendingReceiptScanImages.set(tx.id, compressed);
     if(signal.aborted){
       if(didPendingReceiptScanTimeOut(tx.id, controller)){
         markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
@@ -436,13 +446,15 @@ async function startBackgroundReceiptScan(file, preferredModel = null, queueInfo
     }
 
     const timeout = /abort|timeout|timed out/i.test(lastReceiptScanError || '');
-    markPendingReceiptScanFailed(
-      tx.id,
-      timeout
-        ? getReceiptScanTimeoutMessage()
-        : (isZh ? '未能提取小票内容。点击编辑以手动填写。' : 'We could not extract the receipt. Tap Edit to enter it manually.'),
-      controller
-    );
+    let failMsg = '';
+    if(timeout){
+      failMsg = getReceiptScanTimeoutMessage();
+    } else if(lastReceiptScanError){
+      failMsg = (isZh ? '⚠️ 错误: ' : '⚠️ ') + lastReceiptScanError.substring(0, 95);
+    } else {
+      failMsg = isZh ? '未能提取小票内容。点击编辑以手动填写。' : 'We could not extract the receipt. Tap Edit to enter it manually.';
+    }
+    markPendingReceiptScanFailed(tx.id, failMsg, controller);
   } catch(err){
     if(signal.aborted){
       if(didPendingReceiptScanTimeOut(tx.id, controller)){
@@ -451,14 +463,110 @@ async function startBackgroundReceiptScan(file, preferredModel = null, queueInfo
       return;
     }
     console.warn('Background receipt scan failed:', err);
+    const errText = err?.message || String(err || '');
     markPendingReceiptScanFailed(
       tx.id,
-      isZh ? '扫描遇到问题。点击编辑以手动填写。' : 'The scan ran into a problem. Tap Edit to enter it manually.',
+      (isZh ? '⚠️ 扫描错误: ' : '⚠️ Scan error: ') + errText.substring(0, 80),
       controller
     );
   } finally {
     // The completion helpers clean up successful/failed jobs. This covers an
     // aborted job whose transaction was edited or removed while the request ran.
+    finishPendingReceiptScanJob(tx.id, controller);
+  }
+}
+
+async function retryPendingReceiptScan(txId){
+  const tx = (S.transactions || []).find(item => item.id === txId);
+  if(!tx) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+
+  const base64Data = (typeof pendingReceiptScanImages !== 'undefined') ? pendingReceiptScanImages.get(txId) : null;
+  if(!base64Data){
+    toast(isZh ? '📷 请重新选择小票照片进行扫描' : '📷 Please re-select the receipt photo to scan');
+    openUniversalUpload('expense');
+    return;
+  }
+
+  // Cancel any lingering ticker or job
+  finishPendingReceiptScanJob(txId);
+
+  // Re-initialize processing state on the card
+  const now = Date.now();
+  tx.aiScan = {
+    status: 'processing',
+    startedAt: now,
+    durationMs: RECEIPT_SCAN_DURATION_MS,
+    message: ''
+  };
+  tx.desc = isZh ? '正在重新读取小票…' : 'Re-scanning receipt…';
+  tx.note = '';
+
+  const controller = new AbortController();
+  const job = { controller, timer: null, deadlineTimer: null, timedOut: false };
+  job.deadlineTimer = setTimeout(() => {
+    job.timedOut = true;
+    try { controller.abort(); } catch(e){}
+    markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
+  }, RECEIPT_SCAN_DURATION_MS);
+
+  pendingReceiptScanJobs.set(tx.id, job);
+  uniScanAbortController = controller;
+  isUniversalScanning = true;
+  uniScanRunsInBackground = true;
+
+  save();
+  renderAll();
+  startPendingReceiptScanTicker(tx.id);
+
+  toast(isZh ? '🔄 正在重新识别小票…' : '🔄 Retrying receipt scan…');
+
+  const preferredModel = (typeof getNextRoundRobinReceiptModel === 'function')
+    ? getNextRoundRobinReceiptModel()
+    : null;
+
+  try {
+    const result = await analyzeUnifiedUploadWithRetry(base64Data, controller.signal, 2, preferredModel);
+    if(controller.signal.aborted){
+      if(didPendingReceiptScanTimeOut(tx.id, controller)){
+        markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
+      }
+      return;
+    }
+
+    if(hasUsableReceiptResult(result)){
+      const applied = applyPendingReceiptScanResult(tx.id, result, controller);
+      if(!applied) return;
+      if(typeof pendingReceiptScanImages !== 'undefined') pendingReceiptScanImages.delete(tx.id);
+      toast(isZh ? '✅ 小票识别完成！点击该记录可编辑或删除。' : '✅ Receipt ready. Tap the transaction to edit or delete it.');
+      return;
+    }
+
+    const timeout = /abort|timeout|timed out/i.test(lastReceiptScanError || '');
+    let failMsg = '';
+    if(timeout){
+      failMsg = getReceiptScanTimeoutMessage();
+    } else if(lastReceiptScanError){
+      failMsg = (isZh ? '⚠️ 错误: ' : '⚠️ ') + lastReceiptScanError.substring(0, 95);
+    } else {
+      failMsg = isZh ? '未能提取小票内容。点击编辑以手动填写。' : 'We could not extract the receipt. Tap Edit to enter it manually.';
+    }
+    markPendingReceiptScanFailed(tx.id, failMsg, controller);
+  } catch(err){
+    if(controller.signal.aborted){
+      if(didPendingReceiptScanTimeOut(tx.id, controller)){
+        markPendingReceiptScanFailed(tx.id, getReceiptScanTimeoutMessage(), controller);
+      }
+      return;
+    }
+    console.warn('Retry receipt scan failed:', err);
+    const errText = err?.message || String(err || '');
+    markPendingReceiptScanFailed(
+      tx.id,
+      (isZh ? '⚠️ 扫描错误: ' : '⚠️ Scan error: ') + errText.substring(0, 80),
+      controller
+    );
+  } finally {
     finishPendingReceiptScanJob(tx.id, controller);
   }
 }
@@ -616,12 +724,7 @@ Rules:
           }
         }
       ]
-    }],
-    generationConfig: {
-      temperature: 0,
-      maxOutputTokens: 2048,
-      responseMimeType: 'application/json'
-    }
+    }]
   };
 
   const generation = await generateFastGeminiReceiptContent(apiKey, payload, signal, preferredModel);
@@ -641,7 +744,13 @@ Rules:
         parsed = normalizeGeminiReceiptOutput(rawJson);
         parsed = await verifyReceiptCategoryWithGemini(parsed, apiKey, { localOnly: true });
         console.log('Successfully parsed receipt data:', parsed);
+      } else {
+        console.warn('Could not extract JSON from text:', rawText.substring(0, 150));
+        if(!lastReceiptScanError) lastReceiptScanError = 'Invalid JSON output from AI model';
       }
+    } else {
+      console.warn('Gemini returned empty text');
+      if(!lastReceiptScanError) lastReceiptScanError = 'Empty response from AI model';
     }
   }
 
@@ -677,10 +786,12 @@ async function analyzeUnifiedUploadWithRetry(base64DataUrl, signal, maxAttempts,
     }
     if(signal && signal.aborted) return null;
     if(attempt < maxAttempts){
-      var isQuota = /resource_exhausted|quota|429/i.test(lastReceiptScanError || '');
-      var delayMs = isQuota ? 2500 : 1500;
+      var isQuota = /resource_exhausted|quota|rate.?limit|429/i.test(lastReceiptScanError || '');
+      var delayMs = isQuota ? 6000 : 2000;
       var isZh2 = (typeof S !== 'undefined' && S && S.lang === 'zh');
-      toast(isZh2 ? (isQuota ? '⏳ 配额繁忙，正在切换备用模型重试…' : '⚠️ 正在重试扫描…') : (isQuota ? '⏳ Model quota busy, retrying with fallback…' : '⚠️ Retrying scan…'));
+      toast(isZh2
+        ? (isQuota ? '⏳ 免费配额繁忙，等待 6 秒后自动重试…' : '⚠️ 正在重试扫描…')
+        : (isQuota ? '⏳ Google quota cooldown. Waiting 6s to auto-retry…' : '⚠️ Retrying scan…'));
       await new Promise(function(r){ setTimeout(r, delayMs); });
     }
   }
