@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-11-17T07:14:48.582Z
+   Last build: 2026-11-17T10:56:48.945Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -1242,7 +1242,12 @@ const STATE = {
   geminiModel: 'auto',
   geminiActiveModel: 'gemini-2.0-flash',
   geminiDiscoveredModels: [],
-  travelTrips: []
+  travelTrips: [],
+  travelPlannerPlaces: [],
+  travelPlannerCurrentPlan: null,
+  travelPlannerDayMode: 'auto',
+  travelPlannerStartTime: '09:00',
+  travelPlannerTravelMode: 'driving'
 };
 
 // ── S: GLOBAL BACKWARD-COMPATIBLE STATE ALIAS ──
@@ -1886,6 +1891,11 @@ function applyStateObject(p){
     pendingMeals: p.pendingMeals || [],
     restaurantRecords: Array.isArray(p.restaurantRecords) ? p.restaurantRecords : [],
     travelTrips: Array.isArray(p.travelTrips) ? p.travelTrips : [],
+    travelPlannerPlaces: Array.isArray(p.travelPlannerPlaces) ? p.travelPlannerPlaces : [],
+    travelPlannerCurrentPlan: p.travelPlannerCurrentPlan || null,
+    travelPlannerDayMode: p.travelPlannerDayMode || 'auto',
+    travelPlannerStartTime: p.travelPlannerStartTime || '09:00',
+    travelPlannerTravelMode: p.travelPlannerTravelMode || 'driving',
     paydayDate: p.paydayDate || 25,
     paydayAmount: p.paydayAmount || 0,
     challenges: p.challenges || [],
@@ -16662,6 +16672,14 @@ window.filterPassportPageCountry = filterPassportPageCountry;
 // (Wishlist tab => Quick Add from Google Maps with zero typing, Visited tab => visited form).
 function openAddPassportPlace(source){
   const st = (source === 'modal' || source === 'popup') ? passportActiveStatusFilter : passportPageStatusFilter;
+  if(st === 'trip'){
+    const inp = (typeof getPlannerUrlInput === 'function') ? getPlannerUrlInput() : document.querySelector('#tp-url-input');
+    if(inp){
+      inp.focus();
+      if(typeof inp.scrollIntoView === 'function') inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return;
+  }
   if(st === 'pending'){
     openQuickWishlistModal();
   } else {
@@ -16987,9 +17005,17 @@ function renderPassportPage(){
   const ppSearchBox = document.querySelector('#page-passport .pp-search-box');
   const ppToolbar = document.querySelector('#page-passport .pp-toolbar');
   if(passportPageStatusFilter === 'trip'){
+    ['all', 'visited', 'pending', 'trip'].forEach(s => {
+      const btn = el('passport-page-filter-' + s);
+      if(btn){
+        if(s === 'trip') btn.classList.add('on');
+        else btn.classList.remove('on');
+      }
+    });
     if(ppSearchBox) ppSearchBox.style.display = 'none';
     if(pillsContainer) pillsContainer.style.display = 'none';
     if(ppToolbar) ppToolbar.style.display = 'none';
+    if(typeof loadPlannerPlaces === 'function') loadPlannerPlaces();
     container.innerHTML = (typeof renderTravelPlannerInlineHTML === 'function')
       ? renderTravelPlannerInlineHTML(isZh)
       : '<div id="tp-inline-container" style="min-height:50vh"></div>';
@@ -17608,8 +17634,11 @@ function parseMapsShareText(rawText) {
   const lines = String(rawText).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (/https?:\/\//i.test(line)) continue;
+    let line = lines[i];
+    // Strip URL from the line to check if there is venue text before/after the URL
+    const lineWithoutUrl = line.replace(/https?:\/\/[^\s<>"']+/gi, '').trim();
+    if (!lineWithoutUrl) continue; // Only skip if the line was strictly a bare URL
+    line = lineWithoutUrl;
 
     // Check for rating and review count, e.g. "4.7 ★ (763) · Fine dining restaurant"
     const starMatch = line.match(/(\d+\.\d+)\s*(?:★|⭐|stars?)/i) || line.match(/(?:★|⭐)\s*(\d+\.\d+)/);
@@ -17998,7 +18027,14 @@ async function capturePlaceFromGoogleMaps(raw){
   let recommendations = (backendData && backendData.recommendations) || [];
   let recommendationText = (backendData && backendData.recommendationText) || '';
 
-  if(!recommendationText || recommendations.length === 0){
+  const HOTEL_CHECK_REGEX = /(?:\bhotels?\b|\bresorts?\b|\binns?\b|\bhostels?\b|\bmotels?\b|\bb&b\b|\bhomestays?\b|\bguesthouses?\b|guest\s*house|\bsuites?\b|\blodges?\b|\bvillas?\b|\bchalets?\b|serviced\s*apartments?|\bresidences?\b|\bairbnb\b|check-?in|酒店|宾馆|旅馆|民宿|度假村|客栈|青旅|\bwestin\b|\bhilton\b|\bmarriott\b|\bhyatt\b|shangri-?la|\bsheraton\b|\bintercontinental\b|ritz-?carlton|four\s*seasons|\bnovotel\b|\bibis\b|\bradisson\b|\bkempinski\b|\bpullman\b|le\s*meridien|st\\.?\s*regis|\brenaissance\b|crowne\s*plaza|\bmercure\b|\bswissotel\b|\baloft\b|\balila\b|banyan\s*tree|\bsofitel\b|\banantara\b|\bcitizenm\b|\btravelodge\b|tune\s*hotel|zen\s*rooms|\boyo\b)/i;
+  const isHotel = HOTEL_CHECK_REGEX.test(`${name || ''} ${cuisine || ''} ${(categories||[]).join(' ')} ${raw || ''}`);
+  if(isHotel){
+    cuisine = isZh ? '酒店住宿 / 入住' : 'Hotel / Check-in';
+    categories = ['Hotel', 'Accommodation'];
+    recommendations = isZh ? ['办理入住 / Check-in', '行李寄存', '酒店设施体验'] : ['Hotel Check-in', 'Luggage Drop-off', 'Amenities & Rest'];
+    recommendationText = isZh ? '行程第一站：优先前往酒店办理 Check-in 入住或寄存行李，轻装开启旅程' : 'Check in first or drop bags at concierge before sightseeing';
+  } else if(!recommendationText || recommendations.length === 0){
     const localReco = generateDiningRecommendations(name, categories, city);
     cuisine = cuisine || localReco.cuisine;
     recommendations = localReco.items;
@@ -18024,9 +18060,22 @@ async function capturePlaceFromGoogleMaps(raw){
     protein: 0
   }));
 
+  // Prevent generating dummy generic names like "Malaysia Restaurant Specialties"
+  let resolvedDisplayName = name;
+  if (!resolvedDisplayName || /Malaysia Restaurant Specialties/i.test(resolvedDisplayName)) {
+    const rawClean = String(raw || '').replace(/https?:\/\/[^\s<>"']+/gi, '').trim();
+    if (rawClean && rawClean.length >= 2 && rawClean.length <= 60 && !/^\d+$/.test(rawClean)) {
+      resolvedDisplayName = rawClean;
+    } else if (urlInfo && urlInfo.name) {
+      resolvedDisplayName = urlInfo.name;
+    } else {
+      resolvedDisplayName = isZh ? '地图地点 (点击编辑名称)' : 'Map Location (Tap to name)';
+    }
+  }
+
   return {
     ok: true,
-    name: name || (city ? `${city} ${cuisine || (isZh ? '精选餐厅' : 'Restaurant')}` : (countryName ? `${countryName} ${cuisine || (isZh ? '精选餐厅' : 'Restaurant')}` : (isZh ? '想吃餐厅' : 'Wishlist Restaurant'))),
+    name: resolvedDisplayName,
     rating,
     ratingNum: rating,
     reviewsCount,
@@ -18934,9 +18983,92 @@ let travelPlannerShowWishlistImport = false;
 let travelPlannerIsCoolingDown = false;
 let travelPlannerCooldownTimer = null;
 let travelPlannerCooldownRemaining = 0;
-let travelPlannerCooldownTotal = 15;
+let travelPlannerCooldownTotal = 40;
 let travelPlannerRetryCount = 0;
-const TRAVEL_PLANNER_MAX_RETRIES = 3;
+const TRAVEL_PLANNER_MAX_RETRIES = 10;
+let travelPlannerLastStatus = { html: '', color: '' };
+
+const HOTEL_REGEX = /(?:\bhotels?\b|\bresorts?\b|\binns?\b|\bhostels?\b|\bmotels?\b|\bb&b\b|\bhomestays?\b|\bguesthouses?\b|guest\s*house|\bsuites?\b|\blodges?\b|\bvillas?\b|\bchalets?\b|serviced\s*apartments?|\bresidences?\b|\bairbnb\b|check-?in|酒店|宾馆|旅馆|民宿|度假村|客栈|青旅|\bwestin\b|\bhilton\b|\bmarriott\b|\bhyatt\b|shangri-?la|\bsheraton\b|\bintercontinental\b|ritz-?carlton|four\s*seasons|\bnovotel\b|\bibis\b|\bradisson\b|\bkempinski\b|\bpullman\b|le\s*meridien|st\\.?\s*regis|\brenaissance\b|crowne\s*plaza|\bmercure\b|\bswissotel\b|\baloft\b|\balila\b|banyan\s*tree|\bsofitel\b|\banantara\b|\bcitizenm\b|\btravelodge\b|tune\s*hotel|zen\s*rooms|\boyo\b)/i;
+
+/**
+ * Persists planner places and current plan to S state and localStorage
+ */
+function savePlannerPlaces() {
+  if (typeof S !== 'undefined' && S) {
+    S.travelPlannerPlaces = travelPlannerPlaces;
+    S.travelPlannerCurrentPlan = travelPlannerCurrentPlan;
+    S.travelPlannerDayMode = travelPlannerDayMode;
+    S.travelPlannerStartTime = travelPlannerStartTime;
+    S.travelPlannerTravelMode = travelPlannerTravelMode;
+  }
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('pw_travel_planner_places', JSON.stringify(travelPlannerPlaces));
+      if (travelPlannerCurrentPlan) {
+        localStorage.setItem('pw_travel_planner_current_plan', JSON.stringify(travelPlannerCurrentPlan));
+      } else {
+        localStorage.removeItem('pw_travel_planner_current_plan');
+      }
+      localStorage.setItem('pw_travel_planner_prefs', JSON.stringify({
+        dayMode: travelPlannerDayMode,
+        startTime: travelPlannerStartTime,
+        travelMode: travelPlannerTravelMode
+      }));
+    }
+  } catch(e) {
+    console.warn('Could not save planner places to localStorage:', e);
+  }
+  if (typeof save === 'function') {
+    try { save(); } catch(e) {}
+  }
+}
+
+/**
+ * Loads planner places and current plan from S state or localStorage
+ */
+function loadPlannerPlaces() {
+  try {
+    if (typeof S !== 'undefined' && S && Array.isArray(S.travelPlannerPlaces) && S.travelPlannerPlaces.length > 0) {
+      travelPlannerPlaces.length = 0;
+      travelPlannerPlaces.push(...S.travelPlannerPlaces);
+      if (S.travelPlannerCurrentPlan) travelPlannerCurrentPlan = S.travelPlannerCurrentPlan;
+      if (S.travelPlannerDayMode) travelPlannerDayMode = S.travelPlannerDayMode;
+      if (S.travelPlannerStartTime) travelPlannerStartTime = S.travelPlannerStartTime;
+      if (S.travelPlannerTravelMode) travelPlannerTravelMode = S.travelPlannerTravelMode;
+      return;
+    }
+    if (typeof localStorage !== 'undefined') {
+      const rawPlaces = localStorage.getItem('pw_travel_planner_places');
+      if (rawPlaces) {
+        const parsed = JSON.parse(rawPlaces);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          travelPlannerPlaces.length = 0;
+          travelPlannerPlaces.push(...parsed);
+          if (typeof S !== 'undefined' && S) S.travelPlannerPlaces = travelPlannerPlaces;
+        }
+      }
+      const rawPlan = localStorage.getItem('pw_travel_planner_current_plan');
+      if (rawPlan) {
+        const parsedPlan = JSON.parse(rawPlan);
+        if (parsedPlan && parsedPlan.days) {
+          travelPlannerCurrentPlan = parsedPlan;
+          if (typeof S !== 'undefined' && S) S.travelPlannerCurrentPlan = travelPlannerCurrentPlan;
+        }
+      }
+      const rawPrefs = localStorage.getItem('pw_travel_planner_prefs');
+      if (rawPrefs) {
+        const prefs = JSON.parse(rawPrefs);
+        if (prefs.dayMode) travelPlannerDayMode = prefs.dayMode;
+        if (prefs.startTime) travelPlannerStartTime = prefs.startTime;
+        if (prefs.travelMode) travelPlannerTravelMode = prefs.travelMode;
+      }
+    }
+  } catch(e) {
+    console.warn('Could not load planner places from localStorage:', e);
+  }
+}
+// Initial load on module load
+loadPlannerPlaces();
 
 // ── 1. GEOGRAPHIC & TIME HELPER UTILITIES ──────────────────────
 
@@ -19005,8 +19137,13 @@ function formatHourTo12h(timeStr) {
  * Infers venue time-of-day category, recommended dwell minutes, and icon
  */
 function inferPlaceMetadata(place) {
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const text = `${place.name || ''} ${place.cuisine || ''} ${(place.categories || []).join(' ')} ${place.notes || ''}`.toLowerCase();
   
+  // 🏨 Hotel / Accommodation Check-in (Slot 0 = highest priority, check in first!)
+  if (HOTEL_REGEX.test(text)) {
+    return { type: 'hotel', slot: 0, dwellMins: 45, icon: '🏨', label: isZh ? '酒店入住 (Hotel Check-in)' : 'Hotel Check-in' };
+  }
   if (/breakfast|toast|kopitiam|coffee|cafe|bakery|dim sum|nasi lemak|roti|bazaar/.test(text)) {
     return { type: 'breakfast', slot: 1, dwellMins: 50, icon: '☕', label: 'Breakfast / Coffee' };
   }
@@ -19105,6 +19242,17 @@ function solveOptimizedRouteLocal(places, startHour = '09:00', dayPlanMode = 'au
     dayGroups.push(list.slice(0, chunkSize));
     dayGroups.push(list.slice(chunkSize, chunkSize * 2));
     dayGroups.push(list.slice(chunkSize * 2));
+  }
+
+  // 🏨 Ensure hotel check-in is ALWAYS in Day 1 (first day) so the traveler checks in first
+  if (dayGroups.length > 1) {
+    for (let d = 1; d < dayGroups.length; d++) {
+      const hIdx = dayGroups[d].findIndex(p => p.type === 'hotel');
+      if (hIdx !== -1) {
+        const hotel = dayGroups[d].splice(hIdx, 1)[0];
+        dayGroups[0].unshift(hotel);
+      }
+    }
   }
 
   // Format Days and sequence stops
@@ -19273,6 +19421,11 @@ function formatMinutesTo12h(totalMinutes) {
 }
 
 function generateWhyOrderText(idx, stop, totalStops, isZh) {
+  if (stop.type === 'hotel' || (idx === 0 && stop.type === 'hotel')) {
+    return isZh 
+      ? '🏨 行程第一站：优先前往酒店办理 Check-in 入住与寄存行李，轻松无负担出发！' 
+      : '🏨 1st Stop: Hotel check-in & luggage drop-off first to explore freely!';
+  }
   if (idx === 0) {
     return isZh ? '行程第一站，适合开启活力早晨，避开排队高峰' : '1st Stop: Best visited in the morning to beat long queues';
   }
@@ -19318,7 +19471,13 @@ The user wants to plan an optimized trip based on a list of places they saved fr
 CRITICAL PLANNING REQUIREMENTS:
 1. OPTIMAL ROUTE & SEQUENCE (Which one to go first):
    - Sequence places to minimize travel distance and avoid cross-town backtracking using their GPS coordinates.
-   - Respect natural daily rhythm:
+   - 🏨 HOTEL CHECK-IN PRIORITY (FIRST STOP):
+     * If the places include any hotel, resort, inn, hostel, homestay, Airbnb, or accommodation, SCHEDULE IT AS STOP #1 (THE VERY FIRST STOP) ON DAY 1!
+     * The traveler must check in and drop off heavy luggage first before visiting sights, cafes, or dining.
+     * The rest of the itinerary starts from this hotel.
+     * In whyThisOrder, explain: "1st Stop: Hotel check-in and drop luggage first".
+     * In aiTip, mention: "Check in / drop luggage at concierge & freshen up".
+   - Respect natural daily rhythm for remaining stops:
      * Morning (08:30 - 11:00): Breakfast / local coffee / morning walks / temples / markets.
      * Midday (11:30 - 14:00): Lunch spots / indoor air-conditioned venues.
      * Afternoon (14:00 - 17:30): Sightseeing / landmarks / cafes / tea / shopping / dessert.
@@ -19431,10 +19590,12 @@ ${JSON.stringify(placesForPrompt, null, 2)}
 
     const lastErr = res?.lastError || '';
     const isRateLimit = /429|resource_exhausted|quota|rate.?limit|overload|busy|too many requests/i.test(lastErr);
-    let cooldownSec = res?.retryAfterSeconds || 15;
+    let cooldownSec = res?.retryAfterSeconds || 40;
     const matchSec = lastErr.match(/retry(?:ing)? in (\d+)(?:\.\d+)?s/i) || lastErr.match(/wait (\d+)s/i);
     if (matchSec && Number(matchSec[1])) {
-      cooldownSec = Math.min(60, Math.max(5, parseInt(matchSec[1], 10)));
+      cooldownSec = Math.min(75, Math.max(35, parseInt(matchSec[1], 10)));
+    } else {
+      cooldownSec = 40; // User explicitly requested longer waiting time
     }
 
     return {
@@ -19449,7 +19610,7 @@ ${JSON.stringify(placesForPrompt, null, 2)}
       ok: false,
       error: 'api_error',
       message: err?.message || String(err),
-      cooldownSeconds: 15
+      cooldownSeconds: 40
     };
   }
 }
@@ -19516,8 +19677,10 @@ async function openTravelPlanner(source = 'default', initialLink = '') {
   travelPlannerShowHowItWorks = false;
   travelPlannerShowWishlistImport = false;
 
-  // If no places added yet and wishlist has pending places, seed with wishlist places if empty
-  if (travelPlannerPlaces.length === 0 && Array.isArray(S.restaurantRecords)) {
+  loadPlannerPlaces();
+  // Only seed from wishlist if brand new user (no saved places ever in localStorage)
+  const neverSavedBefore = (typeof localStorage !== 'undefined' && localStorage.getItem('pw_travel_planner_places') === null);
+  if (neverSavedBefore && travelPlannerPlaces.length === 0 && Array.isArray(S.restaurantRecords)) {
     const pending = S.restaurantRecords.filter(r => r.status === 'pending');
     if (pending.length > 0 && pending.length <= 4) {
       travelPlannerPlaces = pending.map(p => ({
@@ -19533,6 +19696,7 @@ async function openTravelPlanner(source = 'default', initialLink = '') {
         mapUrl: p.mapUrl || '',
         recommendations: p.items ? p.items.map(it => it.name) : []
       }));
+      savePlannerPlaces();
     }
   }
 
@@ -19573,20 +19737,32 @@ window.closeTravelPlanner = closeTravelPlanner;
  * Pastes clipboard content into the planner input and adds it
  */
 
+function setPlannerStatus(html, color = 'var(--muted)') {
+  travelPlannerLastStatus = { html, color };
+  const els = (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') ? document.querySelectorAll('.tp-input-status, #tp-input-status') : [];
+  els.forEach(el => {
+    el.innerHTML = html;
+    el.style.color = color;
+  });
+}
+
 function getPlannerUrlInput() {
-  const inputs = document.querySelectorAll('#tp-url-input');
+  const inputs = (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') ? document.querySelectorAll('.tp-url-input, #tp-url-input') : [];
   for (let i = 0; i < inputs.length; i++) {
-    if (inputs[i].offsetParent !== null || inputs[i].value) return inputs[i];
+    if (inputs[i].value && inputs[i].value.trim()) return inputs[i];
   }
-  return inputs[0] || el('tp-url-input');
+  for (let i = 0; i < inputs.length; i++) {
+    if (inputs[i].offsetParent !== null) return inputs[i];
+  }
+  return inputs[0] || (typeof el === 'function' ? el('tp-url-input') : null);
 }
 
 function getPlannerStatusEl() {
-  const els = document.querySelectorAll('#tp-input-status');
+  const els = document.querySelectorAll('.tp-input-status, #tp-input-status');
   for (let i = 0; i < els.length; i++) {
     if (els[i].offsetParent !== null) return els[i];
   }
-  return els[0] || el('tp-input-status');
+  return els[0] || (typeof el === 'function' ? el('tp-input-status') : null);
 }
 
 async function pasteAndAddPlannerPlace() {
@@ -19614,24 +19790,103 @@ window.pasteAndAddPlannerPlace = pasteAndAddPlannerPlace;
 /**
  * Adds a place to the trip planner via Google Maps URL or text
  */
+
+/**
+ * Geocodes a place name to GPS coordinates via OpenStreetMap Nominatim
+ */
+async function geocodePlaceByName(name, city = '') {
+  if (!name || name.length < 2) return null;
+  const q = [name, city].filter(Boolean).join(', ');
+  try {
+    const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q), {
+      headers: { 'User-Agent': 'PocketWinnie-TravelPlanner/4.6' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data[0] && data[0].lat && data[0].lon) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+          city: city || (data[0].display_name ? data[0].display_name.split(',')[1]?.trim() : '')
+        };
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+window.geocodePlaceByName = geocodePlaceByName;
+
+/**
+ * Resolves venue name & GPS from Google Maps link or text using Gemini AI
+ */
+async function resolvePlaceViaGemini(inputQuery) {
+  if (!S || !S.geminiApiKey || S.geminiApiKey.length < 8) return null;
+  try {
+    const prompt = 'Identify this venue or Google Maps location query: "' + inputQuery + '". Return ONLY a valid single-line JSON object: {"name":"Exact Venue Name","city":"City","lat":3.123,"lng":101.456,"cuisine":"Category"}';
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + S.geminiApiKey, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const txt = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const cleanJson = txt.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const p = JSON.parse(cleanJson);
+      if (p && p.name && !/Malaysia Restaurant Specialties/i.test(p.name)) {
+        return {
+          name: p.name,
+          city: p.city || '',
+          lat: (p.lat && isFinite(p.lat)) ? parseFloat(p.lat) : null,
+          lng: (p.lng && isFinite(p.lng)) ? parseFloat(p.lng) : null,
+          cuisine: p.cuisine || ''
+        };
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+window.resolvePlaceViaGemini = resolvePlaceViaGemini;
+
+/**
+ * Allows the user to tap and edit a place name directly
+ */
+function editPlannerPlaceName(idx) {
+  if (idx < 0 || idx >= travelPlannerPlaces.length) return;
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const current = travelPlannerPlaces[idx];
+  const newName = prompt(isZh ? '修改目的地名称：' : 'Edit destination name:', current.name);
+  if (newName && newName.trim() && newName.trim() !== current.name) {
+    current.name = newName.trim();
+    if (!current.lat || !current.lng) {
+      geocodePlaceByName(current.name, current.city).then(geo => {
+        if (geo) {
+          current.lat = geo.lat;
+          current.lng = geo.lng;
+          if (geo.city && !current.city) current.city = geo.city;
+          renderTravelPlannerUI();
+        }
+      });
+    }
+    savePlannerPlaces();
+    renderTravelPlannerUI();
+    if (typeof toast === 'function') toast(isZh ? ('✏️ 已重命名为：' + current.name) : ('✏️ Renamed to: ' + current.name));
+  }
+}
+window.editPlannerPlaceName = editPlannerPlaceName;
+
 async function addPlaceToPlanner(rawText) {
-  const inp = el('tp-url-input');
-  const statusEl = el('tp-input-status');
+  const inp = getPlannerUrlInput();
+  const statusEl = getPlannerStatusEl();
   const text = String(rawText || (inp ? inp.value : '')).trim();
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
 
   if (!text) {
-    if (statusEl) {
-      statusEl.textContent = isZh ? '⚠️ 请先粘贴 Google 地图链接' : '⚠️ Please paste a Google Maps link first';
-      statusEl.style.color = 'var(--red)';
-    }
+    setPlannerStatus(isZh ? '⚠️ 请先粘贴 Google 地图链接或输入地点' : '⚠️ Please paste a Google Maps link or enter a place name first', 'var(--red)');
     return;
   }
 
-  if (statusEl) {
-    statusEl.innerHTML = `⏳ ${isZh ? '正在自动提取地点名称、GPS定位与类别…' : 'Auto-capturing venue, GPS coordinates & details…'}`;
-    statusEl.style.color = 'var(--amber)';
-  }
+  setPlannerStatus(`⏳ ${isZh ? '正在自动提取地点名称、GPS定位与类别…' : 'Auto-capturing venue, GPS coordinates & details…'}`, 'var(--amber)');
 
   try {
     let captured = null;
@@ -19639,62 +19894,101 @@ async function addPlaceToPlanner(rawText) {
       captured = await capturePlaceFromGoogleMaps(text);
     }
 
-    if (!captured || !captured.ok) {
-      // Fallback: extract name from URL string directly
-      let fallbackName = '';
+    let placeName = (captured && captured.name && !/Malaysia Restaurant Specialties/i.test(captured.name)) ? captured.name : '';
+    let placeLat = (captured && captured.lat && isFinite(captured.lat)) ? captured.lat : null;
+    let placeLng = (captured && captured.lng && isFinite(captured.lng)) ? captured.lng : null;
+    let placeCity = (captured && captured.city) ? captured.city : '';
+    let placeCuisine = (captured && captured.cuisine) ? captured.cuisine : '';
+
+    // 1. If name is generic or coordinates missing: try Gemini AI
+    if ((!placeName || !placeLat || !placeLng) && typeof resolvePlaceViaGemini === 'function' && S && S.geminiApiKey) {
+      const geminiRes = await resolvePlaceViaGemini(text);
+      if (geminiRes) {
+        if (!placeName && geminiRes.name) placeName = geminiRes.name;
+        if (!placeLat && geminiRes.lat) placeLat = geminiRes.lat;
+        if (!placeLng && geminiRes.lng) placeLng = geminiRes.lng;
+        if (!placeCity && geminiRes.city) placeCity = geminiRes.city;
+        if (!placeCuisine && geminiRes.cuisine) placeCuisine = geminiRes.cuisine;
+      }
+    }
+
+    // 2. Fallback: extract name from raw text directly (strip URL)
+    if (!placeName) {
+      const textClean = text.replace(/https?:\/\/[^\s<>"']+/gi, '').trim();
+      if (textClean && textClean.length >= 2 && textClean.length <= 60 && !/^\d+$/.test(textClean)) {
+        placeName = textClean;
+      }
+    }
+
+    // 3. Fallback: extract name from URL string path
+    if (!placeName) {
       try {
         const u = new URL(text.match(/https?:\/\/[^\s<>"']+/i)?.[0] || text);
         const m = u.pathname.match(/\/maps\/(?:place|search)\/([^/@]+)/);
-        if (m) fallbackName = decodeURIComponent(m[1].replace(/\+/g, ' ')).split(',')[0].trim();
+        if (m) placeName = decodeURIComponent(m[1].replace(/\+/g, ' ')).split(',')[0].trim();
       } catch(e) {}
+    }
 
-      if (!fallbackName) {
-        fallbackName = text.replace(/https?:\/\/[^\s]+/g, '').trim() || (isZh ? '想去地点' : 'Wishlist Stop');
+    if (!placeName || /Malaysia Restaurant Specialties/i.test(placeName)) {
+      placeName = isZh ? '自选目的地 (点击修改名称)' : 'Destination (Tap to edit)';
+    }
+
+    // 4. If coordinates are still missing: try Nominatim geocoding on the resolved name!
+    if ((!placeLat || !placeLng) && placeName && !placeName.includes('(')) {
+      const geo = await geocodePlaceByName(placeName, placeCity);
+      if (geo) {
+        placeLat = geo.lat;
+        placeLng = geo.lng;
+        if (geo.city && !placeCity) placeCity = geo.city;
       }
-
-      captured = {
-        ok: true,
-        name: fallbackName,
-        city: '',
-        lat: null,
-        lng: null,
-        cuisine: '',
-        mapUrl: text
-      };
     }
 
     const newPlace = {
       id: 'pl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-      name: captured.name || (isZh ? '精选地点' : 'Destination'),
-      city: captured.city || '',
-      address: captured.address || '',
-      lat: captured.lat || null,
-      lng: captured.lng || null,
-      cuisine: captured.cuisine || '',
-      categories: captured.categories || [],
-      rating: captured.rating || null,
-      mapUrl: captured.finalUrl || captured.url || (typeof extractMapsUrl === 'function' ? extractMapsUrl(text) : text) || '',
-      recommendations: captured.recommendations || [],
-      recommendationText: captured.recommendationText || ''
+      name: placeName,
+      city: placeCity,
+      address: (captured && captured.address) || '',
+      lat: placeLat,
+      lng: placeLng,
+      cuisine: placeCuisine,
+      categories: (captured && captured.categories) || [],
+      rating: (captured && captured.rating) || null,
+      mapUrl: (captured && captured.finalUrl) || (typeof extractMapsUrl === 'function' ? extractMapsUrl(text) : text) || '',
+      recommendations: (captured && captured.recommendations) || [],
+      recommendationText: (captured && captured.recommendationText) || ''
     };
 
-    travelPlannerPlaces.push(newPlace);
-    if (inp) inp.value = '';
+    // Deduplication check: prevent adding the exact same venue twice
+    const isDup = travelPlannerPlaces.some(p => {
+      if (newPlace.mapUrl && p.mapUrl && p.mapUrl === newPlace.mapUrl) return true;
+      if (newPlace.name && p.name && p.name.trim().toLowerCase() === newPlace.name.trim().toLowerCase() && p.name !== 'Destination (Tap to edit)' && p.name !== '自选目的地 (点击编辑名称)') return true;
+      return false;
+    });
 
-    if (statusEl) {
-      const pinTag = (newPlace.lat && newPlace.lng) ? '📍 GPS OK' : '📌';
-      statusEl.innerHTML = `✅ ${isZh ? '已添加' : 'Added'}: <strong>${newPlace.name}</strong> <span style="color:var(--green)">(${pinTag})</span>`;
-      statusEl.style.color = 'var(--green)';
+    if (isDup) {
+      if (statusEl) {
+        statusEl.innerHTML = `⚠️ ${isZh ? '该地点已在列表中：' : 'Already in itinerary:'} <strong>${newPlace.name}</strong>`;
+        statusEl.style.color = 'var(--amber)';
+      }
+      if (inp) inp.value = '';
+      if (typeof toast === 'function') toast(isZh ? `⚠️ 该地点已在行程中` : `⚠️ Place is already in itinerary`);
+      return;
     }
+
+    travelPlannerPlaces.push(newPlace);
+    savePlannerPlaces();
+    if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') document.querySelectorAll('.tp-url-input, #tp-url-input').forEach(i => i.value = '');
+
+    const pinTag = (newPlace.lat && newPlace.lng) ? '📍 GPS OK' : '⚠️ No GPS';
+    const placeMeta = inferPlaceMetadata(newPlace);
+    const hotelTag = placeMeta.type === 'hotel' ? ` · ${isZh ? '🏨 酒店入住优先' : '🏨 Hotel Check-in'}` : '';
+    setPlannerStatus(`✅ ${isZh ? '已添加' : 'Added'}: <strong>${newPlace.name}</strong> <span style="color:var(--green)">(${pinTag}${hotelTag})</span>`, 'var(--green)');
 
     renderTravelPlannerUI();
-    toast(isZh ? `📍 已添加：${newPlace.name}` : `📍 Added: ${newPlace.name}`);
+    if (typeof toast === 'function') toast(isZh ? `📍 已添加：${newPlace.name}` : `📍 Added: ${newPlace.name}`);
   } catch(err) {
     console.error('Error adding place to planner:', err);
-    if (statusEl) {
-      statusEl.textContent = isZh ? '⚠️ 识别出错，请重试' : '⚠️ Could not resolve link, please try again';
-      statusEl.style.color = 'var(--red)';
-    }
+    setPlannerStatus(isZh ? '⚠️ 识别出错，请重试' : '⚠️ Could not resolve link, please try again', 'var(--red)');
   }
 }
 window.addPlaceToPlanner = addPlaceToPlanner;
@@ -19702,9 +19996,10 @@ window.addPlaceToPlanner = addPlaceToPlanner;
 function removePlannerPlace(idx) {
   if (idx >= 0 && idx < travelPlannerPlaces.length) {
     const removed = travelPlannerPlaces.splice(idx, 1)[0];
+    savePlannerPlaces();
     renderTravelPlannerUI();
     const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-    toast(isZh ? `🗑️ 已移除：${removed.name}` : `🗑️ Removed: ${removed.name}`);
+    if (typeof toast === 'function') toast(isZh ? `🗑️ 已移除：${removed.name}` : `🗑️ Removed: ${removed.name}`);
   }
 }
 window.removePlannerPlace = removePlannerPlace;
@@ -19715,6 +20010,7 @@ function movePlannerPlace(idx, direction) {
   const temp = travelPlannerPlaces[idx];
   travelPlannerPlaces[idx] = travelPlannerPlaces[target];
   travelPlannerPlaces[target] = temp;
+  savePlannerPlaces();
   renderTravelPlannerUI();
 }
 window.movePlannerPlace = movePlannerPlace;
@@ -19724,6 +20020,7 @@ function clearAllPlannerPlaces() {
   if (confirm(isZh ? '确定清空已添加的地点吗？' : 'Clear all added places?')) {
     travelPlannerPlaces = [];
     travelPlannerCurrentPlan = null;
+    savePlannerPlaces();
     renderTravelPlannerUI();
   }
 }
@@ -19768,25 +20065,29 @@ function importSelectedWishlistPlaces() {
   });
 
   travelPlannerShowWishlistImport = false;
+  savePlannerPlaces();
   renderTravelPlannerUI();
-  toast(isZh ? `📥 成功从想吃清单导入 ${count} 家地点！` : `📥 Imported ${count} places from wishlist!`);
+  if (typeof toast === 'function') toast(isZh ? `📥 成功从想吃清单导入 ${count} 家地点！` : `📥 Imported ${count} places from wishlist!`);
 }
 window.importSelectedWishlistPlaces = importSelectedWishlistPlaces;
 
 function setPlannerDayMode(mode) {
   travelPlannerDayMode = mode;
+  savePlannerPlaces();
   renderTravelPlannerUI();
 }
 window.setPlannerDayMode = setPlannerDayMode;
 
 function setPlannerTravelMode(mode) {
   travelPlannerTravelMode = mode;
+  savePlannerPlaces();
   renderTravelPlannerUI();
 }
 window.setPlannerTravelMode = setPlannerTravelMode;
 
 function setPlannerStartTime(timeStr) {
   travelPlannerStartTime = timeStr;
+  savePlannerPlaces();
 }
 window.setPlannerStartTime = setPlannerStartTime;
 
@@ -19798,34 +20099,39 @@ window.setPlannerStartTime = setPlannerStartTime;
  * Starts the Auto-Countdown Timer when AI is cooling down / rate-limited.
  * When the countdown reaches 0, it automatically submits the plan again!
  */
-function startTravelPlannerCooldown(seconds = 15) {
+function startTravelPlannerCooldown(seconds = 40) {
   if (travelPlannerCooldownTimer) {
     clearInterval(travelPlannerCooldownTimer);
     travelPlannerCooldownTimer = null;
   }
 
-  travelPlannerCooldownTotal = seconds;
-  travelPlannerCooldownRemaining = seconds;
+  const safeSec = (typeof window !== 'undefined' || Number(seconds) > 3) ? Math.max(35, Number(seconds) || 40) : Number(seconds);
+  travelPlannerCooldownTotal = safeSec;
+  travelPlannerCooldownRemaining = safeSec;
   travelPlannerIsLoading = false;
   travelPlannerIsCoolingDown = true;
   travelPlannerRetryCount++;
   renderTravelPlannerUI();
 
-  // Scroll to cooldown card
-  const modalBody = el('tp-modal-body');
+  // Scroll to cooldown card smoothly (works in both modal and inline page tab)
+  const modalBody = (typeof el === 'function') ? el('tp-modal-body') : null;
   if (modalBody) modalBody.scrollTop = 0;
+  const inlineContainer = (typeof el === 'function') ? el('tp-inline-container') : null;
+  if (inlineContainer && inlineContainer.offsetParent !== null && typeof inlineContainer.scrollIntoView === 'function') {
+    inlineContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   travelPlannerCooldownTimer = setInterval(() => {
     travelPlannerCooldownRemaining--;
 
-    // Update countdown number and progress bar in DOM smoothly
-    const numEl = el('tp-cooldown-num');
-    const barEl = document.querySelector('.tp-cooldown-bar-fill');
-    if (numEl) numEl.textContent = `${travelPlannerCooldownRemaining}s`;
-    if (barEl) {
+    // Update countdown number and progress bar across ALL containers (modal and inline tab)
+    const numEls = (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') ? document.querySelectorAll('.tp-cooldown-num, #tp-cooldown-num') : [];
+    const barEls = (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') ? document.querySelectorAll('.tp-cooldown-bar-fill') : [];
+    numEls.forEach(el => { el.textContent = `${travelPlannerCooldownRemaining}s`; });
+    barEls.forEach(el => {
       const pct = Math.max(0, (travelPlannerCooldownRemaining / travelPlannerCooldownTotal) * 100);
-      barEl.style.width = `${pct}%`;
-    }
+      el.style.width = `${pct}%`;
+    });
 
     if (travelPlannerCooldownRemaining <= 0) {
       clearInterval(travelPlannerCooldownTimer);
@@ -19863,8 +20169,9 @@ function skipCooldownAndUseLocalRoute() {
   );
   plan.generatedBy = isZh ? '智能离线路线 (跳过冷却)' : 'Smart GPS Route (Cooldown skipped)';
   travelPlannerCurrentPlan = plan;
+  savePlannerPlaces();
   renderTravelPlannerUI();
-  toast(isZh ? '📍 已为您生成高精度离线路线' : '📍 Offline route generated');
+  if (typeof toast === 'function') toast(isZh ? '📍 已为您生成高精度离线路线' : '📍 Offline route generated');
 }
 
 function cancelTravelPlannerCooldown() {
@@ -19885,8 +20192,9 @@ function cancelTravelPlannerCooldown() {
  */
 async function planTripRoute(isRetry = false) {
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  loadPlannerPlaces();
   if (travelPlannerPlaces.length === 0) {
-    toast(isZh ? '⚠️ 请先粘贴至少一个 Google 地图地点！' : '⚠️ Please add at least 1 destination first!');
+    if (typeof toast === 'function') toast(isZh ? '⚠️ 请先粘贴至少一个 Google 地图地点！' : '⚠️ Please add at least 1 destination first!');
     return;
   }
 
@@ -19905,10 +20213,27 @@ async function planTripRoute(isRetry = false) {
   renderTravelPlannerUI();
 
   // Scroll to loading indicator
-  const modalBody = el('tp-modal-body');
+  const modalBody = (typeof el === 'function') ? el('tp-modal-body') : null;
   if (modalBody) modalBody.scrollTop = 0;
+  const inlineContainer = (typeof el === 'function') ? el('tp-inline-container') : null;
+  if (inlineContainer && inlineContainer.offsetParent !== null && typeof inlineContainer.scrollIntoView === 'function') {
+    inlineContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   try {
+    const apiKey = (typeof S !== 'undefined' && S && S.geminiApiKey) ? S.geminiApiKey.trim() : '';
+    if (!apiKey || apiKey.length < 8) {
+      travelPlannerIsLoading = false;
+      renderTravelPlannerUI();
+      if (typeof openGeminiModal === 'function') {
+        if (typeof toast === 'function') toast(isZh ? '⚠️ 请先连接 Google Gemini API Key 以使用 AI 规划' : '⚠️ Please connect Gemini API Key for AI planning');
+        openGeminiModal();
+      } else {
+        if (typeof toast === 'function') toast(isZh ? '⚠️ 请先在设置中填写 Google Gemini API Key' : '⚠️ Please set Gemini API Key in Settings');
+      }
+      return;
+    }
+
     // 1. Attempt to use Gemini 2.0 Flash (highest free model)
     const result = await callGeminiTravelPlanner(
       travelPlannerPlaces,
@@ -19933,57 +20258,28 @@ async function planTripRoute(isRetry = false) {
       };
       S.travelTrips.unshift(tripRecord);
       if (S.travelTrips.length > 20) S.travelTrips = S.travelTrips.slice(0, 20);
-      if (typeof save === 'function') save();
+      savePlannerPlaces();
 
-      toast(isZh ? '🎉 行程路线规划完成！' : '🎉 Trip route planned successfully!');
+      if (typeof toast === 'function') toast(isZh ? '🎉 行程路线规划完成！' : '🎉 Trip route planned successfully!');
       renderTravelPlannerUI();
       return;
     }
 
-    // 2. If rate-limited or busy and under max retries -> Start Auto Countdown!
-    if (result && (result.error === 'rate_limit' || result.error === 'api_error') && travelPlannerRetryCount < TRAVEL_PLANNER_MAX_RETRIES) {
-      const waitTime = result.cooldownSeconds || 15;
+    // 2. If rate-limited or busy -> Start Auto Countdown!
+    // As explicitly requested: "the waiting ai to plan should longer and dont use offline route"
+    // Never auto-fall-back to offline route! Continue AI countdown auto-retry!
+    if (result && (result.error === 'rate_limit' || result.error === 'api_error')) {
+      const waitTime = Math.max(35, result.cooldownSeconds || 40);
       console.warn(`⏳ AI rate limit / cooldown detected. Initiating ${waitTime}s countdown before auto-submit...`);
       startTravelPlannerCooldown(waitTime);
       return;
     }
 
-    // 3. Fallback: if no key or max retries reached, safely use local mathematical optimizer
-    let plan = solveOptimizedRouteLocal(
-      travelPlannerPlaces,
-      travelPlannerStartTime,
-      travelPlannerDayMode,
-      travelPlannerTravelMode
-    );
-    if (result && result.error === 'rate_limit') {
-      plan.generatedBy = isZh ? '智能离线算法 (AI 达到调用频次上限，已保底规划)' : 'Smart GPS Engine (AI Rate-limited, safely completed)';
-      toast(isZh ? '⚡ 已为您自动生成高精度离线路线' : '⚡ Local GPS route generated safely');
-    }
-    travelPlannerCurrentPlan = plan;
-    travelPlannerRetryCount = 0;
-
-    if (!S.travelTrips) S.travelTrips = [];
-    const tripRecord = {
-      id: 'trip_' + Date.now(),
-      createdAt: new Date().toISOString(),
-      plan: plan,
-      places: [...travelPlannerPlaces]
-    };
-    S.travelTrips.unshift(tripRecord);
-    if (S.travelTrips.length > 20) S.travelTrips = S.travelTrips.slice(0, 20);
-    if (typeof save === 'function') save();
+    // Fallback: initiate cooldown retry rather than forcing offline route
+    startTravelPlannerCooldown(40);
   } catch(err) {
     console.error('Trip planner error:', err);
-    if (travelPlannerRetryCount < TRAVEL_PLANNER_MAX_RETRIES) {
-      startTravelPlannerCooldown(15);
-      return;
-    }
-    travelPlannerCurrentPlan = solveOptimizedRouteLocal(
-      travelPlannerPlaces,
-      travelPlannerStartTime,
-      travelPlannerDayMode,
-      travelPlannerTravelMode
-    );
+    startTravelPlannerCooldown(40);
   } finally {
     if (!travelPlannerIsCoolingDown) {
       travelPlannerIsLoading = false;
@@ -20110,30 +20406,33 @@ function buildTravelPlannerBodyHTML(isZh) {
   // 1. INPUT BOX: Paste Google Maps Link
   html += `
     <div class="tp-paste-box">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-        <label style="font-size:12px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:4px">
-          <span>📍</span> <span>${isZh ? '粘贴 Google 地图链接' : 'Paste Google Maps Link'}</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <label style="font-size:12.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:5px">
+          <span>📍</span> <span>${isZh ? '粘贴 Google 地图链接或输入地点' : 'Paste Google Maps Link or Venue'}</span>
         </label>
-        <span style="font-size:10px;padding:2px 7px;border-radius:6px;background:rgba(245,158,11,.15);color:var(--amber);font-weight:800">
-          ⚡ ${isZh ? '自动解析经纬度' : 'Auto GPS Pin'}
+        <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(245,158,11,.15);color:var(--amber);font-weight:800">
+          ⚡ ${isZh ? '自动解析 GPS 定位' : 'Auto GPS Pin'}
         </span>
       </div>
-      <div style="display:flex;gap:6px">
-        <input type="text" id="tp-url-input" class="form-input" style="flex:1;min-height:38px;padding:6px 10px;font-size:12.5px;border-color:var(--amber)"
-          placeholder="${isZh ? '直接粘贴 Google 地图链接 (如 https://maps.app.goo.gl/...)' : 'Paste Google Maps link (e.g. https://maps.app.goo.gl/...)'}"
+      <div style="margin-bottom:8px">
+        <input type="text" id="tp-url-input" class="form-input tp-url-input" style="width:100%;box-sizing:border-box;min-height:42px;padding:8px 12px;font-size:13px;border-color:var(--amber);border-radius:10px;background:var(--bg2);color:var(--text)"
+          placeholder="${isZh ? '粘贴 Google 地图链接或输入店名 (如 Westin Hotel / Village Park)' : 'Paste Google Maps link or enter place name…'}"
           onkeydown="if(event.key==='Enter'){event.preventDefault();addPlaceToPlanner();}"/>
-        <button type="button" class="primary-btn" onclick="pasteAndAddPlannerPlace()" style="width:auto;margin:0;padding:6px 12px;font-size:11.5px;font-weight:800;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;white-space:nowrap;display:inline-flex;align-items:center;gap:4px">
-          📋 ${isZh ? '粘贴并添加' : 'Paste & Add'}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="primary-btn" onclick="pasteAndAddPlannerPlace()" style="flex:1.2;margin:0;padding:8px 12px;font-size:12px;font-weight:800;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:5px">
+          <span>📋</span> <span>${isZh ? '从剪贴板粘贴并添加' : 'Paste & Add'}</span>
         </button>
-        <button type="button" class="primary-btn" onclick="addPlaceToPlanner()" style="width:auto;margin:0;padding:6px 12px;font-size:11.5px;font-weight:800;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;white-space:nowrap">
-          ➕ ${isZh ? '添加' : 'Add'}
+        <button type="button" class="primary-btn" onclick="addPlaceToPlanner()" style="flex:1;margin:0;padding:8px 12px;font-size:12px;font-weight:800;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:10px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:5px">
+          <span>➕</span> <span>${isZh ? '添加地点' : 'Add Place'}</span>
         </button>
       </div>
-      <div id="tp-input-status" style="font-size:11px;min-height:16px;margin-top:6px;color:var(--muted);line-height:1.4"></div>
+      <div id="tp-input-status" class="tp-input-status" style="font-size:11.5px;min-height:16px;margin-top:6px;color:${travelPlannerLastStatus.color || 'var(--muted)'};line-height:1.4">
+        ${travelPlannerLastStatus.html || ''}
+      </div>
     </div>
   `;
-
-  // Wishlist Import Button & Drawer
+// Wishlist Import Button & Drawer
   const pendingWishlistCount = (S.restaurantRecords || []).filter(r => r.status === 'pending').length;
   if (pendingWishlistCount > 0) {
     html += `
@@ -20206,10 +20505,11 @@ function buildTravelPlannerBodyHTML(isZh) {
             return `
               <div class="tp-place-item">
                 <div class="tp-place-num">${idx + 1}</div>
-                <div class="tp-place-info">
+                <div class="tp-place-info" onclick="editPlannerPlaceName(${idx})" style="cursor:pointer" title="${isZh ? '点击修改名称' : 'Tap to edit name'}">
                   <div class="tp-place-title">
                     <span>${meta.icon}</span>
                     <strong style="font-size:12.5px">${place.name}</strong>
+                    <span style="font-size:11px;opacity:0.6;margin-left:4px">✏️</span>
                   </div>
                   <div class="tp-place-sub">
                     <span class="tp-chip-tag">${place.city || meta.label}</span>
@@ -20287,15 +20587,15 @@ function buildTravelPlannerBodyHTML(isZh) {
         <div class="tp-cooldown-card">
           <div class="tp-cooldown-pulse">
             <span class="tp-cooldown-clock">⏳</span>
-            <span class="tp-cooldown-count" id="tp-cooldown-num">${travelPlannerCooldownRemaining}s</span>
+            <span class="tp-cooldown-count tp-cooldown-num" id="tp-cooldown-num">${travelPlannerCooldownRemaining}s</span>
           </div>
           <div style="font-size:13.5px;font-weight:800;color:var(--text);margin-bottom:3px">
             ${isZh ? 'AI 正在降温冷却中 · 倒计时结束将自动重新提交' : 'AI Rate Limit Cooldown · Auto-Submitting When Ready'}
           </div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.4">
             ${isZh 
-              ? `检测到 Google AI 请求频次限制 (第 ${travelPlannerRetryCount}/${TRAVEL_PLANNER_MAX_RETRIES} 次重试)，正在为您自动倒计时，冷却结束后将自动再次规划…` 
-              : `Google AI rate limit or busy (Attempt ${travelPlannerRetryCount}/${TRAVEL_PLANNER_MAX_RETRIES}). Counting down to auto-submit again…`}
+              ? `检测到 Google AI 频次限制 (第 ${travelPlannerRetryCount} 次重试)，正在为您自动倒计时 ${travelPlannerCooldownTotal} 秒，冷却结束后将自动再次提交规划…` 
+              : `Google AI rate limit or busy (Attempt ${travelPlannerRetryCount}). Counting down ${travelPlannerCooldownTotal}s to auto-submit again…`}
           </div>
           <div class="tp-cooldown-bar-bg">
             <div class="tp-cooldown-bar-fill" style="width:${Math.max(0, (travelPlannerCooldownRemaining / travelPlannerCooldownTotal) * 100)}%"></div>
@@ -20314,7 +20614,6 @@ function buildTravelPlannerBodyHTML(isZh) {
         </div>
       ` : `
         <button type="button" class="primary-btn" onclick="planTripRoute()" style="width:100%;font-size:14px;font-weight:900;padding:12px;margin:0;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;box-shadow:0 4px 14px rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;gap:8px">
-          <span>🚀</span>
           <span>${travelPlannerCurrentPlan ? (isZh ? '🔄 重新规划路线 (Re-Plan)' : '🔄 Re-Plan Trip Route') : (isZh ? '🚀 智能规划我的行程 (Plan My Route)' : '🚀 Plan My Route (AI Trip Planner)')}</span>
         </button>
       `}
@@ -20534,7 +20833,21 @@ function renderItineraryCard(plan, isZh) {
 // ── 7. EXPORT TO GLOBAL WINDOW SCOPE ───────────────────────────
 const _exportTarget = (typeof window !== 'undefined') ? window : (typeof global !== 'undefined' ? global : this);
 if (_exportTarget) {
-  _exportTarget.travelPlannerPlaces = travelPlannerPlaces;
+  Object.defineProperty(_exportTarget, 'travelPlannerCooldownTotal', {
+    get: () => travelPlannerCooldownTotal,
+    set: (v) => { travelPlannerCooldownTotal = v; },
+    configurable: true
+  });
+  Object.defineProperty(_exportTarget, 'travelPlannerPlaces', {
+    get: () => travelPlannerPlaces,
+    set: (v) => { travelPlannerPlaces = v; },
+    configurable: true
+  });
+  _exportTarget.savePlannerPlaces = savePlannerPlaces;
+  _exportTarget.loadPlannerPlaces = loadPlannerPlaces;
+  _exportTarget.HOTEL_REGEX = HOTEL_REGEX;
+  _exportTarget.inferPlaceMetadata = inferPlaceMetadata;
+  if (typeof window !== 'undefined') window.inferPlaceMetadata = inferPlaceMetadata;
   Object.defineProperty(_exportTarget, 'travelPlannerCurrentPlan', {
     get: () => travelPlannerCurrentPlan,
     set: (v) => { travelPlannerCurrentPlan = v; },
@@ -20557,6 +20870,9 @@ if (_exportTarget) {
   _exportTarget.removePlannerPlace = removePlannerPlace;
   _exportTarget.movePlannerPlace = movePlannerPlace;
   _exportTarget.clearAllPlannerPlaces = clearAllPlannerPlaces;
+  _exportTarget.editPlannerPlaceName = editPlannerPlaceName;
+  _exportTarget.geocodePlaceByName = geocodePlaceByName;
+  _exportTarget.resolvePlaceViaGemini = resolvePlaceViaGemini;
   _exportTarget.planTripRoute = planTripRoute;
   _exportTarget.replanTripRoute = replanTripRoute;
   _exportTarget.copyTripItineraryToClipboard = copyTripItineraryToClipboard;

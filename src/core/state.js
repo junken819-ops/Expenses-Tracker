@@ -44,7 +44,12 @@ const STATE = {
   geminiModel: 'auto',
   geminiActiveModel: 'gemini-2.0-flash',
   geminiDiscoveredModels: [],
-  travelTrips: []
+  travelTrips: [],
+  travelPlannerPlaces: [],
+  travelPlannerCurrentPlan: null,
+  travelPlannerDayMode: 'auto',
+  travelPlannerStartTime: '09:00',
+  travelPlannerTravelMode: 'driving'
 };
 
 // ── S: GLOBAL BACKWARD-COMPATIBLE STATE ALIAS ──

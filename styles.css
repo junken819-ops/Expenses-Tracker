@@ -7043,9 +7043,13 @@ div[id*="feedback"],
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 190px;
+  max-height: 240px;
   overflow-y: auto;
-  padding-right: 2px;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 4px;
+}
+.tp-inline-body {
+  padding-bottom: 75px;
 }
 .tp-place-item {
   display: flex;

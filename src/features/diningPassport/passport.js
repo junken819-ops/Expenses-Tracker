@@ -171,6 +171,14 @@ window.filterPassportPageCountry = filterPassportPageCountry;
 // (Wishlist tab => Quick Add from Google Maps with zero typing, Visited tab => visited form).
 function openAddPassportPlace(source){
   const st = (source === 'modal' || source === 'popup') ? passportActiveStatusFilter : passportPageStatusFilter;
+  if(st === 'trip'){
+    const inp = (typeof getPlannerUrlInput === 'function') ? getPlannerUrlInput() : document.querySelector('#tp-url-input');
+    if(inp){
+      inp.focus();
+      if(typeof inp.scrollIntoView === 'function') inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return;
+  }
   if(st === 'pending'){
     openQuickWishlistModal();
   } else {
@@ -496,9 +504,17 @@ function renderPassportPage(){
   const ppSearchBox = document.querySelector('#page-passport .pp-search-box');
   const ppToolbar = document.querySelector('#page-passport .pp-toolbar');
   if(passportPageStatusFilter === 'trip'){
+    ['all', 'visited', 'pending', 'trip'].forEach(s => {
+      const btn = el('passport-page-filter-' + s);
+      if(btn){
+        if(s === 'trip') btn.classList.add('on');
+        else btn.classList.remove('on');
+      }
+    });
     if(ppSearchBox) ppSearchBox.style.display = 'none';
     if(pillsContainer) pillsContainer.style.display = 'none';
     if(ppToolbar) ppToolbar.style.display = 'none';
+    if(typeof loadPlannerPlaces === 'function') loadPlannerPlaces();
     container.innerHTML = (typeof renderTravelPlannerInlineHTML === 'function')
       ? renderTravelPlannerInlineHTML(isZh)
       : '<div id="tp-inline-container" style="min-height:50vh"></div>';
@@ -1117,8 +1133,11 @@ function parseMapsShareText(rawText) {
   const lines = String(rawText).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (/https?:\/\//i.test(line)) continue;
+    let line = lines[i];
+    // Strip URL from the line to check if there is venue text before/after the URL
+    const lineWithoutUrl = line.replace(/https?:\/\/[^\s<>"']+/gi, '').trim();
+    if (!lineWithoutUrl) continue; // Only skip if the line was strictly a bare URL
+    line = lineWithoutUrl;
 
     // Check for rating and review count, e.g. "4.7 ★ (763) · Fine dining restaurant"
     const starMatch = line.match(/(\d+\.\d+)\s*(?:★|⭐|stars?)/i) || line.match(/(?:★|⭐)\s*(\d+\.\d+)/);
@@ -1507,7 +1526,14 @@ async function capturePlaceFromGoogleMaps(raw){
   let recommendations = (backendData && backendData.recommendations) || [];
   let recommendationText = (backendData && backendData.recommendationText) || '';
 
-  if(!recommendationText || recommendations.length === 0){
+  const HOTEL_CHECK_REGEX = /(?:\bhotels?\b|\bresorts?\b|\binns?\b|\bhostels?\b|\bmotels?\b|\bb&b\b|\bhomestays?\b|\bguesthouses?\b|guest\s*house|\bsuites?\b|\blodges?\b|\bvillas?\b|\bchalets?\b|serviced\s*apartments?|\bresidences?\b|\bairbnb\b|check-?in|酒店|宾馆|旅馆|民宿|度假村|客栈|青旅|\bwestin\b|\bhilton\b|\bmarriott\b|\bhyatt\b|shangri-?la|\bsheraton\b|\bintercontinental\b|ritz-?carlton|four\s*seasons|\bnovotel\b|\bibis\b|\bradisson\b|\bkempinski\b|\bpullman\b|le\s*meridien|st\\.?\s*regis|\brenaissance\b|crowne\s*plaza|\bmercure\b|\bswissotel\b|\baloft\b|\balila\b|banyan\s*tree|\bsofitel\b|\banantara\b|\bcitizenm\b|\btravelodge\b|tune\s*hotel|zen\s*rooms|\boyo\b)/i;
+  const isHotel = HOTEL_CHECK_REGEX.test(`${name || ''} ${cuisine || ''} ${(categories||[]).join(' ')} ${raw || ''}`);
+  if(isHotel){
+    cuisine = isZh ? '酒店住宿 / 入住' : 'Hotel / Check-in';
+    categories = ['Hotel', 'Accommodation'];
+    recommendations = isZh ? ['办理入住 / Check-in', '行李寄存', '酒店设施体验'] : ['Hotel Check-in', 'Luggage Drop-off', 'Amenities & Rest'];
+    recommendationText = isZh ? '行程第一站：优先前往酒店办理 Check-in 入住或寄存行李，轻装开启旅程' : 'Check in first or drop bags at concierge before sightseeing';
+  } else if(!recommendationText || recommendations.length === 0){
     const localReco = generateDiningRecommendations(name, categories, city);
     cuisine = cuisine || localReco.cuisine;
     recommendations = localReco.items;
@@ -1533,9 +1559,22 @@ async function capturePlaceFromGoogleMaps(raw){
     protein: 0
   }));
 
+  // Prevent generating dummy generic names like "Malaysia Restaurant Specialties"
+  let resolvedDisplayName = name;
+  if (!resolvedDisplayName || /Malaysia Restaurant Specialties/i.test(resolvedDisplayName)) {
+    const rawClean = String(raw || '').replace(/https?:\/\/[^\s<>"']+/gi, '').trim();
+    if (rawClean && rawClean.length >= 2 && rawClean.length <= 60 && !/^\d+$/.test(rawClean)) {
+      resolvedDisplayName = rawClean;
+    } else if (urlInfo && urlInfo.name) {
+      resolvedDisplayName = urlInfo.name;
+    } else {
+      resolvedDisplayName = isZh ? '地图地点 (点击编辑名称)' : 'Map Location (Tap to name)';
+    }
+  }
+
   return {
     ok: true,
-    name: name || (city ? `${city} ${cuisine || (isZh ? '精选餐厅' : 'Restaurant')}` : (countryName ? `${countryName} ${cuisine || (isZh ? '精选餐厅' : 'Restaurant')}` : (isZh ? '想吃餐厅' : 'Wishlist Restaurant'))),
+    name: resolvedDisplayName,
     rating,
     ratingNum: rating,
     reviewsCount,
