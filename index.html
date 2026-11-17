@@ -930,6 +930,7 @@
         <button type="button" id="passport-page-filter-all" class="pp-seg-btn on" onclick="filterPassportPageStatus('all')">All</button>
         <button type="button" id="passport-page-filter-visited" class="pp-seg-btn" onclick="filterPassportPageStatus('visited')">✅ Visited</button>
         <button type="button" id="passport-page-filter-pending" class="pp-seg-btn" onclick="filterPassportPageStatus('pending')">📌 Wishlist</button>
+        <button type="button" id="passport-page-filter-trip" class="pp-seg-btn" onclick="filterPassportPageStatus('trip')">🗺️ Trip</button>
       </div>
 
       <!-- Dynamic Country Pills (Self-open only when country detected) -->
@@ -1450,218 +1451,300 @@
   </section>
 
   <!-- MORE / SETTINGS -->
+    <!-- MORE / SETTINGS -->
   <section id="page-more" class="page">
     <div class="inner-hdr">
       <button type="button" class="back-btn" onclick="go('home')" title="Back to Home">✕</button>
       <h1 data-i18n="more_title">功能中心与设置</h1>
+      <button type="button" class="icon-btn" onclick="go('profile')" title="Profile & Account" style="font-size:15px;background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.3);color:#a855f7">👤</button>
     </div>
 
-
-
-    <!-- 🤖 Google Gemini AI & Studio Settings -->
-    <div class="more-sec">
-      <div class="more-sec-title"><span>🤖 Google Gemini AI 核心设置</span></div>
-      <div class="more-card-list">
-        <button type="button" class="more-row" onclick="openGeminiModal()">
-          <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(6,182,212,.16);color:#06b6d4">🔑</div>
-            <div>
-              <div class="more-row-title">Google Gemini API Key</div>
-              <div class="more-row-sub">配置 Google AI Studio 密钥 · 激活收据视觉识别与经期分析</div>
-            </div>
-          </div>
-          <div class="more-row-right" id="sval-gemini">Setup ⚡ ›</div>
+    <!-- Modern Hero Hub Banner -->
+    <div class="more-hero">
+      <div class="more-hero-badge">🍯 Pocket Winnie Pro Toolkit</div>
+      <div class="more-hero-title">功能中心与超级工具箱</div>
+      <div class="more-hero-sub">AI 智能规划 · 生理期健康 · 消费对账 · 马来西亚实用百宝箱</div>
+      <div class="more-hero-pills">
+        <button type="button" class="more-hero-pill" onclick="openGeminiModal()">
+          <span>🤖</span>
+          <span id="more-hero-gemini-pill">Gemini AI</span>
         </button>
-        <button type="button" class="more-row" onclick="openAiAutoBudgetModal()">
-          <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(16,185,129,.16);color:#10b981">✨</div>
-            <div>
-              <div class="more-row-title">AI 50/30/20 智能预算调优</div>
-              <div class="more-row-sub">根据月度开销自动计算黄金预算比例</div>
-            </div>
-          </div>
-          <div class="more-row-right">›</div>
+        <button type="button" class="more-hero-pill" onclick="filterPassportPageStatus('trip'); go('passport');">
+          <span>🧭</span>
+          <span>AI 行程路线</span>
         </button>
-        <button type="button" class="more-row" onclick="openTravelPlanner('more')">
-          <div class="more-row-left">
-            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(6,182,212,.2));color:#10b981">🗺️</div>
-            <div>
-              <div class="more-row-title" data-i18n="travel_planner_title">AI 智能行程路线规划</div>
-              <div class="more-row-sub" data-i18n="travel_planner_sub">粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排</div>
-            </div>
-          </div>
-          <div class="more-row-right" style="color:#10b981;font-weight:700">Open ›</div>
-        </button>
-        <button type="button" class="more-row" onclick="openAiCoachModal()">
-          <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(245,158,11,.16);color:var(--amber)">🍯</div>
-            <div>
-              <div class="more-row-title">维尼 AI 理财陪伴官 (Spending Coach)</div>
-              <div class="more-row-sub">智能问答 · 消费漏斗诊断 · 趣味省钱建议与购买决策</div>
-            </div>
-          </div>
-          <div class="more-row-right">Ask 🍯 ›</div>
+        <button type="button" class="more-hero-pill" onclick="go('profile')">
+          <span>⚙️</span>
+          <span>偏好设置</span>
         </button>
       </div>
     </div>
 
-    <!-- 🌸 Period Care & Health -->
+    <!-- 🤖 Google Gemini AI 核心智能 -->
+    <div class="more-sec">
+      <div class="more-sec-title"><span>🤖 Google Gemini AI 核心智能</span></div>
+      <div class="more-card-list">
+        <button type="button" class="more-row" onclick="openGeminiModal()">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(6,182,212,.22),rgba(59,130,246,.18));color:#06b6d4">🔑</div>
+            <div class="more-row-text">
+              <div class="more-row-title">Google Gemini API Key</div>
+              <div class="more-row-sub">配置 Google AI Studio 密钥 · 激活收据视觉识别</div>
+            </div>
+          </div>
+          <div class="more-row-right" id="sval-gemini">
+            <span class="more-badge badge-amber">Setup ⚡</span>
+            <span class="more-arrow">›</span>
+          </div>
+        </button>
+
+        <button type="button" class="more-row" onclick="filterPassportPageStatus('trip'); go('passport');">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(16,185,129,.24),rgba(6,182,212,.2));color:#10b981">🗺️</div>
+            <div class="more-row-text">
+              <div class="more-row-title" data-i18n="travel_planner_title">AI 智能行程路线规划</div>
+              <div class="more-row-sub" data-i18n="travel_planner_sub">粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排</div>
+            </div>
+          </div>
+          <div class="more-row-right">
+            <span class="more-badge badge-emerald">🗺️ Open</span>
+            <span class="more-arrow">›</span>
+          </div>
+        </button>
+
+        <button type="button" class="more-row" onclick="openAiAutoBudgetModal()">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(16,185,129,.22),rgba(52,211,153,.16));color:#10b981">✨</div>
+            <div class="more-row-text">
+              <div class="more-row-title">AI 50/30/20 智能预算调优</div>
+              <div class="more-row-sub">根据月度开销自动计算黄金预算比例</div>
+            </div>
+          </div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
+        </button>
+
+        <button type="button" class="more-row" onclick="openAiCoachModal()">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(245,158,11,.24),rgba(251,191,36,.18));color:var(--amber)">🍯</div>
+            <div class="more-row-text">
+              <div class="more-row-title">维尼 AI 理财陪伴官 (Spending Coach)</div>
+              <div class="more-row-sub">智能问答 · 消费漏斗诊断 · 趣味省钱建议与购买决策</div>
+            </div>
+          </div>
+          <div class="more-row-right">
+            <span class="more-badge badge-amber">Ask 🍯</span>
+            <span class="more-arrow">›</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- 🌸 女生经期关怀中心 -->
     <div class="more-sec">
       <div class="more-sec-title"><span>🌸 女生经期关怀中心</span></div>
       <div class="more-card-list">
         <button type="button" class="more-row" onclick="go('period')">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(244,114,182,.16);color:#ec4899">🌸</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(244,114,182,.24),rgba(236,72,153,.18));color:#ec4899">🌸</div>
+            <div class="more-row-text">
               <div class="more-row-title">经期关怀日历与健康记录</div>
               <div class="more-row-sub">生理周期倒计时 · 排卵期预测 · 经期护理开销汇总</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
         </button>
+
         <button type="button" class="more-row" onclick="openPeriodSettingsModal()">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(244,114,182,.16);color:#ec4899">⚙️</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(244,114,182,.22),rgba(219,39,119,.16));color:#ec4899">⚙️</div>
+            <div class="more-row-text">
               <div class="more-row-title">生理周期参数设置</div>
               <div class="more-row-sub">设定周期天数、经期长度及上次经期起始日</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
         </button>
       </div>
     </div>
 
-    <!-- 📊 Expense Management & Statements -->
+    <!-- 📊 支出管理与凭证报表 -->
     <div class="more-sec">
       <div class="more-sec-title"><span>📊 支出管理与凭证报表</span></div>
       <div class="more-card-list">
         <button type="button" class="more-row" onclick="openCashFlowModal()">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(6,182,212,.16);color:#06b6d4">💰</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(6,182,212,.22),rgba(14,165,233,.16));color:#06b6d4">💰</div>
+            <div class="more-row-text">
               <div class="more-row-title">30天现金流与发薪日预测 (Cash Flow Forecast)</div>
               <div class="more-row-sub">基于发薪日、周期账单与日常花销测算资金安全期</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
         </button>
+
         <button type="button" class="more-row" onclick="openHeatmapModal()">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(249,115,22,.16);color:#f97316">📸</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(249,115,22,.22),rgba(234,88,12,.16));color:#f97316">📸</div>
+            <div class="more-row-text">
               <div class="more-row-title">全年支出活跃热力图 (Spending Heatmap)</div>
               <div class="more-row-sub">GitHub 式 365 天消费点阵 · 记录每一天无消费与高开销</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
         </button>
+
         <button type="button" class="more-row" onclick="openWrappedModal()">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(245,158,11,.16);color:var(--amber)">🍯</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(245,158,11,.24),rgba(217,119,6,.18));color:var(--amber)">🎁</div>
+            <div class="more-row-text">
               <div class="more-row-title">Pocket Winnie Wrapped (年终消费回顾)</div>
               <div class="more-row-sub">年度总账单 · 美食餐厅足迹 · 攒钱勋章与理财性格</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
         </button>
+
         <button type="button" class="more-row" onclick="go('passport')">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(236,72,153,.16);color:#ec4899">🌏</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(236,72,153,.22),rgba(16,185,129,.18));color:#ec4899">🌏</div>
+            <div class="more-row-text">
               <div class="more-row-title">全球美食餐厅足迹 (World Dining Passport)</div>
-              <div class="more-row-sub">跨国探店 · 自动创建国家分类 · 消费汇率 · 菜品与营养 · 待探店清单</div>
+              <div class="more-row-sub">跨国探店 · 自动创建国家分类 · 汇率 · 想吃清单</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
+          <div class="more-row-right">
+            <span class="more-badge badge-pink">🌏 Passport</span>
+            <span class="more-arrow">›</span>
+          </div>
         </button>
+
         <button type="button" class="more-row" onclick="go('debts')">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(59,130,246,.16);color:#3b82f6">🤝</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(59,130,246,.22),rgba(37,99,235,.16));color:#3b82f6">🤝</div>
+            <div class="more-row-text">
               <div class="more-row-title">债务与借还记录 (Debt & IOU)</div>
-              <div class="more-row-sub">记录朋友垫付、借钱与欠款</div>
+              <div class="more-row-sub">记录朋友垫付、借钱与欠款结清</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
         </button>
+
         <button type="button" class="more-row" onclick="exportMonthlyPDF()">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(124,58,237,.16);color:#7c3aed">📄</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(109,40,217,.16));color:#7c3aed">📄</div>
+            <div class="more-row-text">
               <div class="more-row-title">导出月度 PDF 消费对账单</div>
               <div class="more-row-sub">生成专业账单汇总，支持下载打印与离线保存</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
         </button>
+
         <button type="button" class="more-row" onclick="go('budgets')">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(239,68,68,.16);color:#ef4444">🎯</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(239,68,68,.22),rgba(220,38,38,.16));color:#ef4444">🎯</div>
+            <div class="more-row-text">
               <div class="more-row-title">每月预算中心 (Monthly Budgets)</div>
               <div class="more-row-sub">设定分类消费上限与超支提醒</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
-        </button>
-                <button type="button" class="more-row" onclick="openPetrolModal()">
-          <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(245,158,11,.16);color:var(--amber)">⛽</div>
-            <div>
-              <div class="more-row-title">马来西亚实时油价与加油记录 (Petrol Tracker)</div>
-              <div class="more-row-sub">RON95 / RON97 / Diesel 实时油价 · 车型油箱测算 · 加油账单明细</div>
-            </div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
           </div>
-          <div class="more-row-right">›</div>
-        </button>
-        <button type="button" class="more-row" onclick="openCategoryManager('expense')">
-          <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(16,185,129,.16);color:#10b981">🏷️</div>
-            <div>
-              <div class="more-row-title">支出分类与二级标签管理</div>
-              <div class="more-row-sub">自定义专属消费图标与分类</div>
-            </div>
-          </div>
-          <div class="more-row-right">›</div>
         </button>
       </div>
     </div>
 
-    <!-- 🎨 Personalization & App Settings -->
+    <!-- 🇲🇾 马来西亚实用百宝箱 -->
     <div class="more-sec">
-      <div class="more-sec-title"><span>🎨 个性化与数据设置</span></div>
+      <div class="more-sec-title"><span>🇲🇾 马来西亚实用百宝箱</span></div>
       <div class="more-card-list">
+        <button type="button" class="more-row" onclick="openPetrolModal()">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(245,158,11,.24),rgba(217,119,6,.18));color:var(--amber)">⛽</div>
+            <div class="more-row-text">
+              <div class="more-row-title">实时油价与加油测算 (Petrol Tracker)</div>
+              <div class="more-row-sub">RON95 / RON97 / Diesel 实时油价 · 车型油箱测算 · 加油账单明细</div>
+            </div>
+          </div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
+        </button>
+
+        <button type="button" class="more-row" onclick="openCategoryManager('expense')">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(16,185,129,.22),rgba(5,150,105,.16));color:#10b981">🏷️</div>
+            <div class="more-row-text">
+              <div class="more-row-title">支出分类与二级标签管理</div>
+              <div class="more-row-sub">自定义专属消费图标与分类标签</div>
+            </div>
+          </div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ⚙️ 偏好设置与数据安全 -->
+    <div class="more-sec">
+      <div class="more-sec-title"><span>⚙️ 偏好设置与数据安全</span></div>
+      <div class="more-card-list">
+        <button type="button" class="more-row" onclick="go('profile')">
+          <div class="more-row-left">
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(139,92,246,.16));color:#a855f7">👤</div>
+            <div class="more-row-text">
+              <div class="more-row-title">个人设置、主题与数据备份</div>
+              <div class="more-row-sub">深浅主题、用户名、货币、语言、JSON 备份导出与恢复</div>
+            </div>
+          </div>
+          <div class="more-row-right">
+            <span class="more-badge badge-purple">⚙️ Setup</span>
+            <span class="more-arrow">›</span>
+          </div>
+        </button>
+
         <button type="button" class="more-row" onclick="openWallpaperModal()">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(255,179,0,.16);color:#f59e0b">🎨</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(255,179,0,.22),rgba(245,158,11,.16));color:#f59e0b">🎨</div>
+            <div class="more-row-text">
               <div class="more-row-title">小金库萌系壁纸工坊</div>
               <div class="more-row-sub">百亩森林 Pooh 萌系背景与自定义网络壁纸</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
+          </div>
         </button>
+
         <button type="button" class="more-row" onclick="openCurrencyModal()">
           <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(6,182,212,.16);color:#06b6d4">💱</div>
-            <div>
+            <div class="more-row-icon" style="background:linear-gradient(135deg,rgba(6,182,212,.22),rgba(14,165,233,.16));color:#06b6d4">💱</div>
+            <div class="more-row-text">
               <div class="more-row-title">实时汇率换算器 (FX Converter)</div>
               <div class="more-row-sub">实时汇率转换与外币计算</div>
             </div>
           </div>
-          <div class="more-row-right">›</div>
-        </button>
-        <button type="button" class="more-row" onclick="go('profile')">
-          <div class="more-row-left">
-            <div class="more-row-icon" style="background:rgba(124,58,237,.16);color:#9d5ff0">👤</div>
-            <div>
-              <div class="more-row-title">个人设置与数据备份 (Backup & Reset)</div>
-              <div class="more-row-sub">深浅主题、JSON 备份导出、恢复与安全重置</div>
-            </div>
+          <div class="more-row-right">
+            <span class="more-arrow">›</span>
           </div>
-          <div class="more-row-right">›</div>
         </button>
       </div>
     </div>

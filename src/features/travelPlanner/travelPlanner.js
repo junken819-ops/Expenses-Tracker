@@ -604,19 +604,10 @@ window.openSingleStopInGoogleMaps = openSingleStopInGoogleMaps;
 async function openTravelPlanner(source = 'default', initialLink = '') {
   travelPlannerShowHowItWorks = false;
   travelPlannerShowWishlistImport = false;
-  
-  // If user passed a link directly from the Wishlist quick-add bar
-  if (initialLink && String(initialLink).trim()) {
-    openModal('travel-planner-modal');
-    renderTravelPlannerUI();
-    await addPlaceToPlanner(initialLink.trim());
-    return;
-  }
 
   // If no places added yet and wishlist has pending places, seed with wishlist places if empty
   if (travelPlannerPlaces.length === 0 && Array.isArray(S.restaurantRecords)) {
     const pending = S.restaurantRecords.filter(r => r.status === 'pending');
-    // Pre-populate if only a few pending places exist
     if (pending.length > 0 && pending.length <= 4) {
       travelPlannerPlaces = pending.map(p => ({
         id: p.id || ('pl_' + Date.now() + Math.random().toString(36).substr(2, 4)),
@@ -632,6 +623,24 @@ async function openTravelPlanner(source = 'default', initialLink = '') {
         recommendations: p.items ? p.items.map(it => it.name) : []
       }));
     }
+  }
+
+  // When opened from 'more' hubs, 'passport' page, or tab requests: route directly to dedicated tab!
+  if (source === 'more' || source === 'passport' || source === 'tab') {
+    if (typeof go === 'function') go('passport');
+    if (typeof filterPassportPageStatus === 'function') filterPassportPageStatus('trip');
+    if (initialLink && String(initialLink).trim()) {
+      setTimeout(() => addPlaceToPlanner(initialLink.trim()), 100);
+    }
+    return;
+  }
+
+  // If user passed a link directly from modal source
+  if (initialLink && String(initialLink).trim()) {
+    openModal('travel-planner-modal');
+    renderTravelPlannerUI();
+    await addPlaceToPlanner(initialLink.trim());
+    return;
   }
 
   openModal('travel-planner-modal');
@@ -652,9 +661,26 @@ window.closeTravelPlanner = closeTravelPlanner;
 /**
  * Pastes clipboard content into the planner input and adds it
  */
+
+function getPlannerUrlInput() {
+  const inputs = document.querySelectorAll('#tp-url-input');
+  for (let i = 0; i < inputs.length; i++) {
+    if (inputs[i].offsetParent !== null || inputs[i].value) return inputs[i];
+  }
+  return inputs[0] || el('tp-url-input');
+}
+
+function getPlannerStatusEl() {
+  const els = document.querySelectorAll('#tp-input-status');
+  for (let i = 0; i < els.length; i++) {
+    if (els[i].offsetParent !== null) return els[i];
+  }
+  return els[0] || el('tp-input-status');
+}
+
 async function pasteAndAddPlannerPlace() {
-  const inp = el('tp-url-input');
-  const statusEl = el('tp-input-status');
+  const inp = getPlannerUrlInput();
+  const statusEl = getPlannerStatusEl();
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   try {
     const text = await navigator.clipboard.readText();
@@ -1124,38 +1150,8 @@ window.planTripFromQuickWishlist = planTripFromQuickWishlist;
 
 // ── 6. UI HTML TEMPLATE & RENDERER ─────────────────────────────
 
-function renderTravelPlannerUI() {
-  const container = el('travel-planner-modal-content');
-  if (!container) return;
-  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-  const hasGeminiKey = Boolean(S.geminiApiKey && S.geminiApiKey.length > 7);
-
-  // Model pill
-  const activeModelName = (S.geminiModel && S.geminiModel !== 'auto') ? S.geminiModel : 'Gemini 2.0 Flash';
-  const modelBadge = hasGeminiKey
-    ? `<span class="tp-badge-ai" title="Free Tier: 15 RPM / 1M TPM">🤖 ${activeModelName} · Free AI</span>`
-    : `<span class="tp-badge-offline" onclick="openGeminiModal()" title="Tap to enter your free Google AI Studio Key">⚡ Smart GPS Engine <span style="text-decoration:underline;cursor:pointer">(${isZh ? '开启 Gemini AI ›' : 'Connect Gemini AI ›'})</span></span>`;
-
-  let html = `
-    <div class="tp-modal-header">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:22px">🧭</span>
-        <div>
-          <div style="font-weight:900;font-size:16px;color:var(--text);display:flex;align-items:center;gap:6px">
-            <span>${isZh ? 'AI 智能行程路线规划' : 'AI Travel Route Planner'}</span>
-            ${modelBadge}
-          </div>
-          <div style="font-size:11px;color:var(--muted)">
-            ${isZh ? '粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排' : 'Paste Google Maps links · AI plans optimal timing, route & Today/Tomorrow schedule'}
-          </div>
-        </div>
-      </div>
-      <button type="button" class="modal-close-btn" onclick="closeTravelPlanner()">✕</button>
-    </div>
-
-    <div class="tp-modal-body" id="tp-modal-body">
-  `;
-
+function buildTravelPlannerBodyHTML(isZh) {
+  let html = '';
   // Expandable "How It Works" Card
   html += `
     <div class="tp-how-box ${travelPlannerShowHowItWorks ? 'expanded' : ''}">
@@ -1419,11 +1415,77 @@ function renderTravelPlannerUI() {
     html += renderItineraryCard(travelPlannerCurrentPlan, isZh);
   }
 
-  html += `
-    </div>
-  `;
 
-  container.innerHTML = html;
+  return html;
+}
+
+function renderTravelPlannerInlineHTML(isZh) {
+  return '<div id="tp-inline-container" class="tp-inline-root" style="min-height:50vh"></div>';
+}
+window.renderTravelPlannerInlineHTML = renderTravelPlannerInlineHTML;
+
+function renderInlineTravelPlannerContent() {
+  renderTravelPlannerUI();
+}
+window.renderInlineTravelPlannerContent = renderInlineTravelPlannerContent;
+
+function renderTravelPlannerUI() {
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const hasGeminiKey = Boolean(S.geminiApiKey && S.geminiApiKey.length > 7);
+
+  // Model pill
+  const activeModelName = (S.geminiModel && S.geminiModel !== 'auto') ? S.geminiModel : 'Gemini 2.0 Flash';
+  const modelBadge = hasGeminiKey
+    ? `<span class="tp-badge-ai" title="Free Tier: 15 RPM / 1M TPM">🤖 ${activeModelName} · Free AI</span>`
+    : `<span class="tp-badge-offline" onclick="openGeminiModal()" title="Tap to enter your free Google AI Studio Key">⚡ Smart GPS Engine <span style="text-decoration:underline;cursor:pointer">(${isZh ? '开启 Gemini AI ›' : 'Connect Gemini AI ›'})</span></span>`;
+
+  const bodyHtml = buildTravelPlannerBodyHTML(isZh);
+
+  // 1. Modal Container
+  const modalContainer = el('travel-planner-modal-content');
+  if (modalContainer) {
+    modalContainer.innerHTML = `
+      <div class="tp-modal-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:22px">🧭</span>
+          <div>
+            <div style="font-weight:900;font-size:16px;color:var(--text);display:flex;align-items:center;gap:6px">
+              <span>${isZh ? 'AI 智能行程路线规划' : 'AI Travel Route Planner'}</span>
+              ${modelBadge}
+            </div>
+            <div style="font-size:11px;color:var(--muted)">
+              ${isZh ? '粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排' : 'Paste Google Maps links · AI plans optimal timing, route & Today/Tomorrow schedule'}
+            </div>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeTravelPlanner()">✕</button>
+      </div>
+
+      <div class="tp-modal-body" id="tp-modal-body">
+        ${bodyHtml}
+      </div>
+    `;
+  }
+
+  // 2. Inline Page Tab Container
+  const inlineContainer = el('tp-inline-container');
+  if (inlineContainer) {
+    inlineContainer.innerHTML = `
+      <div class="tp-inline-header" style="text-align:center;padding:14px 12px 16px;background:linear-gradient(135deg,rgba(16,185,129,.14),rgba(6,182,212,.08));border-radius:18px;margin-bottom:14px;border:1.5px solid rgba(16,185,129,.22);box-shadow:0 6px 18px rgba(0,0,0,.04)">
+        <div style="font-size:34px;margin-bottom:6px">🧭</div>
+        <div style="font-weight:900;font-size:17.5px;color:var(--text);display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
+          <span>${isZh ? 'AI 智能行程路线规划' : 'AI Travel Route Planner'}</span>
+          ${modelBadge}
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:4px">
+          ${isZh ? '粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排' : 'Paste Google Maps links · AI plans optimal timing, route & Today/Tomorrow schedule'}
+        </div>
+      </div>
+      <div class="tp-inline-body" id="tp-inline-body">
+        ${bodyHtml}
+      </div>
+    `;
+  }
 }
 
 /**
@@ -1588,6 +1650,9 @@ if (_exportTarget) {
   _exportTarget.replanTripRoute = replanTripRoute;
   _exportTarget.copyTripItineraryToClipboard = copyTripItineraryToClipboard;
   _exportTarget.renderTravelPlannerUI = renderTravelPlannerUI;
+  _exportTarget.renderTravelPlannerInlineHTML = renderTravelPlannerInlineHTML;
+  _exportTarget.renderInlineTravelPlannerContent = renderInlineTravelPlannerContent;
+  _exportTarget.buildTravelPlannerBodyHTML = buildTravelPlannerBodyHTML;
   _exportTarget.toggleTravelPlannerHowItWorks = toggleTravelPlannerHowItWorks;
   _exportTarget.toggleWishlistImportSelector = toggleWishlistImportSelector;
   _exportTarget.importSelectedWishlistPlaces = importSelectedWishlistPlaces;

@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-11-17T05:49:35.666Z
+   Last build: 2026-11-17T07:14:48.582Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -423,7 +423,7 @@ const I18N = {
     "passport_page_title": "Dining Passport",
     "passport_page_sub": "World Restaurant & Dining Passport · Track Worldwide",
     "travel_planner_title": "AI Travel Route Planner",
-    "travel_planner_sub": "Plan optimal routes, schedule & Today vs Tomorrow trips",
+    "travel_planner_sub": "Plan routes, schedule & Today vs Tomorrow trips",
     "travel_planner_btn": "Plan My Route",
     "nav_profile": "Profile",
     "cal_view": "Calendar",
@@ -764,7 +764,7 @@ const I18N = {
     "passport_page_title": "全球美食护照",
     "passport_page_sub": "跨国探店与美食足迹 · 待吃清单",
     "travel_planner_title": "AI 智能行程路线规划",
-    "travel_planner_sub": "AI 规划路线顺序、时刻表与今天/明天安排",
+    "travel_planner_sub": "自动规划时刻表与今天/明天路线安排",
     "travel_planner_btn": "规划我的行程",
     "nav_profile": "我的",
     "cal_view": "日历视图",
@@ -2189,6 +2189,11 @@ function toggleCustomWpDropdown(){
 // Page view routing (go), Modal Dialog Manager (openModal/closeModal), Speed dial FAB,
 // Form submissions, File/Photo upload handlers, Super-Hub routers, and Swipe gestures.
 function go(page){
+  if(page==='travel' || page==='trip'){
+    go('passport');
+    if(typeof filterPassportPageStatus==='function') filterPassportPageStatus('trip');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
   const target = el('page-'+page);
@@ -6768,8 +6773,15 @@ function updateGeminiStatusUI(){
   // More/Studio settings row
   const sval = el('sval-gemini');
   if(sval){
-    sval.textContent = hasKey ? (isZh ? `已连接 ⚡ (${defaultSetting}) ›` : `Connected ⚡ (${defaultSetting}) ›`) : (isZh ? '点击配置 ⚡ ›' : 'Setup ⚡ ›');
-    sval.style.color = hasKey ? 'var(--green)' : 'var(--amber)';
+    sval.innerHTML = hasKey 
+      ? `<span class="more-badge badge-emerald">⚡ ${isZh ? '已连接' : 'Connected'}</span> <span class="more-arrow">›</span>`
+      : `<span class="more-badge badge-amber">${isZh ? '配置 ⚡' : 'Setup ⚡'}</span> <span class="more-arrow">›</span>`;
+  }
+
+  // More hero pill
+  const heroPill = el('more-hero-gemini-pill');
+  if(heroPill){
+    heroPill.textContent = hasKey ? (isZh ? 'Gemini 就绪' : 'Gemini Ready') : (isZh ? '配置 AI' : 'Setup AI');
   }
 
   // Tx Modal AI button
@@ -16629,7 +16641,7 @@ window.togglePassportCardExpand = togglePassportCardExpand;
 
 function filterPassportPageStatus(status){
   passportPageStatusFilter = status;
-  ['all', 'visited', 'pending'].forEach(s => {
+  ['all', 'visited', 'pending', 'trip'].forEach(s => {
     const btn = el('passport-page-filter-' + s);
     if(btn){
       if(s === status) btn.classList.add('on');
@@ -16971,6 +16983,26 @@ function renderPassportPage(){
       : (isZh ? '详细' : 'Detailed');
   }
 
+  // Handle Trip Planner Tab (Inline full experience)
+  const ppSearchBox = document.querySelector('#page-passport .pp-search-box');
+  const ppToolbar = document.querySelector('#page-passport .pp-toolbar');
+  if(passportPageStatusFilter === 'trip'){
+    if(ppSearchBox) ppSearchBox.style.display = 'none';
+    if(pillsContainer) pillsContainer.style.display = 'none';
+    if(ppToolbar) ppToolbar.style.display = 'none';
+    container.innerHTML = (typeof renderTravelPlannerInlineHTML === 'function')
+      ? renderTravelPlannerInlineHTML(isZh)
+      : '<div id="tp-inline-container" style="min-height:50vh"></div>';
+    if(typeof renderTravelPlannerUI === 'function'){
+      renderTravelPlannerUI();
+    }
+    return;
+  } else {
+    if(ppSearchBox) ppSearchBox.style.display = 'flex';
+    if(pillsContainer) pillsContainer.style.display = 'flex';
+    if(ppToolbar) ppToolbar.style.display = 'flex';
+  }
+
   // Render Country Pills: only detected countries self-open!
   if(pillsContainer){
     pillsContainer.innerHTML = `
@@ -17171,7 +17203,7 @@ window.renderPassportPage = renderPassportPage;
 
 function filterPassportStatus(status){
   passportActiveStatusFilter = status;
-  ['all', 'visited', 'pending'].forEach(s => {
+  ['all', 'visited', 'pending', 'trip'].forEach(s => {
     const btn = el('passport-filter-' + s);
     if(btn){
       if(s === status) btn.classList.add('on');
@@ -19483,19 +19515,10 @@ window.openSingleStopInGoogleMaps = openSingleStopInGoogleMaps;
 async function openTravelPlanner(source = 'default', initialLink = '') {
   travelPlannerShowHowItWorks = false;
   travelPlannerShowWishlistImport = false;
-  
-  // If user passed a link directly from the Wishlist quick-add bar
-  if (initialLink && String(initialLink).trim()) {
-    openModal('travel-planner-modal');
-    renderTravelPlannerUI();
-    await addPlaceToPlanner(initialLink.trim());
-    return;
-  }
 
   // If no places added yet and wishlist has pending places, seed with wishlist places if empty
   if (travelPlannerPlaces.length === 0 && Array.isArray(S.restaurantRecords)) {
     const pending = S.restaurantRecords.filter(r => r.status === 'pending');
-    // Pre-populate if only a few pending places exist
     if (pending.length > 0 && pending.length <= 4) {
       travelPlannerPlaces = pending.map(p => ({
         id: p.id || ('pl_' + Date.now() + Math.random().toString(36).substr(2, 4)),
@@ -19511,6 +19534,24 @@ async function openTravelPlanner(source = 'default', initialLink = '') {
         recommendations: p.items ? p.items.map(it => it.name) : []
       }));
     }
+  }
+
+  // When opened from 'more' hubs, 'passport' page, or tab requests: route directly to dedicated tab!
+  if (source === 'more' || source === 'passport' || source === 'tab') {
+    if (typeof go === 'function') go('passport');
+    if (typeof filterPassportPageStatus === 'function') filterPassportPageStatus('trip');
+    if (initialLink && String(initialLink).trim()) {
+      setTimeout(() => addPlaceToPlanner(initialLink.trim()), 100);
+    }
+    return;
+  }
+
+  // If user passed a link directly from modal source
+  if (initialLink && String(initialLink).trim()) {
+    openModal('travel-planner-modal');
+    renderTravelPlannerUI();
+    await addPlaceToPlanner(initialLink.trim());
+    return;
   }
 
   openModal('travel-planner-modal');
@@ -19531,9 +19572,26 @@ window.closeTravelPlanner = closeTravelPlanner;
 /**
  * Pastes clipboard content into the planner input and adds it
  */
+
+function getPlannerUrlInput() {
+  const inputs = document.querySelectorAll('#tp-url-input');
+  for (let i = 0; i < inputs.length; i++) {
+    if (inputs[i].offsetParent !== null || inputs[i].value) return inputs[i];
+  }
+  return inputs[0] || el('tp-url-input');
+}
+
+function getPlannerStatusEl() {
+  const els = document.querySelectorAll('#tp-input-status');
+  for (let i = 0; i < els.length; i++) {
+    if (els[i].offsetParent !== null) return els[i];
+  }
+  return els[0] || el('tp-input-status');
+}
+
 async function pasteAndAddPlannerPlace() {
-  const inp = el('tp-url-input');
-  const statusEl = el('tp-input-status');
+  const inp = getPlannerUrlInput();
+  const statusEl = getPlannerStatusEl();
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   try {
     const text = await navigator.clipboard.readText();
@@ -20003,38 +20061,8 @@ window.planTripFromQuickWishlist = planTripFromQuickWishlist;
 
 // ── 6. UI HTML TEMPLATE & RENDERER ─────────────────────────────
 
-function renderTravelPlannerUI() {
-  const container = el('travel-planner-modal-content');
-  if (!container) return;
-  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
-  const hasGeminiKey = Boolean(S.geminiApiKey && S.geminiApiKey.length > 7);
-
-  // Model pill
-  const activeModelName = (S.geminiModel && S.geminiModel !== 'auto') ? S.geminiModel : 'Gemini 2.0 Flash';
-  const modelBadge = hasGeminiKey
-    ? `<span class="tp-badge-ai" title="Free Tier: 15 RPM / 1M TPM">🤖 ${activeModelName} · Free AI</span>`
-    : `<span class="tp-badge-offline" onclick="openGeminiModal()" title="Tap to enter your free Google AI Studio Key">⚡ Smart GPS Engine <span style="text-decoration:underline;cursor:pointer">(${isZh ? '开启 Gemini AI ›' : 'Connect Gemini AI ›'})</span></span>`;
-
-  let html = `
-    <div class="tp-modal-header">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:22px">🧭</span>
-        <div>
-          <div style="font-weight:900;font-size:16px;color:var(--text);display:flex;align-items:center;gap:6px">
-            <span>${isZh ? 'AI 智能行程路线规划' : 'AI Travel Route Planner'}</span>
-            ${modelBadge}
-          </div>
-          <div style="font-size:11px;color:var(--muted)">
-            ${isZh ? '粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排' : 'Paste Google Maps links · AI plans optimal timing, route & Today/Tomorrow schedule'}
-          </div>
-        </div>
-      </div>
-      <button type="button" class="modal-close-btn" onclick="closeTravelPlanner()">✕</button>
-    </div>
-
-    <div class="tp-modal-body" id="tp-modal-body">
-  `;
-
+function buildTravelPlannerBodyHTML(isZh) {
+  let html = '';
   // Expandable "How It Works" Card
   html += `
     <div class="tp-how-box ${travelPlannerShowHowItWorks ? 'expanded' : ''}">
@@ -20298,11 +20326,77 @@ function renderTravelPlannerUI() {
     html += renderItineraryCard(travelPlannerCurrentPlan, isZh);
   }
 
-  html += `
-    </div>
-  `;
 
-  container.innerHTML = html;
+  return html;
+}
+
+function renderTravelPlannerInlineHTML(isZh) {
+  return '<div id="tp-inline-container" class="tp-inline-root" style="min-height:50vh"></div>';
+}
+window.renderTravelPlannerInlineHTML = renderTravelPlannerInlineHTML;
+
+function renderInlineTravelPlannerContent() {
+  renderTravelPlannerUI();
+}
+window.renderInlineTravelPlannerContent = renderInlineTravelPlannerContent;
+
+function renderTravelPlannerUI() {
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  const hasGeminiKey = Boolean(S.geminiApiKey && S.geminiApiKey.length > 7);
+
+  // Model pill
+  const activeModelName = (S.geminiModel && S.geminiModel !== 'auto') ? S.geminiModel : 'Gemini 2.0 Flash';
+  const modelBadge = hasGeminiKey
+    ? `<span class="tp-badge-ai" title="Free Tier: 15 RPM / 1M TPM">🤖 ${activeModelName} · Free AI</span>`
+    : `<span class="tp-badge-offline" onclick="openGeminiModal()" title="Tap to enter your free Google AI Studio Key">⚡ Smart GPS Engine <span style="text-decoration:underline;cursor:pointer">(${isZh ? '开启 Gemini AI ›' : 'Connect Gemini AI ›'})</span></span>`;
+
+  const bodyHtml = buildTravelPlannerBodyHTML(isZh);
+
+  // 1. Modal Container
+  const modalContainer = el('travel-planner-modal-content');
+  if (modalContainer) {
+    modalContainer.innerHTML = `
+      <div class="tp-modal-header">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:22px">🧭</span>
+          <div>
+            <div style="font-weight:900;font-size:16px;color:var(--text);display:flex;align-items:center;gap:6px">
+              <span>${isZh ? 'AI 智能行程路线规划' : 'AI Travel Route Planner'}</span>
+              ${modelBadge}
+            </div>
+            <div style="font-size:11px;color:var(--muted)">
+              ${isZh ? '粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排' : 'Paste Google Maps links · AI plans optimal timing, route & Today/Tomorrow schedule'}
+            </div>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" onclick="closeTravelPlanner()">✕</button>
+      </div>
+
+      <div class="tp-modal-body" id="tp-modal-body">
+        ${bodyHtml}
+      </div>
+    `;
+  }
+
+  // 2. Inline Page Tab Container
+  const inlineContainer = el('tp-inline-container');
+  if (inlineContainer) {
+    inlineContainer.innerHTML = `
+      <div class="tp-inline-header" style="text-align:center;padding:14px 12px 16px;background:linear-gradient(135deg,rgba(16,185,129,.14),rgba(6,182,212,.08));border-radius:18px;margin-bottom:14px;border:1.5px solid rgba(16,185,129,.22);box-shadow:0 6px 18px rgba(0,0,0,.04)">
+        <div style="font-size:34px;margin-bottom:6px">🧭</div>
+        <div style="font-weight:900;font-size:17.5px;color:var(--text);display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap">
+          <span>${isZh ? 'AI 智能行程路线规划' : 'AI Travel Route Planner'}</span>
+          ${modelBadge}
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:4px">
+          ${isZh ? '粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排' : 'Paste Google Maps links · AI plans optimal timing, route & Today/Tomorrow schedule'}
+        </div>
+      </div>
+      <div class="tp-inline-body" id="tp-inline-body">
+        ${bodyHtml}
+      </div>
+    `;
+  }
 }
 
 /**
@@ -20467,6 +20561,9 @@ if (_exportTarget) {
   _exportTarget.replanTripRoute = replanTripRoute;
   _exportTarget.copyTripItineraryToClipboard = copyTripItineraryToClipboard;
   _exportTarget.renderTravelPlannerUI = renderTravelPlannerUI;
+  _exportTarget.renderTravelPlannerInlineHTML = renderTravelPlannerInlineHTML;
+  _exportTarget.renderInlineTravelPlannerContent = renderInlineTravelPlannerContent;
+  _exportTarget.buildTravelPlannerBodyHTML = buildTravelPlannerBodyHTML;
   _exportTarget.toggleTravelPlannerHowItWorks = toggleTravelPlannerHowItWorks;
   _exportTarget.toggleWishlistImportSelector = toggleWishlistImportSelector;
   _exportTarget.importSelectedWishlistPlaces = importSelectedWishlistPlaces;

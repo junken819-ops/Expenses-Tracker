@@ -150,7 +150,7 @@ window.togglePassportCardExpand = togglePassportCardExpand;
 
 function filterPassportPageStatus(status){
   passportPageStatusFilter = status;
-  ['all', 'visited', 'pending'].forEach(s => {
+  ['all', 'visited', 'pending', 'trip'].forEach(s => {
     const btn = el('passport-page-filter-' + s);
     if(btn){
       if(s === status) btn.classList.add('on');
@@ -492,6 +492,26 @@ function renderPassportPage(){
       : (isZh ? '详细' : 'Detailed');
   }
 
+  // Handle Trip Planner Tab (Inline full experience)
+  const ppSearchBox = document.querySelector('#page-passport .pp-search-box');
+  const ppToolbar = document.querySelector('#page-passport .pp-toolbar');
+  if(passportPageStatusFilter === 'trip'){
+    if(ppSearchBox) ppSearchBox.style.display = 'none';
+    if(pillsContainer) pillsContainer.style.display = 'none';
+    if(ppToolbar) ppToolbar.style.display = 'none';
+    container.innerHTML = (typeof renderTravelPlannerInlineHTML === 'function')
+      ? renderTravelPlannerInlineHTML(isZh)
+      : '<div id="tp-inline-container" style="min-height:50vh"></div>';
+    if(typeof renderTravelPlannerUI === 'function'){
+      renderTravelPlannerUI();
+    }
+    return;
+  } else {
+    if(ppSearchBox) ppSearchBox.style.display = 'flex';
+    if(pillsContainer) pillsContainer.style.display = 'flex';
+    if(ppToolbar) ppToolbar.style.display = 'flex';
+  }
+
   // Render Country Pills: only detected countries self-open!
   if(pillsContainer){
     pillsContainer.innerHTML = `
@@ -692,7 +712,7 @@ window.renderPassportPage = renderPassportPage;
 
 function filterPassportStatus(status){
   passportActiveStatusFilter = status;
-  ['all', 'visited', 'pending'].forEach(s => {
+  ['all', 'visited', 'pending', 'trip'].forEach(s => {
     const btn = el('passport-filter-' + s);
     if(btn){
       if(s === status) btn.classList.add('on');

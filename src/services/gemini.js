@@ -557,8 +557,15 @@ function updateGeminiStatusUI(){
   // More/Studio settings row
   const sval = el('sval-gemini');
   if(sval){
-    sval.textContent = hasKey ? (isZh ? `已连接 ⚡ (${defaultSetting}) ›` : `Connected ⚡ (${defaultSetting}) ›`) : (isZh ? '点击配置 ⚡ ›' : 'Setup ⚡ ›');
-    sval.style.color = hasKey ? 'var(--green)' : 'var(--amber)';
+    sval.innerHTML = hasKey 
+      ? `<span class="more-badge badge-emerald">⚡ ${isZh ? '已连接' : 'Connected'}</span> <span class="more-arrow">›</span>`
+      : `<span class="more-badge badge-amber">${isZh ? '配置 ⚡' : 'Setup ⚡'}</span> <span class="more-arrow">›</span>`;
+  }
+
+  // More hero pill
+  const heroPill = el('more-hero-gemini-pill');
+  if(heroPill){
+    heroPill.textContent = hasKey ? (isZh ? 'Gemini 就绪' : 'Gemini Ready') : (isZh ? '配置 AI' : 'Setup AI');
   }
 
   // Tx Modal AI button

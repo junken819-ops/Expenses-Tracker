@@ -9,6 +9,11 @@
 // Page view routing (go), Modal Dialog Manager (openModal/closeModal), Speed dial FAB,
 // Form submissions, File/Photo upload handlers, Super-Hub routers, and Swipe gestures.
 function go(page){
+  if(page==='travel' || page==='trip'){
+    go('passport');
+    if(typeof filterPassportPageStatus==='function') filterPassportPageStatus('trip');
+    return;
+  }
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
   const target = el('page-'+page);
