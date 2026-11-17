@@ -169,6 +169,11 @@ async function generateGeminiContent(apiKey, payload, timeoutMs = 25000, signal 
 
       const errBody = await res.json().catch(() => ({}));
       lastError = errBody?.error?.message || `HTTP ${res.status}`;
+      let retryAfterHeader = null;
+      if (res.headers && typeof res.headers.get === 'function') {
+        const rawH = res.headers.get('retry-after');
+        if (rawH) retryAfterHeader = parseInt(rawH, 10) || null;
+      }
 
       const isRetired = res.status === 404 ||
                         /not found|deprecated|retired|not supported|is not supported for api/i.test(lastError);

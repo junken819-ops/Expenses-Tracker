@@ -122,6 +122,7 @@ const MODULE_MANIFEST = [
   // 17. Compatibility Layer & Modern Features
   'core/compat.js',
   'features/diningPassport/passport.js',
+  'features/travelPlanner/travelPlanner.js',
   'features/transactions/tags.js',
   'features/cashflow/cashflow.js',
   'features/heatmap/heatmap.js',

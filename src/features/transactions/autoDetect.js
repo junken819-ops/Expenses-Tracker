@@ -430,6 +430,10 @@ async function startBackgroundReceiptScan(file, preferredModel = null, queueInfo
     }
 
     if(hasUsableReceiptResult(result)){
+      // Enrich items with calorie & protein estimates before applying
+      if(Array.isArray(result.items) && result.items.length > 0 && typeof enrichItemsWithCalories === 'function'){
+        try { await enrichItemsWithCalories(result.items); } catch(e){ console.log('Calorie enrichment skipped:', e); }
+      }
       const applied = applyPendingReceiptScanResult(tx.id, result, controller);
       if(!applied) return;
 
@@ -535,6 +539,10 @@ async function retryPendingReceiptScan(txId){
     }
 
     if(hasUsableReceiptResult(result)){
+      // Enrich items with calorie & protein estimates before applying
+      if(Array.isArray(result.items) && result.items.length > 0 && typeof enrichItemsWithCalories === 'function'){
+        try { await enrichItemsWithCalories(result.items); } catch(e){ console.log('Calorie enrichment skipped:', e); }
+      }
       const applied = applyPendingReceiptScanResult(tx.id, result, controller);
       if(!applied) return;
       if(typeof deleteScanImage === 'function') deleteScanImage(tx.id);

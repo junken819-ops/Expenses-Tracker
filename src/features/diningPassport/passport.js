@@ -199,6 +199,9 @@ function passportQuickAddBarHTML(source, isZh){
         <div id="passport-quick-map-status-${source}" style="font-size:11px;color:var(--muted);line-height:1.4;flex:1">
           ${isZh ? '💡 自动识别店名、城市、国家与定位，完全无需手动输入！' : '💡 Zero manual typing: auto-captures place name, city, country & pin location!'}
         </div>
+        <button type="button" onclick="openTravelPlanner('wishlist', el('passport-quick-map-url-${source}') ? el('passport-quick-map-url-${source}').value : '')" style="background:linear-gradient(135deg,rgba(16,185,129,.18),rgba(6,182,212,.18));border:1px solid rgba(16,185,129,.45);color:#10b981;border-radius:8px;font-size:11px;font-weight:800;padding:3px 9px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Plan route with AI">
+          <span>🗺️</span> <span>${isZh ? 'AI 规划路线' : 'Plan Route'}</span>
+        </button>
         <button type="button" onclick="openRoulette('wishlist')" style="background:rgba(236,72,153,.12);border:1px solid rgba(236,72,153,.35);color:#ec4899;border-radius:8px;font-size:11px;font-weight:800;padding:3px 9px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px">
           <span>🎡</span> <span>${isZh ? '纠结吃哪家？转盘选' : 'Spin Wishlist'}</span>
         </button>
@@ -617,6 +620,22 @@ function renderPassportPage(){
   });
 
   let html = (passportPageStatusFilter === 'pending') ? passportQuickAddBarHTML('page', isZh) : '';
+  if (passportPageStatusFilter === 'pending') {
+    html += `
+      <div class="pp-route-banner" style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(16,185,129,.14),rgba(6,182,212,.08));border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:9px 12px;margin-bottom:12px;box-shadow:0 2px 8px rgba(16,185,129,.08)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:20px">🗺️</span>
+          <div>
+            <div style="font-size:12.5px;font-weight:800;color:var(--text)">${isZh ? 'AI 智能行程路线规划' : 'AI Travel Route Planner'}</div>
+            <div style="font-size:10.5px;color:var(--muted)">${isZh ? '粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排' : 'Paste Google Maps link · AI plans optimal timing, route & Today/Tomorrow schedule'}</div>
+          </div>
+        </div>
+        <button type="button" class="primary-btn" onclick="openTravelPlanner('wishlist-banner')" style="width:auto;margin:0;padding:6px 14px;font-size:11.5px;font-weight:900;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;box-shadow:0 2px 8px rgba(16,185,129,.25);white-space:nowrap;display:inline-flex;align-items:center;gap:5px">
+          <span>🚀</span> <span>${isZh ? '规划我的行程' : 'Plan My Route'}</span>
+        </button>
+      </div>
+    `;
+  }
   visibleCountryKeys.forEach(cName => {
     const cg = filteredCountryGroups[cName];
     const sortedRestList = [...cg.records].sort((a,b) => {

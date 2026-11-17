@@ -43,7 +43,8 @@ const STATE = {
   geminiApiKey: '',
   geminiModel: 'auto',
   geminiActiveModel: 'gemini-2.0-flash',
-  geminiDiscoveredModels: []
+  geminiDiscoveredModels: [],
+  travelTrips: []
 };
 
 // ── S: GLOBAL BACKWARD-COMPATIBLE STATE ALIAS ──

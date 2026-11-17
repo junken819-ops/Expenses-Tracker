@@ -149,6 +149,7 @@ function applyStateObject(p){
     biometricLock: p.biometricLock || false,
     pendingMeals: p.pendingMeals || [],
     restaurantRecords: Array.isArray(p.restaurantRecords) ? p.restaurantRecords : [],
+    travelTrips: Array.isArray(p.travelTrips) ? p.travelTrips : [],
     paydayDate: p.paydayDate || 25,
     paydayAmount: p.paydayAmount || 0,
     challenges: p.challenges || [],
