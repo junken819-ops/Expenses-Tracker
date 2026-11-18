@@ -38,7 +38,6 @@ function init(){
   applyLanguage();
   applyRecurring();
   removeNetlifyBadge();
-  checkBiometricOnLaunch();
   fetchLiveExchangeRates();
   fetchMalaysiaInflationData();
 

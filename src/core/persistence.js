@@ -100,6 +100,10 @@ function load(){
 
 function applyStateObject(p){
   if(!p || typeof p !== 'object') return;
+  // Biometric locking was retired. Discard its legacy setting rather than
+  // carrying it forward into the saved application state.
+  const hadLegacyBiometricLock = Object.hasOwn(p, 'biometricLock');
+  const { biometricLock: _legacyBiometricLock, ...persistedState } = p;
   // Account system simplified to unified wallet
   let loadedAccounts = JSON.parse(JSON.stringify(DEFAULT_MY_ACCOUNTS));
 
@@ -128,7 +132,7 @@ function applyStateObject(p){
 
   S = {
     ...S,
-    ...p,
+    ...persistedState,
     monthlyBudget: loadedMonthlyBudget,
     transactions: loadedTx,
     budgets: p.budgets || [],
@@ -146,7 +150,6 @@ function applyStateObject(p){
     selAcc: loadedSelAcc,
     gsheetUrl: p.gsheetUrl || '',
     lastSync: p.lastSync || '',
-    biometricLock: p.biometricLock || false,
     pendingMeals: p.pendingMeals || [],
     restaurantRecords: Array.isArray(p.restaurantRecords) ? p.restaurantRecords : [],
     travelTrips: Array.isArray(p.travelTrips) ? p.travelTrips : [],
@@ -183,7 +186,7 @@ function applyStateObject(p){
   }
 
   // Keep converted legacy transfers on this device without requiring a server.
-  if(migratedInternalTransfers){
+  if(migratedInternalTransfers || hadLegacyBiometricLock){
     try { localStorage.setItem('ff2', JSON.stringify(S)); } catch(e){}
   }
 

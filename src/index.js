@@ -8,7 +8,7 @@
  * ├── core/            # State store (S), persistence, DOM helper, router, modals
  * ├── utils/           # Formatters, calculators, BNM 5-sen rounding, greetings
  * ├── ui/              # Themes, wallpaper studio, floating AI alerts queue
- * ├── services/        # Gemini AI, live FX converter, WebAuthn biometrics, PDF generator
+ * ├── services/        # Gemini AI, live FX converter, and PDF generator
  * ├── features/        # Application business logic modules
  * │   ├── transactions/  # Add, edit, swipe-to-delete, tags, presets, auto-detect
  * │   ├── calendar/      # Daily calendar grid, day activity inspector

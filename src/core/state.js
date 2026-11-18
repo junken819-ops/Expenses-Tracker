@@ -18,7 +18,6 @@ const STATE = {
   lang: 'en',
   userName:'Pocket Winnie',currency:'RM',theme:'dark',period:'month',selAcc:'all',
   lastUsedAccId:'',gsheetUrl:'',lastSync:'',
-  biometricLock: false,
   pendingMeals: [],
   restaurantRecords: [],
   paydayDate: 25,

@@ -99,7 +99,6 @@ function clearData(){
     lastUsedAccId: '',
     gsheetUrl: '',
     lastSync: '',
-    biometricLock: false,
     pendingMeals: [],
     restaurantRecords: [],
     paydayDate: 25,
