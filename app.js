@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-11-17T10:56:48.945Z
+   Last build: 2026-11-18T11:14:34.195Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -1216,7 +1216,6 @@ const STATE = {
   lang: 'en',
   userName:'Pocket Winnie',currency:'RM',theme:'dark',period:'month',selAcc:'all',
   lastUsedAccId:'',gsheetUrl:'',lastSync:'',
-  biometricLock: false,
   pendingMeals: [],
   restaurantRecords: [],
   paydayDate: 25,
@@ -1841,6 +1840,10 @@ function load(){
 
 function applyStateObject(p){
   if(!p || typeof p !== 'object') return;
+  // Biometric locking was retired. Discard its legacy setting rather than
+  // carrying it forward into the saved application state.
+  const hadLegacyBiometricLock = Object.hasOwn(p, 'biometricLock');
+  const { biometricLock: _legacyBiometricLock, ...persistedState } = p;
   // Account system simplified to unified wallet
   let loadedAccounts = JSON.parse(JSON.stringify(DEFAULT_MY_ACCOUNTS));
 
@@ -1869,7 +1872,7 @@ function applyStateObject(p){
 
   S = {
     ...S,
-    ...p,
+    ...persistedState,
     monthlyBudget: loadedMonthlyBudget,
     transactions: loadedTx,
     budgets: p.budgets || [],
@@ -1887,7 +1890,6 @@ function applyStateObject(p){
     selAcc: loadedSelAcc,
     gsheetUrl: p.gsheetUrl || '',
     lastSync: p.lastSync || '',
-    biometricLock: p.biometricLock || false,
     pendingMeals: p.pendingMeals || [],
     restaurantRecords: Array.isArray(p.restaurantRecords) ? p.restaurantRecords : [],
     travelTrips: Array.isArray(p.travelTrips) ? p.travelTrips : [],
@@ -1924,7 +1926,7 @@ function applyStateObject(p){
   }
 
   // Keep converted legacy transfers on this device without requiring a server.
-  if(migratedInternalTransfers){
+  if(migratedInternalTransfers || hadLegacyBiometricLock){
     try { localStorage.setItem('ff2', JSON.stringify(S)); } catch(e){}
   }
 
@@ -1942,6 +1944,7 @@ function toast(msg,ms=2400){
   clearTimeout(t._t);
   t._t=setTimeout(()=>t.classList.add('hidden'),ms);
 }
+
 
 /* ── Module: ui/theme.js ── */
 /**
@@ -12704,7 +12707,6 @@ function clearData(){
     lastUsedAccId: '',
     gsheetUrl: '',
     lastSync: '',
-    biometricLock: false,
     pendingMeals: [],
     restaurantRecords: [],
     paydayDate: 25,
@@ -12837,6 +12839,7 @@ function purgePhotoCache(){
   save();
   toast(S.lang === 'zh' ? '✨ 小票照片已清空，系统不保留收据图片' : '✨ Receipt photos cleared; photos are never stored');
 }
+
 
 /* ── Module: services/pdfGenerator.js ── */
 /**
@@ -15030,42 +15033,6 @@ function logConvertedExpense(){
 }
 
 
-/* ── Module: services/biometric.js ── */
-/**
- * Biometric Security App Lock
- * Modularized from Pocket Winnie Core
- */
-
-// ── 🔒 BIOMETRIC APP LOCK (WEBAUTHN API) ────────────────
-function toggleBiometricLock(){
-  S.biometricLock = !S.biometricLock;
-  save();
-  renderProfile();
-  toast(S.biometricLock ? '🔒 Biometric Lock Enabled!' : '🔓 Biometric Lock Disabled');
-}
-
-async function authenticateBiometric(){
-  try{
-    if(window.PublicKeyCredential){
-      toast('👆 Scan fingerprint or use Face Unlock');
-    }
-  }catch(e){}
-  
-  const lockScreen = el('biometric-lock-screen');
-  if(lockScreen) lockScreen.classList.add('hidden');
-  toast('🍯 Welcome back! Unlocked.');
-}
-
-function checkBiometricOnLaunch(){
-  if(S.biometricLock){
-    const lockScreen = el('biometric-lock-screen');
-    if(lockScreen){
-      lockScreen.classList.remove('hidden');
-    }
-  }
-}
-
-
 /* ── Module: features/benchmarks/taxRelief.js ── */
 /**
  * LHDN Tax Relief Tracker
@@ -15332,7 +15299,6 @@ function init(){
   applyLanguage();
   applyRecurring();
   removeNetlifyBadge();
-  checkBiometricOnLaunch();
   fetchLiveExchangeRates();
   fetchMalaysiaInflationData();
 
@@ -16667,6 +16633,7 @@ function filterPassportPageCountry(country){
   renderPassportPage();
 }
 window.filterPassportPageCountry = filterPassportPageCountry;
+window.getPassportPageCountryFilter = () => passportPageCountryFilter;
 
 // Open the Add Restaurant form or Quick Wishlist modal depending on active tab
 // (Wishlist tab => Quick Add from Google Maps with zero typing, Visited tab => visited form).
@@ -16976,6 +16943,11 @@ function renderPassportPage(){
     return allCountryGroups[b].records.length - allCountryGroups[a].records.length;
   });
 
+  // Guard: if passportPageCountryFilter is set to a country that doesn't exist, reset to 'all'
+  if (passportPageCountryFilter !== 'all' && !allCountryGroups[passportPageCountryFilter]) {
+    passportPageCountryFilter = 'all';
+  }
+
   // Update hero stats
   if(el('passport-page-stat-countries')) el('passport-page-stat-countries').textContent = allCountryKeys.length;
   if(el('passport-page-stat-visited')) el('passport-page-stat-visited').textContent = totalVisited;
@@ -16983,6 +16955,28 @@ function renderPassportPage(){
   if(el('passport-page-stat-spend')) el('passport-page-stat-spend').textContent = fmt(totalWorldSpend);
   if(el('passport-hero-tot-kcal')) el('passport-hero-tot-kcal').textContent = `🔥 ${totalKcalAll.toLocaleString()} kcal`;
   if(el('passport-hero-tot-protein')) el('passport-hero-tot-protein').textContent = `🥩 ${totalProteinAll}g`;
+
+  // Update top right Add button contextual label
+  const headerAddLabel = el('passport-header-add-label');
+  if(headerAddLabel){
+    if(passportPageStatusFilter === 'pending'){
+      headerAddLabel.textContent = isZh ? '加想吃' : 'Add Wishlist';
+    } else if(passportPageStatusFilter === 'trip'){
+      headerAddLabel.textContent = isZh ? '添地点' : 'Add Stop';
+    } else {
+      headerAddLabel.textContent = isZh ? '记探店' : 'Log Dining';
+    }
+  }
+
+  // Update segmented tab labels with counts
+  const tabVisited = el('passport-page-filter-visited');
+  const tabPending = el('passport-page-filter-pending');
+  const tabTrip = el('passport-page-filter-trip');
+  const tabAll = el('passport-page-filter-all');
+  if(tabVisited) tabVisited.textContent = isZh ? `✅ 已打卡 (${totalVisited})` : `✅ Visited (${totalVisited})`;
+  if(tabPending) tabPending.textContent = isZh ? `📌 想吃清单 (${totalPending})` : `📌 Wishlist (${totalPending})`;
+  if(tabTrip) tabTrip.textContent = isZh ? '🗺️ AI 行程' : '🗺️ Trip Planner';
+  if(tabAll) tabAll.textContent = isZh ? `全部 (${records.length})` : `All (${records.length})`;
 
   if(el('passport-hero-flags')){
     if(allCountryKeys.length > 0){
@@ -17072,6 +17066,20 @@ function renderPassportPage(){
     el('passport-list-counter').textContent = `${filteredRecords.length} ${isZh ? '家餐厅' : 'Places'}`;
   }
 
+  // When in Wishlist mode, prepend the AI Trip Planner promo banner
+  const tripPromoBanner = (passportPageStatusFilter === 'pending' && totalPending > 0) ? `
+    <div onclick="filterPassportPageStatus('trip')" style="background:linear-gradient(135deg,rgba(16,185,129,.14),rgba(6,182,212,.1));border:1px solid rgba(16,185,129,.35);border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:0 2px 8px rgba(16,185,129,.08)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:22px">🚀</span>
+        <div>
+          <div style="font-size:12.5px;font-weight:900;color:var(--text)">${isZh ? '想吃地点已就绪？一键智能规划路线' : 'Ready to explore? Plan trip route with AI'}</div>
+          <div style="font-size:10.5px;color:var(--muted)">${isZh ? '由 Gemini 2.0 Flash 智能生成早中晚无绕路游玩时刻表' : 'Auto-sequences stops & avoids peak crowds'}</div>
+        </div>
+      </div>
+      <span style="font-size:14px;font-weight:900;color:var(--green)">›</span>
+    </div>
+  ` : '';
+
   if(records.length === 0){
     if(passportPageStatusFilter === 'pending'){
       container.innerHTML = passportQuickAddBarHTML('page', isZh) + passportEmptyStateHTML('pending', 'page', isZh);
@@ -17100,7 +17108,7 @@ function renderPassportPage(){
   }
 
   if(filteredRecords.length === 0 && !passportSearchQuery && passportPageCountryFilter === 'all' && (passportPageStatusFilter === 'pending' || passportPageStatusFilter === 'visited')){
-    container.innerHTML = (passportPageStatusFilter === 'pending' ? passportQuickAddBarHTML('page', isZh) : '') + passportEmptyStateHTML(passportPageStatusFilter, 'page', isZh);
+    container.innerHTML = tripPromoBanner + (passportPageStatusFilter === 'pending' ? passportQuickAddBarHTML('page', isZh) : '') + passportEmptyStateHTML(passportPageStatusFilter, 'page', isZh);
     return;
   }
 
@@ -17223,7 +17231,7 @@ function renderPassportPage(){
   if(passportPageStatusFilter === 'pending' || passportPageStatusFilter === 'visited'){
     html += passportAddFooterHTML(passportPageStatusFilter, 'page', isZh);
   }
-  container.innerHTML = html;
+  container.innerHTML = (typeof tripPromoBanner !== 'undefined' ? tripPromoBanner : '') + html;
 }
 window.renderPassportPage = renderPassportPage;
 
@@ -17611,6 +17619,22 @@ window.onRestCountryChange = onRestCountryChange;
 const MAPS_SHORT_HOST_RE = /^(maps\.app\.goo\.gl|goo\.gl|g\.co|share\.google)$/i;
 
 // Find the first Google Maps URL inside arbitrary pasted text (e.g. the text the Maps app "Share" gives)
+function extractAllMapsUrls(text){
+  const found = String(text || '').match(/https?:\/\/[^\s<>"']+/gi);
+  if(!found) return [];
+  const results = [];
+  for(const raw of found){
+    try{
+      const u = new URL(raw.replace(/[),.;]+$/, ''));
+      const isShort = MAPS_SHORT_HOST_RE.test(u.hostname);
+      const isGoogle = /^(www\.|maps\.)?google\.[a-z.]+$/i.test(u.hostname) && (/^\/maps/.test(u.pathname) || /^maps\./i.test(u.hostname));
+      if(isShort || isGoogle) results.push(u.toString());
+    }catch(e){}
+  }
+  return [...new Set(results)];
+}
+window.extractAllMapsUrls = extractAllMapsUrls;
+
 function extractMapsUrl(text){
   const found = String(text || '').match(/https?:\/\/[^\s<>"']+/gi);
   if(!found) return null;
@@ -17637,7 +17661,7 @@ function parseMapsShareText(rawText) {
     let line = lines[i];
     // Strip URL from the line to check if there is venue text before/after the URL
     const lineWithoutUrl = line.replace(/https?:\/\/[^\s<>"']+/gi, '').trim();
-    if (!lineWithoutUrl) continue; // Only skip if the line was strictly a bare URL
+    if (!lineWithoutUrl) continue;
     line = lineWithoutUrl;
 
     // Check for rating and review count, e.g. "4.7 ★ (763) · Fine dining restaurant"
@@ -17656,28 +17680,41 @@ function parseMapsShareText(rawText) {
       continue;
     }
 
-    // Check for address pattern
-    if (/jalan|street|st\.|road|rd\.|avenue|ave\.|lane|lorong|taman|building|plaza|mall|floor|block|perak|selangor|kuala lumpur|penang|johor|\b\d{5}\b/i.test(line)) {
-      if (!result.address) {
-        result.address = line;
-        continue;
-      }
-    }
-
-    // Name extraction from clean lines
+    // Name extraction: first non-rating line
     if (!result.name) {
       let cleaned = line
         .replace(/https?:\/\/[^\s<>"']+/gi, '')
         .replace(/^(check out|take a look at|look at|shared from Google Maps:?|Google Maps:?|在\s*(?:Google\s*地图|Google\s*Maps)\s*(?:上)?(?:查看|看)?[:：\s]*)\s*/i, '')
         .replace(/\s*(on Google Maps|at Google Maps|Google Maps|在\s*(?:Google\s*地图|Google\s*Maps)|Google\s*地图)\s*[:：]?\s*$/i, '')
         .replace(/[:：\-–—\s]+$/, '')
-        .replace(/^【|】$/g, '')
+        .replace(/^[【「]/, '')
+        .replace(/[】」]$/, '')
         .replace(/^"|"$/g, '')
         .replace(/^'|'$/g, '')
         .trim();
-      if (cleaned && cleaned.length >= 2 && cleaned.length <= 80 && !/^\d+[\s,.\d]*$/.test(cleaned) && !/^[★⭐\d\s().·]+$/.test(cleaned)) {
-        result.name = cleaned;
+
+      // If line contains a comma-separated address or area (e.g. 'Pavilion Kuala Lumpur, 168, Jln Bukit Bintang...' or 'Village Park, Damansara Utama')
+      // The venue name is before the first comma!
+      if (cleaned.includes(',')) {
+        const parts = cleaned.split(',');
+        const secondPart = parts.slice(1).join(',').trim();
+        if (parts[0].trim().length >= 2 && /\b(?:jalan|jln|street|st\.|road|rd\.|avenue|ave\.|lane|lorong|taman|utama|jaya|bukit|bintang|damansara|subang|kl|kuala\s*lumpur|penang|george\s*town|ipoh|johor|perak|selangor|malaysia|singapore|\d{5})\b/i.test(secondPart)) {
+          result.name = parts[0].trim();
+          result.address = secondPart;
+          continue;
+        }
       }
+
+      if (cleaned && cleaned.length >= 2 && cleaned.length <= 90 && !/^\d+[\s,.\d]*$/.test(cleaned) && !/^[★⭐\d\s().·]+$/.test(cleaned)) {
+        result.name = cleaned;
+        continue;
+      }
+    }
+
+    // Address extraction (if not already extracted)
+    if (!result.address && /\b(?:jalan|jln|street|st\.|road|rd\.|avenue|ave\.|lane|lorong|taman|building|floor|block|perak|selangor|kuala lumpur|penang|johor|\d{5})\b/i.test(line)) {
+      result.address = line;
+      continue;
     }
   }
 
@@ -17882,18 +17919,22 @@ window.parseMicrolinkPlace = parseMicrolinkPlace;
 // Complete zero-manual-input extraction pipeline: captures name, real rating,
 // review count, cuisine category, address, phone, hours, coordinates & recommendations
 async function capturePlaceFromGoogleMaps(raw){
-  const url = extractMapsUrl(raw);
-  if(!url){
+  let url = extractMapsUrl(raw);
+
+  // Parse share sheet text metadata first (mobile user often pastes text + URL, or just venue name)
+  const shareMeta = parseMapsShareText(raw);
+  const rawClean = String(raw || '').replace(/https?:\/\/[^\s<>"']+/gi, '').trim();
+
+  // If there's neither a URL nor a valid venue name, return no_url
+  if(!url && !shareMeta.name && (!rawClean || rawClean.length < 2 || /^\d+$/.test(rawClean))){
     return { ok: false, error: 'no_url' };
   }
 
-  // Parse share sheet text metadata first (mobile user often pastes text + URL)
-  const shareMeta = parseMapsShareText(raw);
-
   let backendData = null;
-  // 1) Expand short link & fetch rich place details via local backend
-  try{
-    const r = await fetch('/api/resolve-map?url=' + encodeURIComponent(url));
+  // 1) Expand short link & fetch rich place details via local backend (if URL exists)
+  if(url){
+    try{
+      const r = await fetch('/api/resolve-map?url=' + encodeURIComponent(url));
     if(r.ok){
       const j = await r.json();
       if(j && (j.name || j.url)){
@@ -17930,15 +17971,70 @@ async function capturePlaceFromGoogleMaps(raw){
     }catch(e){}
   }
 
+  // 1b-2) Unshorten dedicated resolver for maps.app.goo.gl short links
+  if(MAPS_SHORT_HOST_RE.test(new URL(url).hostname)){
+    try {
+      const uRes = await fetch('https://unshorten.me/json/' + encodeURIComponent(url));
+      if(uRes.ok){
+        const uJson = await uRes.json();
+        if(uJson && uJson.resolved_url && uJson.success && !MAPS_SHORT_HOST_RE.test(new URL(uJson.resolved_url).hostname)){
+          url = uJson.resolved_url;
+        }
+      }
+    } catch(e){}
+  }
+
+  // 1c) Secondary Proxy Fallback if Microlink was rate-limited or blocked
+  if(!backendData || !backendData.name || backendData.name === 'Wishlist Place'){
+    try{
+      const proxyRes = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+      if(proxyRes.ok){
+        const pJson = await proxyRes.json();
+        if(pJson && pJson.contents){
+          // Look for canonical URL, og:url, or continue= param
+          const canonMatch = pJson.contents.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']+)["']/i)
+                          || pJson.contents.match(/<meta\s+property=["']og:url["']\s+content=["']([^"']+)["']/i)
+                          || pJson.contents.match(/continue=([^&"'>\s]+)/i);
+          if(canonMatch && canonMatch[1]){
+            try {
+              let expanded = decodeURIComponent(canonMatch[1]);
+              if(/google\.[a-z.]+\/maps/i.test(expanded)){
+                url = expanded;
+              }
+            } catch(e){}
+          }
+          const titleMatch = pJson.contents.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i)
+                          || pJson.contents.match(/<title>([^<]+)<\/title>/i);
+          if(titleMatch && titleMatch[1] && !/^Google Maps/i.test(titleMatch[1]) && !/Before you continue/i.test(titleMatch[1])){
+            const rawTitle = titleMatch[1].replace(/\s*-\s*Google Maps$/i, '').trim();
+            const parts = rawTitle.split('·').map(s => s.trim()).filter(Boolean);
+            const resolvedName = parts[0] || rawTitle;
+            backendData = {
+              ok: true,
+              name: resolvedName,
+              address: parts[1] || '',
+              finalUrl: url
+            };
+          }
+        }
+      }
+    }catch(e){}
+  }
+
+  }
+
   let finalUrl = (backendData && (backendData.finalUrl || backendData.url)) || url;
+  if(!finalUrl && (shareMeta.name || rawClean)){
+    finalUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([shareMeta.name || rawClean, shareMeta.address].filter(Boolean).join(', '));
+  }
 
   // 2) Parse URL for place name and coordinates
-  const urlInfo = parseGoogleMapsUrl(finalUrl);
+  const urlInfo = url ? parseGoogleMapsUrl(finalUrl) : { name: '', lat: null, lng: null };
 
-  // Name resolution priority: backend details > share text > URL pathname
+  // Name resolution priority: backend details > share text > direct name > URL pathname
   let name = (backendData && backendData.name && backendData.name !== 'Wishlist Place') 
     ? backendData.name 
-    : (shareMeta.name || urlInfo.name || '');
+    : (shareMeta.name || rawClean || urlInfo.name || '');
 
   // Rating & review count
   let rating = (backendData && backendData.rating) || shareMeta.rating || null;
@@ -17962,6 +18058,24 @@ async function capturePlaceFromGoogleMaps(raw){
   // Coordinates
   let lat = (backendData && backendData.lat !== undefined && backendData.lat !== null) ? backendData.lat : urlInfo.lat;
   let lng = (backendData && backendData.lng !== undefined && backendData.lng !== null) ? backendData.lng : urlInfo.lng;
+
+  // 2b) Forward-geocode coordinates via OpenStreetMap Nominatim if lat/lng missing and name provided
+  if((lat === null || lng === null) && name && !/(?:自选目的地|点击修改|点击编辑|destination|tap to edit)/i.test(name)){
+    try{
+      const q = [name, address].filter(Boolean).join(', ');
+      const gr = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=en&q=' + encodeURIComponent(q), {
+        headers: { 'User-Agent': 'PocketWinnie/4.6' }
+      });
+      if(gr.ok){
+        const list = await gr.json();
+        if(list && list[0] && list[0].lat && list[0].lon){
+          lat = parseFloat(list[0].lat);
+          lng = parseFloat(list[0].lon);
+          if(!address && list[0].display_name) address = list[0].display_name;
+        }
+      }
+    }catch(e){}
+  }
 
   // 3) Reverse-geocode coordinates via OpenStreetMap Nominatim if address or city is missing
   let geo = null;
@@ -18024,6 +18138,7 @@ async function capturePlaceFromGoogleMaps(raw){
   }
 
   // Recommendations & signature highlights
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   let recommendations = (backendData && backendData.recommendations) || [];
   let recommendationText = (backendData && backendData.recommendationText) || '';
 
@@ -18042,7 +18157,6 @@ async function capturePlaceFromGoogleMaps(raw){
   }
 
   // Formatted notes combining signature highlights, address & hours
-  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   const notesLines = [];
   if(recommendationText) notesLines.push(`💡 ${recommendationText}`);
   if(recommendations && recommendations.length > 0) notesLines.push(`✨ ${isZh ? '必点招牌' : 'Must-Try'}: ${recommendations.join(', ')}`);
@@ -18121,13 +18235,15 @@ async function autoFillFromMapsLink(raw, force){
   const setStatus = (msg, color) => { if(statusEl){ statusEl.textContent = msg; statusEl.style.color = color || 'var(--muted)'; } };
 
   const url = extractMapsUrl(raw);
-  if(!url){
-    if(raw && String(raw).trim()) setStatus(isZh ? '⚠️ 未检测到 Google 地图链接' : '⚠️ No Google Maps link detected', '#ef4444');
+  const cleanName = String(raw || '').replace(/https?:\/\/[^\s<>"']+/gi, '').trim();
+  if(!url && (!cleanName || cleanName.length < 2)){
+    if(raw && String(raw).trim()) setStatus(isZh ? '⚠️ 未检测到 Google 地图链接或地点名称' : '⚠️ No Google Maps link or place name detected', '#ef4444');
     else setStatus('');
     return;
   }
-  if(!force && url === _restMapLastUrl) return;
-  _restMapLastUrl = url;
+  const cacheKey = url || cleanName;
+  if(!force && cacheKey === _restMapLastUrl) return;
+  _restMapLastUrl = cacheKey;
   setStatus(isZh ? '⏳ 正在提取地点信息与招牌推荐…' : '⏳ Auto-capturing place info & recommendations…');
 
   const res = await capturePlaceFromGoogleMaps(raw);
@@ -18228,7 +18344,7 @@ async function quickAddWishlistFromUrl(raw, source){
   };
 
   if(!raw || !String(raw).trim()){
-    setStatus(isZh ? '⚠️ 请粘贴 Google 地图链接' : '⚠️ Please paste a Google Maps link', '#ef4444');
+    setStatus(isZh ? '⚠️ 请粘贴 Google 地图链接或输入地点名称' : '⚠️ Please paste a Google Maps link or place name', '#ef4444');
     return;
   }
 
@@ -18237,7 +18353,7 @@ async function quickAddWishlistFromUrl(raw, source){
   try{
     const res = await capturePlaceFromGoogleMaps(raw);
     if(!res.ok){
-      setStatus(isZh ? '⚠️ 未识别到有效的 Google 地图链接，请检查后再试' : '⚠️ No valid Google Maps link found, please check and try again', '#ef4444');
+      setStatus(isZh ? '⚠️ 未识别到有效的地点或链接，请检查后再试' : '⚠️ No valid place name or link found, please check and try again', '#ef4444');
       return;
     }
 
@@ -19029,8 +19145,9 @@ function savePlannerPlaces() {
 function loadPlannerPlaces() {
   try {
     if (typeof S !== 'undefined' && S && Array.isArray(S.travelPlannerPlaces) && S.travelPlannerPlaces.length > 0) {
+      const copy = [...S.travelPlannerPlaces]; // snapshot before clearing (may be same ref)
       travelPlannerPlaces.length = 0;
-      travelPlannerPlaces.push(...S.travelPlannerPlaces);
+      travelPlannerPlaces.push(...copy);
       if (S.travelPlannerCurrentPlan) travelPlannerCurrentPlan = S.travelPlannerCurrentPlan;
       if (S.travelPlannerDayMode) travelPlannerDayMode = S.travelPlannerDayMode;
       if (S.travelPlannerStartTime) travelPlannerStartTime = S.travelPlannerStartTime;
@@ -19504,6 +19621,17 @@ CRITICAL PLANNING REQUIREMENTS:
    - For every stop, provide a short "aiTip" (must-order dish, photo spot, or parking advice).
    - Explain "whyThisOrder" (e.g., "Visited 1st to catch fresh breakfast; only 10 mins from hotel").
 
+5. STORE OPERATING HOURS, DAY CLOSURES & PEAK CROWD AVOIDANCE (ULTRA-SMART SCHEDULING):
+   - Real-World Business Hours & Day-of-Week Rest Days:
+     * Leverage your world knowledge of venue operating hours and rest days.
+     * NEVER schedule a venue before it opens or after it closes (e.g., if a famous stall or dessert spot opens at 3:00 PM, DO NOT schedule it at 11:00 AM!).
+     * If a venue has known rest days (e.g. closed on Mondays or Tuesdays), note this prominently in "operatingHours" or "aiTip" (e.g., "⚠️ Closed Mondays!").
+   - Co-Location & Afternoon Openings (Mall + Stall Synergy):
+     * If a stall/eatery is located inside or adjacent to a shopping mall/market and opens at 3:00 PM, plan the shopping mall/sightseeing first, and sequence the stall right after it opens!
+   - Peak Hour & Queue Avoidance:
+     * If a popular venue is notoriously crowded right at opening (e.g. queue rush at 3:00 PM) or during peak rush hours, smartly shift arrival time (e.g. 3:30 PM instead of 3:00 PM) to avoid the peak waiting lines!
+     * In "peakNotice", explicitly explain: e.g. "Stall opens at 3:00 PM; scheduled for 3:30 PM after exploring the mall to skip the opening queue wave".
+
 Language: ${isZh ? 'Chinese (Simplified)' : 'English'}.
 OUTPUT STRICT JSON ONLY (NO markdown codeblocks, NO text before or after):
 {
@@ -19526,6 +19654,8 @@ OUTPUT STRICT JSON ONLY (NO markdown codeblocks, NO text before or after):
           "arriveTime": "09:00 AM",
           "departTime": "10:00 AM",
           "dwellMins": 60,
+          "operatingHours": "10:00 AM - 10:00 PM (Daily)",
+          "peakNotice": "Opens 3 PM; scheduled 3:30 PM to bypass opening rush",
           "transitToNext": { "durationMins": 12, "distanceKm": 3.8, "mode": "${travelMode}" },
           "aiTip": "...",
           "whyThisOrder": "...",
@@ -19683,7 +19813,8 @@ async function openTravelPlanner(source = 'default', initialLink = '') {
   if (neverSavedBefore && travelPlannerPlaces.length === 0 && Array.isArray(S.restaurantRecords)) {
     const pending = S.restaurantRecords.filter(r => r.status === 'pending');
     if (pending.length > 0 && pending.length <= 4) {
-      travelPlannerPlaces = pending.map(p => ({
+      travelPlannerPlaces.length = 0;
+      travelPlannerPlaces.push(...pending.map(p => ({
         id: p.id || ('pl_' + Date.now() + Math.random().toString(36).substr(2, 4)),
         name: p.name,
         city: p.city || '',
@@ -19695,7 +19826,7 @@ async function openTravelPlanner(source = 'default', initialLink = '') {
         rating: p.rating || null,
         mapUrl: p.mapUrl || '',
         recommendations: p.items ? p.items.map(it => it.name) : []
-      }));
+      })));
       savePlannerPlaces();
     }
   }
@@ -19875,109 +20006,238 @@ function editPlannerPlaceName(idx) {
 }
 window.editPlannerPlaceName = editPlannerPlaceName;
 
+function isPlaceholderPlannerName(name) {
+  if (!name) return true;
+  return /(?:自选目的地|点击修改|点击编辑|destination|tap to edit|tap to name|map location|restaurant specialties|地图地点)/i.test(name);
+}
+
+async function addSinglePlaceToPlanner(rawText) {
+  const text = String(rawText || '').trim();
+  const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
+  if (!text) return null;
+
+  // 1. Parse share text directly first to extract clean venue name & address
+  const shareMeta = (typeof parseMapsShareText === 'function') ? parseMapsShareText(text) : null;
+
+  let captured = null;
+  if (typeof capturePlaceFromGoogleMaps === 'function') {
+    captured = await capturePlaceFromGoogleMaps(text);
+  }
+
+  let placeName = (captured && captured.name && !/Malaysia Restaurant Specialties/i.test(captured.name)) ? captured.name : '';
+  let placeLat = (captured && captured.lat && isFinite(captured.lat)) ? captured.lat : null;
+  let placeLng = (captured && captured.lng && isFinite(captured.lng)) ? captured.lng : null;
+  let placeCity = (captured && captured.city) ? captured.city : '';
+  let placeAddress = (captured && captured.address) ? captured.address : '';
+  let placeCuisine = (captured && captured.cuisine) ? captured.cuisine : '';
+  let placeRating = (captured && captured.rating) ? captured.rating : null;
+  let placeCategories = (captured && captured.categories && captured.categories.length > 0) ? captured.categories : [];
+  let placeRecommendations = (captured && captured.recommendations) || [];
+  let placeRecommendationText = (captured && captured.recommendationText) || '';
+
+  if (!placeName && shareMeta && shareMeta.name) {
+    placeName = shareMeta.name;
+    if (!placeAddress && shareMeta.address) placeAddress = shareMeta.address;
+    if (!placeCuisine && shareMeta.cuisine) placeCuisine = shareMeta.cuisine;
+    if (!placeRating && shareMeta.rating) placeRating = shareMeta.rating;
+  }
+
+  // 2. Fallback: extract venue name from first line or comma-separated name + address
+  if (!placeName) {
+    const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (lines.length > 0) {
+      let firstLine = lines[0].replace(/https?:\/\/[^\s<>"']+/gi, '').trim();
+      if (firstLine.includes(',') && /\b(?:jalan|jln|street|st\.|road|rd\.|lorong|taman|\d{5})\b/i.test(firstLine)) {
+        const parts = firstLine.split(',');
+        if (parts[0].trim().length >= 2) {
+          placeName = parts[0].trim();
+          if (!placeAddress && parts.length > 1) placeAddress = parts.slice(1).join(',').trim();
+        }
+      } else if (firstLine && firstLine.length >= 2 && firstLine.length <= 90 && !/^\d+$/.test(firstLine)) {
+        placeName = firstLine;
+      }
+      if (!placeAddress && lines.length > 1) {
+        placeAddress = lines.slice(1).join(', ').trim();
+      }
+    }
+  }
+
+  // 3. Fallback: extract name from URL string path
+  if (!placeName) {
+    try {
+      const u = new URL(text.match(/https?:\/\/[^\s<>"']+/i)?.[0] || text);
+      const m = u.pathname.match(/\/maps\/(?:place|search)\/([^/@]+)/);
+      if (m) placeName = decodeURIComponent(m[1].replace(/\+/g, ' ')).split(',')[0].trim();
+    } catch(e) {}
+  }
+
+  // 4. If name is generic or missing: ONLY try Gemini AI if input is an actual venue query (not bare short URL)
+  const isBareShortUrl = /^https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl|g\.co)\/[a-zA-Z0-9_-]+$/i.test(text);
+  if (!isBareShortUrl && (!placeName || !placeLat || !placeLng) && typeof resolvePlaceViaGemini === 'function' && S && S.geminiApiKey) {
+    const query = [placeName || text, placeAddress, placeCity].filter(Boolean).join(', ');
+    const geminiRes = await resolvePlaceViaGemini(query);
+    if (geminiRes) {
+      if (!placeName && geminiRes.name) placeName = geminiRes.name;
+      if (!placeLat && geminiRes.lat) placeLat = geminiRes.lat;
+      if (!placeLng && geminiRes.lng) placeLng = geminiRes.lng;
+      if (!placeCity && geminiRes.city) placeCity = geminiRes.city;
+      if (!placeCuisine && geminiRes.cuisine) placeCuisine = geminiRes.cuisine;
+    }
+  }
+
+  if ((!placeName || isPlaceholderPlannerName(placeName)) && isBareShortUrl && typeof window !== 'undefined' && typeof window.prompt === 'function') {
+    const userInputName = window.prompt(
+      isZh 
+        ? '📍 检测到 Google 地图分享短链接，请输入该地点名称 (如 Westin Hotel / Village Park)，系统将自动为您精确定位：' 
+        : '📍 Google Maps short link detected. Enter place name (e.g. Westin Hotel / Village Park) to auto-pin GPS:',
+      ''
+    );
+    if (userInputName && userInputName.trim()) {
+      placeName = userInputName.trim();
+      const geo = await geocodePlaceByName(placeName, placeAddress || placeCity);
+      if (geo) {
+        placeLat = geo.lat;
+        placeLng = geo.lng;
+        if (geo.city && !placeCity) placeCity = geo.city;
+        if (geo.address && !placeAddress) placeAddress = geo.address;
+      }
+    }
+  }
+
+  if (!placeName || isPlaceholderPlannerName(placeName)) {
+    placeName = isZh ? '自选目的地 (点击修改名称)' : 'Destination (Tap to edit)';
+  }
+
+  // 5. Geocode by name + address if coordinates missing
+  if ((!placeLat || !placeLng) && placeName && !isPlaceholderPlannerName(placeName)) {
+    const geo = await geocodePlaceByName(placeName, placeAddress || placeCity);
+    if (geo) {
+      placeLat = geo.lat;
+      placeLng = geo.lng;
+      if (geo.city && !placeCity) placeCity = geo.city;
+      if (geo.address && !placeAddress) placeAddress = geo.address;
+    }
+  }
+
+  // 6. Infer place metadata & hotel check-in status
+  const meta = (typeof inferPlaceMetadata === 'function')
+    ? inferPlaceMetadata({ name: placeName, address: placeAddress, cuisine: placeCuisine, categories: placeCategories })
+    : null;
+
+  if (meta && meta.type === 'hotel') {
+    if (!placeCuisine || placeCuisine === 'Hotel') placeCuisine = isZh ? '酒店住宿 / 入住' : 'Hotel / Check-in';
+    if (!placeCategories.length) placeCategories = ['Hotel', 'Accommodation'];
+    if (!placeRecommendations.length) {
+      placeRecommendations = isZh ? ['办理入住 / Check-in', '行李寄存', '酒店设施体验'] : ['Hotel Check-in', 'Luggage Drop-off', 'Amenities & Rest'];
+    }
+    if (!placeRecommendationText) {
+      placeRecommendationText = isZh ? '行程第一站：优先前往酒店办理 Check-in 入住或寄存行李，轻装开启旅程' : 'Check in first or drop bags at concierge before sightseeing';
+    }
+  } else if (!placeCuisine || placeRecommendations.length === 0) {
+    const localReco = (typeof generateDiningRecommendations === 'function')
+      ? generateDiningRecommendations(placeName, placeCategories, placeCity)
+      : null;
+    if (localReco) {
+      if (!placeCuisine) placeCuisine = localReco.cuisine;
+      if (!placeRecommendations.length) placeRecommendations = localReco.items;
+      if (!placeRecommendationText) placeRecommendationText = localReco.signature;
+    }
+  }
+
+  let finalMapUrl = (captured && captured.finalUrl) || (typeof extractMapsUrl === 'function' ? extractMapsUrl(text) : (text.startsWith('http') ? text : '')) || '';
+  if (!finalMapUrl && placeName && !isPlaceholderPlannerName(placeName)) {
+    finalMapUrl = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([placeName, placeAddress || placeCity].filter(Boolean).join(', '));
+  }
+
+  const newPlace = {
+    id: 'pl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+    name: placeName,
+    city: placeCity,
+    address: placeAddress || (captured && captured.address) || '',
+    lat: placeLat,
+    lng: placeLng,
+    cuisine: placeCuisine,
+    categories: placeCategories,
+    rating: placeRating,
+    mapUrl: finalMapUrl,
+    recommendations: placeRecommendations,
+    recommendationText: placeRecommendationText
+  };
+
+  // Safe deduplication: never reject distinct places just because they share a placeholder name
+  const isDup = travelPlannerPlaces.some(p => {
+    if (newPlace.mapUrl && p.mapUrl && newPlace.mapUrl.trim() === p.mapUrl.trim()) return true;
+    if (!isPlaceholderPlannerName(newPlace.name) && !isPlaceholderPlannerName(p.name)) {
+      if (newPlace.name.trim().toLowerCase() === p.name.trim().toLowerCase()) return true;
+    }
+    return false;
+  });
+
+  if (isDup) {
+    return { dup: true, place: newPlace };
+  }
+
+  travelPlannerPlaces.push(newPlace);
+  savePlannerPlaces();
+  return { ok: true, place: newPlace };
+}
+
 async function addPlaceToPlanner(rawText) {
   const inp = getPlannerUrlInput();
-  const statusEl = getPlannerStatusEl();
   const text = String(rawText || (inp ? inp.value : '')).trim();
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
 
   if (!text) {
-    setPlannerStatus(isZh ? '⚠️ 请先粘贴 Google 地图链接或输入地点' : '⚠️ Please paste a Google Maps link or enter a place name first', 'var(--red)');
+    setPlannerStatus(isZh ? '⚠️ 请输入地点名称或粘贴 Google 地图链接' : '⚠️ Please enter a place name or paste a Google Maps link', 'var(--red)');
+    return;
+  }
+
+  // Multi-link batch detection: if user pasted multiple links at once
+  const allUrls = (typeof extractAllMapsUrls === 'function') 
+    ? extractAllMapsUrls(text) 
+    : (text.match(/https?:\/\/[^\s<>"']+/gi) || []);
+
+  if (allUrls.length > 1) {
+    setPlannerStatus(`⏳ ${isZh ? `检测到 ${allUrls.length} 个链接，正在批量添加…` : `Found ${allUrls.length} links, batch adding…`}`, 'var(--amber)');
+    let addedCount = 0;
+    let dupCount = 0;
+    for (const singleUrl of allUrls) {
+      const res = await addSinglePlaceToPlanner(singleUrl);
+      if (res && res.ok) addedCount++;
+      else if (res && res.dup) dupCount++;
+    }
+    if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+      document.querySelectorAll('.tp-url-input, #tp-url-input').forEach(i => i.value = '');
+    }
+    renderTravelPlannerUI();
+    const msg = isZh 
+      ? `✅ 已批量添加 ${addedCount} 处目的地${dupCount ? ` (${dupCount} 处已在行程中)` : ''}` 
+      : `✅ Added ${addedCount} destinations${dupCount ? ` (${dupCount} already in list)` : ''}`;
+    setPlannerStatus(msg, 'var(--green)');
+    if (typeof toast === 'function') toast(msg);
     return;
   }
 
   setPlannerStatus(`⏳ ${isZh ? '正在自动提取地点名称、GPS定位与类别…' : 'Auto-capturing venue, GPS coordinates & details…'}`, 'var(--amber)');
 
   try {
-    let captured = null;
-    if (typeof capturePlaceFromGoogleMaps === 'function') {
-      captured = await capturePlaceFromGoogleMaps(text);
-    }
-
-    let placeName = (captured && captured.name && !/Malaysia Restaurant Specialties/i.test(captured.name)) ? captured.name : '';
-    let placeLat = (captured && captured.lat && isFinite(captured.lat)) ? captured.lat : null;
-    let placeLng = (captured && captured.lng && isFinite(captured.lng)) ? captured.lng : null;
-    let placeCity = (captured && captured.city) ? captured.city : '';
-    let placeCuisine = (captured && captured.cuisine) ? captured.cuisine : '';
-
-    // 1. If name is generic or coordinates missing: try Gemini AI
-    if ((!placeName || !placeLat || !placeLng) && typeof resolvePlaceViaGemini === 'function' && S && S.geminiApiKey) {
-      const geminiRes = await resolvePlaceViaGemini(text);
-      if (geminiRes) {
-        if (!placeName && geminiRes.name) placeName = geminiRes.name;
-        if (!placeLat && geminiRes.lat) placeLat = geminiRes.lat;
-        if (!placeLng && geminiRes.lng) placeLng = geminiRes.lng;
-        if (!placeCity && geminiRes.city) placeCity = geminiRes.city;
-        if (!placeCuisine && geminiRes.cuisine) placeCuisine = geminiRes.cuisine;
-      }
-    }
-
-    // 2. Fallback: extract name from raw text directly (strip URL)
-    if (!placeName) {
-      const textClean = text.replace(/https?:\/\/[^\s<>"']+/gi, '').trim();
-      if (textClean && textClean.length >= 2 && textClean.length <= 60 && !/^\d+$/.test(textClean)) {
-        placeName = textClean;
-      }
-    }
-
-    // 3. Fallback: extract name from URL string path
-    if (!placeName) {
-      try {
-        const u = new URL(text.match(/https?:\/\/[^\s<>"']+/i)?.[0] || text);
-        const m = u.pathname.match(/\/maps\/(?:place|search)\/([^/@]+)/);
-        if (m) placeName = decodeURIComponent(m[1].replace(/\+/g, ' ')).split(',')[0].trim();
-      } catch(e) {}
-    }
-
-    if (!placeName || /Malaysia Restaurant Specialties/i.test(placeName)) {
-      placeName = isZh ? '自选目的地 (点击修改名称)' : 'Destination (Tap to edit)';
-    }
-
-    // 4. If coordinates are still missing: try Nominatim geocoding on the resolved name!
-    if ((!placeLat || !placeLng) && placeName && !placeName.includes('(')) {
-      const geo = await geocodePlaceByName(placeName, placeCity);
-      if (geo) {
-        placeLat = geo.lat;
-        placeLng = geo.lng;
-        if (geo.city && !placeCity) placeCity = geo.city;
-      }
-    }
-
-    const newPlace = {
-      id: 'pl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-      name: placeName,
-      city: placeCity,
-      address: (captured && captured.address) || '',
-      lat: placeLat,
-      lng: placeLng,
-      cuisine: placeCuisine,
-      categories: (captured && captured.categories) || [],
-      rating: (captured && captured.rating) || null,
-      mapUrl: (captured && captured.finalUrl) || (typeof extractMapsUrl === 'function' ? extractMapsUrl(text) : text) || '',
-      recommendations: (captured && captured.recommendations) || [],
-      recommendationText: (captured && captured.recommendationText) || ''
-    };
-
-    // Deduplication check: prevent adding the exact same venue twice
-    const isDup = travelPlannerPlaces.some(p => {
-      if (newPlace.mapUrl && p.mapUrl && p.mapUrl === newPlace.mapUrl) return true;
-      if (newPlace.name && p.name && p.name.trim().toLowerCase() === newPlace.name.trim().toLowerCase() && p.name !== 'Destination (Tap to edit)' && p.name !== '自选目的地 (点击编辑名称)') return true;
-      return false;
-    });
-
-    if (isDup) {
-      if (statusEl) {
-        statusEl.innerHTML = `⚠️ ${isZh ? '该地点已在列表中：' : 'Already in itinerary:'} <strong>${newPlace.name}</strong>`;
-        statusEl.style.color = 'var(--amber)';
-      }
+    const res = await addSinglePlaceToPlanner(text);
+    if (res && res.dup) {
+      setPlannerStatus(`⚠️ ${isZh ? '该地点已在列表中：' : 'Already in itinerary:'} <strong>${res.place.name}</strong>`, 'var(--amber)');
       if (inp) inp.value = '';
-      if (typeof toast === 'function') toast(isZh ? `⚠️ 该地点已在行程中` : `⚠️ Place is already in itinerary`);
+      if (typeof toast === 'function') toast(isZh ? '⚠️ 该地点已在行程中' : '⚠️ Place is already in itinerary');
       return;
     }
 
-    travelPlannerPlaces.push(newPlace);
-    savePlannerPlaces();
-    if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') document.querySelectorAll('.tp-url-input, #tp-url-input').forEach(i => i.value = '');
+    if (!res || !res.ok) {
+      setPlannerStatus(isZh ? '⚠️ 无法解析该链接，请重试' : '⚠️ Could not resolve link, please try again', 'var(--red)');
+      return;
+    }
+
+    const newPlace = res.place;
+    if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+      document.querySelectorAll('.tp-url-input, #tp-url-input').forEach(i => i.value = '');
+    }
 
     const pinTag = (newPlace.lat && newPlace.lng) ? '📍 GPS OK' : '⚠️ No GPS';
     const placeMeta = inferPlaceMetadata(newPlace);
@@ -20018,7 +20278,7 @@ window.movePlannerPlace = movePlannerPlace;
 function clearAllPlannerPlaces() {
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   if (confirm(isZh ? '确定清空已添加的地点吗？' : 'Clear all added places?')) {
-    travelPlannerPlaces = [];
+    travelPlannerPlaces.length = 0;
     travelPlannerCurrentPlan = null;
     savePlannerPlaces();
     renderTravelPlannerUI();
@@ -20194,7 +20454,7 @@ async function planTripRoute(isRetry = false) {
   const isZh = (typeof S !== 'undefined' && S && S.lang === 'zh');
   loadPlannerPlaces();
   if (travelPlannerPlaces.length === 0) {
-    if (typeof toast === 'function') toast(isZh ? '⚠️ 请先粘贴至少一个 Google 地图地点！' : '⚠️ Please add at least 1 destination first!');
+    if (typeof toast === 'function') toast(isZh ? '⚠️ 请先搜索并添加至少一个目的地！' : '⚠️ Please search & add at least 1 destination first!');
     return;
   }
 
@@ -20315,6 +20575,8 @@ function copyTripItineraryToClipboard() {
     (day.stops || []).forEach(stop => {
       text += `\n📍 ${stop.order}. ${stop.name} (${stop.category || ''})\n`;
       text += `   ⏰ ${stop.arriveTime} - ${stop.departTime} (${stop.dwellMins} mins)\n`;
+      if (stop.operatingHours) text += `   🕒 ${stop.operatingHours}\n`;
+      if (stop.peakNotice) text += `   ⏳ ${stop.peakNotice}\n`;
       if (stop.aiTip) text += `   ✨ ${stop.aiTip}\n`;
       if (stop.transitToNext) {
         text += `   🚗 ${stop.transitToNext.durationMins} mins transit (~${stop.transitToNext.distanceKm} km)\n`;
@@ -20373,8 +20635,8 @@ function buildTravelPlannerBodyHTML(isZh) {
           <div class="tp-how-step">
             <span class="tp-how-num">1</span>
             <div>
-              <strong>${isZh ? '粘贴 Google 地图链接 (Zero Typing)' : 'Paste Google Maps Links (Zero Typing)'}</strong>
-              <div>${isZh ? '从 Google 地图 App 分享或复制任意地点链接直接粘贴，系统自动秒级解析经纬度定位、店名、类别与地址。' : 'Copy or share any link from Google Maps; venue name, real GPS coordinates, rating & category are auto-captured.'}</div>
+              <strong>${isZh ? '搜索地点名称或粘贴链接 (Smart Detect)' : 'Search Place Name or Paste Link (Smart Detect)'}</strong>
+              <div>${isZh ? '直接输入地点名称（如 Westin Hotel）或粘贴 Google 地图链接，系统自动秒级解析经纬度定位、店名、类别与地址。' : 'Type a place name (e.g. Westin Hotel) or paste a Google Maps link; venue name, real GPS coordinates, rating & category are auto-captured.'}</div>
             </div>
           </div>
           <div class="tp-how-step">
@@ -20403,34 +20665,43 @@ function buildTravelPlannerBodyHTML(isZh) {
     </div>
   `;
 
-  // 1. INPUT BOX: Paste Google Maps Link
+  // 1. SEARCH & ADD DESTINATION BOX (supports location name, address, or Google Maps link)
   html += `
-    <div class="tp-paste-box">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <label style="font-size:12.5px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:5px">
-          <span>📍</span> <span>${isZh ? '粘贴 Google 地图链接或输入地点' : 'Paste Google Maps Link or Venue'}</span>
+    <section class="tp-paste-box" aria-labelledby="tp-destination-label">
+      <div class="tp-paste-box-header">
+        <label id="tp-destination-label" class="tp-paste-box-title" for="tp-url-input">
+          <span aria-hidden="true">📍</span>
+          <span>${isZh ? '添加目的地' : 'Add a destination'}</span>
         </label>
-        <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:rgba(245,158,11,.15);color:var(--amber);font-weight:800">
-          ⚡ ${isZh ? '自动解析 GPS 定位' : 'Auto GPS Pin'}
+        <span class="tp-smart-detect-badge">
+          <span aria-hidden="true">⚡</span> ${isZh ? '智能识别' : 'Smart detect'}
         </span>
       </div>
-      <div style="margin-bottom:8px">
-        <input type="text" id="tp-url-input" class="form-input tp-url-input" style="width:100%;box-sizing:border-box;min-height:42px;padding:8px 12px;font-size:13px;border-color:var(--amber);border-radius:10px;background:var(--bg2);color:var(--text)"
-          placeholder="${isZh ? '粘贴 Google 地图链接或输入店名 (如 Westin Hotel / Village Park)' : 'Paste Google Maps link or enter place name…'}"
-          onkeydown="if(event.key==='Enter'){event.preventDefault();addPlaceToPlanner();}"/>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button type="button" class="primary-btn" onclick="pasteAndAddPlannerPlace()" style="flex:1.2;margin:0;padding:8px 12px;font-size:12px;font-weight:800;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:10px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:5px">
-          <span>📋</span> <span>${isZh ? '从剪贴板粘贴并添加' : 'Paste & Add'}</span>
+      <p class="tp-paste-box-help">
+        ${isZh ? '输入地点、酒店或地址，也可直接粘贴 Google Maps 链接。' : 'Enter a place, hotel, or address — or paste a Google Maps link.'}
+      </p>
+      <div class="tp-place-input-row">
+        <div class="tp-place-input-wrap">
+          <span class="tp-place-input-icon" aria-hidden="true">⌕</span>
+          <input type="text" id="tp-url-input" class="form-input tp-url-input"
+            placeholder="${isZh ? '例如：The Westin Kuala Lumpur' : 'e.g. The Westin Kuala Lumpur'}"
+            aria-describedby="tp-place-input-hint"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addPlaceToPlanner();}"/>
+        </div>
+        <button type="button" class="tp-paste-clipboard-btn" onclick="pasteAndAddPlannerPlace()" title="${isZh ? '从剪贴板粘贴并添加' : 'Paste and add from clipboard'}">
+          <span aria-hidden="true">📋</span><span>${isZh ? '粘贴' : 'Paste'}</span>
         </button>
-        <button type="button" class="primary-btn" onclick="addPlaceToPlanner()" style="flex:1;margin:0;padding:8px 12px;font-size:12px;font-weight:800;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:10px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:5px">
-          <span>➕</span> <span>${isZh ? '添加地点' : 'Add Place'}</span>
+        <button type="button" class="tp-add-place-btn" onclick="addPlaceToPlanner()">
+          <span aria-hidden="true">＋</span><span>${isZh ? '添加地点' : 'Add place'}</span>
         </button>
       </div>
-      <div id="tp-input-status" class="tp-input-status" style="font-size:11.5px;min-height:16px;margin-top:6px;color:${travelPlannerLastStatus.color || 'var(--muted)'};line-height:1.4">
+      <div id="tp-place-input-hint" class="tp-place-input-hint">
+        ${isZh ? '支持地点名称、完整地址和 Google Maps 链接' : 'Works with place names, full addresses, and Google Maps links'}
+      </div>
+      <div id="tp-input-status" class="tp-input-status" style="color:${travelPlannerLastStatus.color || 'var(--muted)'}">
         ${travelPlannerLastStatus.html || ''}
       </div>
-    </div>
+    </section>
   `;
 // Wishlist Import Button & Drawer
   const pendingWishlistCount = (S.restaurantRecords || []).filter(r => r.status === 'pending').length;
@@ -20494,7 +20765,7 @@ function buildTravelPlannerBodyHTML(isZh) {
           <div style="font-size:28px;margin-bottom:4px">🗺️</div>
           <div style="font-weight:800;font-size:12.5px;color:var(--text)">${isZh ? '暂未添加任何地点' : 'No places added yet'}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px;max-width:260px;margin-left:auto;margin-right:auto">
-            ${isZh ? '在上方粘贴 Google 地图链接或从想吃清单导入，系统将为你规划完整游玩时刻表！' : 'Paste Google Maps links above or import from wishlist to start planning your route.'}
+            ${isZh ? '在上方搜索地点名称或粘贴链接，也可从想吃清单导入，系统将为你规划完整游玩时刻表！' : 'Search for places by name or paste links above, or import from wishlist to plan your route.'}
           </div>
         </div>
       ` : `
@@ -20600,6 +20871,11 @@ function buildTravelPlannerBodyHTML(isZh) {
           <div class="tp-cooldown-bar-bg">
             <div class="tp-cooldown-bar-fill" style="width:${Math.max(0, (travelPlannerCooldownRemaining / travelPlannerCooldownTotal) * 100)}%"></div>
           </div>
+          ${travelPlannerRetryCount >= 2 ? `
+            <div style="font-size:11.5px;color:var(--amber);margin-bottom:8px;font-weight:700">
+              💡 ${isZh ? 'Google AI 目前处理排队中。您可点击下方一键生成离线智能路线，立即可用！' : 'Google AI is currently busy. You can tap below to generate instant smart route!'}
+            </div>
+          ` : ''}
           <div style="display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap">
             <button type="button" class="primary-btn" onclick="triggerImmediateRetry()" style="font-size:11.5px;padding:6px 14px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;margin:0;width:auto;display:inline-flex;align-items:center;gap:4px">
               ⚡ ${isZh ? '立即重试' : 'Retry Now'}
@@ -20664,7 +20940,7 @@ function renderTravelPlannerUI() {
               ${modelBadge}
             </div>
             <div style="font-size:11px;color:var(--muted)">
-              ${isZh ? '粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排' : 'Paste Google Maps links · AI plans optimal timing, route & Today/Tomorrow schedule'}
+              ${isZh ? '搜索地点名称或粘贴链接 · 智能规划行程时刻表与今天/明天安排' : 'Search places or paste links · AI plans optimal timing, route & Today/Tomorrow schedule'}
             </div>
           </div>
         </div>
@@ -20688,7 +20964,7 @@ function renderTravelPlannerUI() {
           ${modelBadge}
         </div>
         <div style="font-size:11.5px;color:var(--muted);margin-top:4px">
-          ${isZh ? '粘贴 Google 地图链接 · 智能规划行程时刻表与今天/明天安排' : 'Paste Google Maps links · AI plans optimal timing, route & Today/Tomorrow schedule'}
+          ${isZh ? '搜索地点名称或粘贴链接 · 智能规划行程时刻表与今天/明天安排' : 'Search places or paste links · AI plans optimal timing, route & Today/Tomorrow schedule'}
         </div>
       </div>
       <div class="tp-inline-body" id="tp-inline-body">
@@ -20780,6 +21056,16 @@ function renderItineraryCard(plan, isZh) {
             ${stop.whyThisOrder ? `
               <div class="tp-stop-why">
                 <span>⚡</span> <span>${stop.whyThisOrder}</span>
+              </div>
+            ` : ''}
+            ${stop.operatingHours ? `
+              <div style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;margin-top:3px">
+                <span>🕒</span> <span>${stop.operatingHours}</span>
+              </div>
+            ` : ''}
+            ${stop.peakNotice ? `
+              <div style="font-size:11px;color:var(--amber);display:flex;align-items:center;gap:4px;margin-top:3px;font-weight:700">
+                <span>⏳</span> <span>${stop.peakNotice}</span>
               </div>
             ` : ''}
             ${stop.aiTip ? `
@@ -21810,11 +22096,6 @@ window.handleCoachInputKeyDown = handleCoachInputKeyDown;
  * App Bootstrap & Lifecycle Entry
  * Modularized from Pocket Winnie Core
  */
-
-// Flush any pending debounced save before the page unloads
-window.addEventListener('beforeunload', () => {
-  if(_saveTimer) saveImmediate();
-});
 
 if (document.readyState === 'loading') {
   window.addEventListener('DOMContentLoaded', init);

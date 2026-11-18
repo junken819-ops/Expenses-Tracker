@@ -103,10 +103,9 @@ const MODULE_MANIFEST = [
   'features/mealSplitter/mealSplitter.js',
   'features/mealSplitter/payLater.js',
 
-  // 15. Services: Inflation, FX, Biometrics, Tax Relief
+  // 15. Services: Inflation, FX, Tax Relief
   'services/inflation.js',
   'services/fxRates.js',
-  'services/biometric.js',
   'features/benchmarks/taxRelief.js',
   'utils/greeting.js',
 

@@ -28,15 +28,6 @@
   <!-- 🎨 Cute Wallpaper Background Layer -->
   <div id="app-bg-layer" class="app-bg-layer"></div>
 
-  <!-- Biometric Lock Screen Overlay -->
-  <div id="biometric-lock-screen" class="lock-screen hidden">
-    <div class="lock-avatar">🍯</div>
-    <div class="lock-title">🍯 Pocket Winnie 🍯</div>
-    <div class="lock-sub">Your personal finance tracker is protected with Biometric Security.</div>
-    <button type="button" class="lock-unlock-btn" onclick="authenticateBiometric()">
-      <span>🔓</span> <span>Touch Fingerprint / Face</span>
-    </button>
-  </div>
 
   <!-- HOME -->
   <section id="page-home" class="page active">
@@ -849,66 +840,55 @@
 
   <!-- 🌏 WORLD DINING & RESTAURANT PASSPORT PAGE -->
   <section id="page-passport" class="page">
-    <div class="inner-hdr" style="display:flex;justify-content:space-between;align-items:center">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button type="button" class="back-btn" onclick="go('home')" title="Back to Home">✕</button>
-        <div>
-          <h1 style="margin:0;font-size:17px;font-weight:900;display:flex;align-items:center;gap:6px">
-            <span>🌏</span> <span data-i18n="passport_page_title">Dining Passport</span>
-          </h1>
-          <div style="font-size:10px;color:var(--muted)" data-i18n="passport_page_sub">全球美食餐厅足迹 · 跨国探店与待吃清单</div>
-        </div>
+    <div class="inner-hdr" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px 6px;margin-bottom:4px">
+      <div>
+        <h1 style="margin:0;font-size:18px;font-weight:900;display:flex;align-items:center;gap:6px">
+          <span>🌏</span> <span data-i18n="passport_page_title">Dining Passport</span>
+        </h1>
+        <div style="font-size:10.5px;color:var(--muted)" data-i18n="passport_page_sub">全球美食餐厅足迹 · 跨国探店与待吃清单</div>
       </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        <button type="button" class="ghost-btn" onclick="openCurrencyModal()" title="💱 Live Currency Exchange & FX Converter" style="padding:5px 9px;font-size:11.5px;margin-bottom:0;border-color:rgba(6,182,212,.35);background:rgba(6,182,212,.12);color:var(--cyan);display:inline-flex;align-items:center;gap:4px">
-          <span>💱</span> <span style="font-size:11px;font-weight:800">FX</span>
-        </button>
-        <button type="button" class="primary-btn" onclick="openAddPassportPlace('page')" style="padding:5px 12px;font-size:11.5px;margin-bottom:0;background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff">
-          ➕ Add
+      <div>
+        <button type="button" class="primary-btn" id="passport-header-add-btn" onclick="openAddPassportPlace('page')" style="padding:6px 14px;font-size:12px;font-weight:800;margin-bottom:0;background:linear-gradient(135deg,#ec4899,#d946ef);color:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(236,72,153,.3);display:inline-flex;align-items:center;gap:4px">
+          <span>➕</span> <span id="passport-header-add-label">记探店</span>
         </button>
       </div>
     </div>
 
     <!-- Tidy Passport Hero Summary -->
-    <div class="pp-hero">
-      <div class="pp-hero-top">
-        <div class="pp-hero-title">
+    <div class="pp-hero" style="padding:10px 12px;margin-bottom:10px;border-radius:14px;background:linear-gradient(135deg,rgba(236,72,153,.08),rgba(168,85,247,.05));border:1px solid rgba(236,72,153,.2)">
+      <div class="pp-hero-top" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="pp-hero-title" style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--text)">
           <span>✈️</span>
-          <span id="passport-hero-flags">🇲🇾 🇯🇵 🇹🇭 World Explorer</span>
+          <span id="passport-hero-flags">🇲🇾 1 Countries</span>
         </div>
-        <div class="pp-hero-actions">
-          <button type="button" class="chip" onclick="syncExistingFoodTxsToPassport()" title="Sync dining records from your food transactions" style="font-size:9.5px;padding:2px 7px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:var(--amber)">
-            🔄 Sync
+        <div class="pp-hero-actions" style="display:flex;align-items:center;gap:6px">
+          <button type="button" class="chip" onclick="syncExistingFoodTxsToPassport()" title="Sync dining records from your food transactions" style="font-size:9.5px;padding:3px 8px;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3);color:var(--amber);border-radius:6px;font-weight:800">
+            🔄 同步账单
           </button>
         </div>
       </div>
 
-      <!-- Compact 4 Stats Strip -->
-      <div class="pp-stats-strip">
-        <div class="pp-stat-cell">
-          <div class="pp-stat-val" id="passport-page-stat-countries" style="color:#ec4899">0</div>
-          <div class="pp-stat-lbl">Countries</div>
+      <!-- Compact 3-metric stats strip -->
+      <div class="pp-stats-strip" style="display:flex;align-items:center;justify-content:space-around;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:6px 8px">
+        <div class="pp-stat-cell" onclick="filterPassportPageStatus('visited')" style="text-align:center;flex:1;cursor:pointer">
+          <div class="pp-stat-val" id="passport-page-stat-visited" style="font-size:14px;font-weight:900;color:#10b981">0</div>
+          <div class="pp-stat-lbl" style="font-size:9.5px;color:var(--muted);font-weight:700">已打卡 Visited</div>
         </div>
-        <div class="pp-stat-sep"></div>
-        <div class="pp-stat-cell">
-          <div class="pp-stat-val" id="passport-page-stat-visited" style="color:#10b981">0</div>
-          <div class="pp-stat-lbl">Visited</div>
+        <div class="pp-stat-sep" style="width:1px;height:18px;background:var(--border)"></div>
+        <div class="pp-stat-cell" onclick="filterPassportPageStatus('pending')" style="text-align:center;flex:1;cursor:pointer">
+          <div class="pp-stat-val" id="passport-page-stat-pending" style="font-size:14px;font-weight:900;color:var(--amber)">0</div>
+          <div class="pp-stat-lbl" style="font-size:9.5px;color:var(--muted);font-weight:700">想吃清单 Wishlist</div>
         </div>
-        <div class="pp-stat-sep"></div>
-        <div class="pp-stat-cell">
-          <div class="pp-stat-val" id="passport-page-stat-pending" style="color:var(--amber)">0</div>
-          <div class="pp-stat-lbl">Wishlist</div>
-        </div>
-        <div class="pp-stat-sep"></div>
-        <div class="pp-stat-cell">
-          <div class="pp-stat-val" id="passport-page-stat-spend" style="color:var(--cyan)">RM 0</div>
-          <div class="pp-stat-lbl">Spend</div>
+        <div class="pp-stat-sep" style="width:1px;height:18px;background:var(--border)"></div>
+        <div class="pp-stat-cell" style="text-align:center;flex:1.2">
+          <div class="pp-stat-val" id="passport-page-stat-spend" style="font-size:14px;font-weight:900;color:var(--cyan)">RM 0</div>
+          <div class="pp-stat-lbl" style="font-size:9.5px;color:var(--muted);font-weight:700">总花销 Total Spend</div>
         </div>
       </div>
 
-      <!-- Tidy Nutrition Footprint -->
-      <div class="pp-hero-sub">
-        <span>🥗 Nutrition Footprint</span>
+      <!-- Subtle Nutrition Footprint Sub-bar -->
+      <div class="pp-hero-sub" id="passport-nutrition-strip" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:10.5px;color:var(--muted);padding:0 4px">
+        <span>🥗 营养足迹 Nutrition</span>
         <span>
           <strong style="color:#10b981" id="passport-hero-tot-kcal">🔥 0 kcal</strong> · 
           <strong style="color:var(--cyan)" id="passport-hero-tot-protein">🥩 0g</strong>
@@ -917,24 +897,24 @@
     </div>
 
     <!-- Tidy Search & Filter Controls -->
-    <div class="pp-controls">
-      <!-- Search Input -->
-      <div class="pp-search-box">
-        <span class="pp-search-ico">🔍</span>
-        <input type="text" id="passport-search-inp" class="pp-search-input" placeholder="Search places, dishes, cities..." oninput="onPassportSearchInput(this.value)"/>
-        <button type="button" onclick="clearPassportSearch()" id="passport-search-clear-btn" class="pp-search-clear">✕</button>
+    <div class="pp-controls" style="margin-bottom:8px">
+      <!-- Segmented Status Tabs -->
+      <div class="pp-segmented" style="display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:3px;margin-bottom:6px">
+        <button type="button" id="passport-page-filter-visited" class="pp-seg-btn on" onclick="filterPassportPageStatus('visited')">✅ 已打卡</button>
+        <button type="button" id="passport-page-filter-pending" class="pp-seg-btn" onclick="filterPassportPageStatus('pending')">📌 想吃清单</button>
+        <button type="button" id="passport-page-filter-trip" class="pp-seg-btn" onclick="filterPassportPageStatus('trip')">🗺️ AI 行程</button>
+        <button type="button" id="passport-page-filter-all" class="pp-seg-btn" onclick="filterPassportPageStatus('all')">全部</button>
       </div>
 
-      <!-- Segmented Status Tabs -->
-      <div class="pp-segmented">
-        <button type="button" id="passport-page-filter-all" class="pp-seg-btn on" onclick="filterPassportPageStatus('all')">All</button>
-        <button type="button" id="passport-page-filter-visited" class="pp-seg-btn" onclick="filterPassportPageStatus('visited')">✅ Visited</button>
-        <button type="button" id="passport-page-filter-pending" class="pp-seg-btn" onclick="filterPassportPageStatus('pending')">📌 Wishlist</button>
-        <button type="button" id="passport-page-filter-trip" class="pp-seg-btn" onclick="filterPassportPageStatus('trip')">🗺️ Trip</button>
+      <!-- Search Input -->
+      <div class="pp-search-box" style="position:relative;display:flex;align-items:center">
+        <span class="pp-search-ico" style="position:absolute;left:10px;color:var(--muted);pointer-events:none">🔍</span>
+        <input type="text" id="passport-search-inp" class="pp-search-input" style="width:100%;box-sizing:border-box;font-size:12px;padding:7px 28px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);color:var(--text)" placeholder="搜索餐厅名称、招牌菜、城市..." oninput="onPassportSearchInput(this.value)"/>
+        <button type="button" onclick="clearPassportSearch()" id="passport-search-clear-btn" class="pp-search-clear" style="position:absolute;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;display:none">✕</button>
       </div>
 
       <!-- Dynamic Country Pills (Self-open only when country detected) -->
-      <div id="passport-page-country-pills" class="pp-country-carousel"></div>
+      <div id="passport-page-country-pills" class="pp-country-carousel" style="display:flex;gap:6px;overflow-x:auto;padding:2px 0"></div>
     </div>
 
     <!-- List Toolbar: Count + Compact/Detailed toggle -->
@@ -1855,10 +1835,6 @@
       <div class="set-row" onclick="toggleLocationSuggest()">
         <div class="set-label">📍 Location Auto-Suggest</div>
         <div class="set-val" id="sval-locsuggest">Enabled ✓ ›</div>
-      </div>
-      <div class="set-row" onclick="toggleBiometricLock()">
-        <div class="set-label">🔒 Biometric Security (Face / Fingerprint)</div>
-        <div class="set-val" id="sval-biometric">Disabled ›</div>
       </div>
     </div>
 
