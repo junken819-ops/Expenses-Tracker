@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════
    🍯 POCKET WINNIE — CORE APPLICATION BUNDLE
    Compiled from modular source files in src/
-   Last build: 2026-11-18T11:14:34.195Z
+   Last build: 2026-11-19T00:53:03.811Z
    ═══════════════════════════════════════════════════════════════════ */
 
 /* ── Module: core/dom.js ── */
@@ -19076,7 +19076,7 @@ window.syncExistingFoodTxsToPassport = syncExistingFoodTxsToPassport;
 /* ── Module: features/travelPlanner/travelPlanner.js ── */
 /**
  * 🗺️ AI Travel Route Planner & Itinerary Optimizer
- * Powered by Google Gemini 2.0 Flash (Highest Free AI Model)
+ * Powered by the user's active Google Gemini model, with live model discovery
  * With High-Precision Geographic Haversine & TSP Routing Fallback
  * 
  * Features:
@@ -19558,10 +19558,15 @@ function generateWhyOrderText(idx, stop, totalStops, isZh) {
   return isZh ? '紧邻上一站，车程距离最短，路线顺畅不折返' : 'Closest stop from previous location; smooth flow with zero backtracking';
 }
 
-// ── 3. GEMINI 2.0 FLASH AI TRIP PLANNER INTEGRATION ───────────
+// ── 3. GEMINI AI TRIP PLANNER INTEGRATION ──────────────────────
 
 /**
- * Builds the AI prompt and invokes Google Gemini 2.0 Flash (highest free model)
+ * Builds the AI prompt and invokes the shared Gemini client.
+ *
+ * Do not put a model name here. The shared client discovers models available to
+ * this particular API key and retries a supported fallback if Google retires a
+ * model. Keeping the planner on that path prevents it from getting stuck on a
+ * retired endpoint while the rest of the app continues to work.
  */
 async function callGeminiTravelPlanner(places, startHour, dayPlanMode, travelMode) {
   const apiKey = (typeof S !== 'undefined' && S && S.geminiApiKey) ? S.geminiApiKey.trim() : '';
@@ -19673,16 +19678,13 @@ ${JSON.stringify(placesForPrompt, null, 2)}
 `;
 
   try {
-    // Specifically use gemini-2.0-flash (Google's highest free tier model)
-    const preferredModel = (S.geminiModel && S.geminiModel !== 'auto') ? S.geminiModel : 'gemini-2.0-flash';
-    const modelsToTry = [preferredModel, 'gemini-2.0-flash', 'gemini-2.0-flash-exp'];
-
     const res = await generateGeminiContent(apiKey, {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.2
+        temperature: 0.2,
+        responseMimeType: 'application/json'
       }
-    }, 28000, null, { models: modelsToTry });
+    }, 28000);
 
     if (res && res.data) {
       const text = res.data?.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
@@ -19713,12 +19715,13 @@ ${JSON.stringify(placesForPrompt, null, 2)}
             }
           });
         });
-        parsed.generatedBy = `Gemini 2.0 Flash AI (${res.model || 'gemini-2.0-flash'})`;
+        parsed.generatedBy = `Gemini AI (${res.model || 'auto'})`;
         return { ok: true, plan: parsed };
       }
     }
 
     const lastErr = res?.lastError || '';
+    const isAuthError = /(?:401|403|api.?key.*(?:invalid|not valid)|invalid.*api.?key|permission_denied|unauthenticated|forbidden)/i.test(lastErr);
     const isRateLimit = /429|resource_exhausted|quota|rate.?limit|overload|busy|too many requests/i.test(lastErr);
     let cooldownSec = res?.retryAfterSeconds || 40;
     const matchSec = lastErr.match(/retry(?:ing)? in (\d+)(?:\.\d+)?s/i) || lastErr.match(/wait (\d+)s/i);
@@ -19730,7 +19733,7 @@ ${JSON.stringify(placesForPrompt, null, 2)}
 
     return {
       ok: false,
-      error: isRateLimit ? 'rate_limit' : 'api_error',
+      error: isAuthError ? 'auth_error' : (isRateLimit ? 'rate_limit' : 'api_error'),
       message: lastErr,
       cooldownSeconds: cooldownSec
     };
@@ -19954,14 +19957,15 @@ async function resolvePlaceViaGemini(inputQuery) {
   if (!S || !S.geminiApiKey || S.geminiApiKey.length < 8) return null;
   try {
     const prompt = 'Identify this venue or Google Maps location query: "' + inputQuery + '". Return ONLY a valid single-line JSON object: {"name":"Exact Venue Name","city":"City","lat":3.123,"lng":101.456,"cuisine":"Category"}';
-    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + S.geminiApiKey, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const txt = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const result = await generateGeminiContent(S.geminiApiKey, {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0,
+        responseMimeType: 'application/json'
+      }
+    }, 12000, null, { maxModels: 3 });
+    if (result?.data) {
+      const txt = result.data?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join('') || '';
       const cleanJson = txt.replace(/```json/gi, '').replace(/```/g, '').trim();
       const p = JSON.parse(cleanJson);
       if (p && p.name && !/Malaysia Restaurant Specialties/i.test(p.name)) {
@@ -20494,7 +20498,7 @@ async function planTripRoute(isRetry = false) {
       return;
     }
 
-    // 1. Attempt to use Gemini 2.0 Flash (highest free model)
+    // 1. Attempt planning with a model supported by this user's API key.
     const result = await callGeminiTravelPlanner(
       travelPlannerPlaces,
       travelPlannerStartTime,
@@ -20525,7 +20529,18 @@ async function planTripRoute(isRetry = false) {
       return;
     }
 
-    // 2. If rate-limited or busy -> Start Auto Countdown!
+    // A rejected or revoked key cannot recover through retries. Surface the
+    // problem immediately instead of trapping the user in an endless cooldown.
+    if (result && result.error === 'auth_error') {
+      travelPlannerIsLoading = false;
+      if (typeof toast === 'function') {
+        toast(isZh ? '⚠️ Google AI 密钥无效或没有权限。请重新连接密钥。' : '⚠️ Your Google AI key is invalid or does not have access. Please reconnect it.');
+      }
+      if (typeof openGeminiModal === 'function') openGeminiModal();
+      return;
+    }
+
+    // 2. If rate-limited or temporarily unavailable -> Start Auto Countdown!
     // As explicitly requested: "the waiting ai to plan should longer and dont use offline route"
     // Never auto-fall-back to offline route! Continue AI countdown auto-retry!
     if (result && (result.error === 'rate_limit' || result.error === 'api_error')) {
@@ -20920,7 +20935,7 @@ function renderTravelPlannerUI() {
   const hasGeminiKey = Boolean(S.geminiApiKey && S.geminiApiKey.length > 7);
 
   // Model pill
-  const activeModelName = (S.geminiModel && S.geminiModel !== 'auto') ? S.geminiModel : 'Gemini 2.0 Flash';
+  const activeModelName = (S.geminiModel && S.geminiModel !== 'auto') ? S.geminiModel : 'Gemini AI · Auto';
   const modelBadge = hasGeminiKey
     ? `<span class="tp-badge-ai" title="Free Tier: 15 RPM / 1M TPM">🤖 ${activeModelName} · Free AI</span>`
     : `<span class="tp-badge-offline" onclick="openGeminiModal()" title="Tap to enter your free Google AI Studio Key">⚡ Smart GPS Engine <span style="text-decoration:underline;cursor:pointer">(${isZh ? '开启 Gemini AI ›' : 'Connect Gemini AI ›'})</span></span>`;
